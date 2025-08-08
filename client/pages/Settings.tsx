@@ -11,7 +11,8 @@ import {
   Moon,
   Sun,
   VolumeX,
-  Lock
+  Lock,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -560,7 +561,7 @@ export default function Settings() {
                 />
 
                 {verificationCode.length === 6 && !/^\d{6}$/.test(verificationCode) && (
-                  <p className="text-red-400 text-sm mb-4">L��tfen 6 haneli sayı girin</p>
+                  <p className="text-red-400 text-sm mb-4">Lütfen 6 haneli sayı girin</p>
                 )}
 
                 <div className="flex space-x-3">
