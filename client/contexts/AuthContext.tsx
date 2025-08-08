@@ -1,6 +1,17 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+  updateProfile,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
 
-// User interface
+// User interface with Firebase data
 interface User {
   uid: string;
   email: string;
@@ -46,58 +57,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate checking for existing authentication on app start
+  // Listen for authentication state changes
   useEffect(() => {
-    const checkAuthState = async () => {
-      try {
-        // Check for existing authentication
-        
-        // For demo: Check localStorage
-        const savedUser = localStorage.getItem('gaming-chat-user');
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        try {
+          // Get additional user data from Firestore
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email!,
+              displayName: firebaseUser.displayName || userData.displayName,
+              photoURL: firebaseUser.photoURL || userData.photoURL,
+              ...userData
+            });
+          } else {
+            // If no Firestore document exists, create basic user object
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email!,
+              displayName: firebaseUser.displayName,
+              photoURL: firebaseUser.photoURL,
+              isOnline: true,
+              preferences: {
+                theme: 'dark',
+                notifications: true
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email!,
+            displayName: firebaseUser.displayName,
+            photoURL: firebaseUser.photoURL,
+            isOnline: true
+          });
         }
-      } catch (error) {
-        console.error('Auth state check failed:', error);
-      } finally {
-        setIsLoading(false);
+      } else {
+        setUser(null);
       }
-    };
+      setIsLoading(false);
+    });
 
-    checkAuthState();
+    return () => unsubscribe();
   }, []);
 
   const login = async (email: string, password: string, rememberMe = false) => {
     setIsLoading(true);
     try {
-      // Authentication logic
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-      // Mock login for demo
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
-      const mockUser: User = {
-        uid: 'demo-user-123',
-        email: email,
-        displayName: 'Demo Oyuncu',
-        username: 'demo_player',
-        firstName: 'Demo',
-        lastName: 'Oyuncu',
+      // Update online status in Firestore
+      await updateDoc(doc(db, 'users', userCredential.user.uid), {
         isOnline: true,
-        photoURL: '',
-        createdAt: new Date().toISOString(),
-        preferences: {
-          theme: 'dark',
-          notifications: true
-        }
-      };
-
-      setUser(mockUser);
+        lastSeen: new Date().toISOString()
+      });
       
-      if (rememberMe) {
-        localStorage.setItem('gaming-chat-user', JSON.stringify(mockUser));
-      }
     } catch (error: any) {
-      throw new Error(error.message || 'Giriş başarısız');
+      throw new Error(getFirebaseErrorMessage(error.code));
     } finally {
       setIsLoading(false);
     }
@@ -106,13 +128,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (userData: RegisterData) => {
     setIsLoading(true);
     try {
-      // Registration logic
+      // Create Firebase Auth user
+      const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
       
-      // Mock registration for demo
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-      
-      const newUser: User = {
-        uid: `user-${Date.now()}`,
+      // Update Firebase Auth profile
+      await updateProfile(userCredential.user, {
+        displayName: `${userData.firstName} ${userData.lastName}`
+      });
+
+      // Create user document in Firestore
+      const userDoc = {
+        uid: userCredential.user.uid,
         email: userData.email,
         displayName: `${userData.firstName} ${userData.lastName}`,
         username: userData.username,
@@ -121,18 +147,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         birthDate: userData.birthDate,
         phoneNumber: userData.phoneNumber,
         isOnline: true,
-        photoURL: '',
         createdAt: new Date().toISOString(),
+        lastSeen: new Date().toISOString(),
         preferences: {
           theme: 'dark',
           notifications: true
         }
       };
 
-      setUser(newUser);
-      localStorage.setItem('gaming-chat-user', JSON.stringify(newUser));
+      await setDoc(doc(db, 'users', userCredential.user.uid), userDoc);
+      
     } catch (error: any) {
-      throw new Error(error.message || 'Kayıt başarısız');
+      throw new Error(getFirebaseErrorMessage(error.code));
     } finally {
       setIsLoading(false);
     }
@@ -140,38 +166,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      // Logout logic
+      // Update online status before signing out
+      if (user) {
+        await updateDoc(doc(db, 'users', user.uid), {
+          isOnline: false,
+          lastSeen: new Date().toISOString()
+        });
+      }
       
-      setUser(null);
-      localStorage.removeItem('gaming-chat-user');
+      await signOut(auth);
     } catch (error: any) {
-      throw new Error(error.message || 'Çıkış başarısız');
+      throw new Error(getFirebaseErrorMessage(error.code));
     }
   };
 
-  const updateProfile = async (data: Partial<User>) => {
+  const updateUserProfile = async (data: Partial<User>) => {
     try {
-      // Update profile logic
-      
-      if (user) {
-        const updatedUser = { ...user, ...data };
-        setUser(updatedUser);
-        localStorage.setItem('gaming-chat-user', JSON.stringify(updatedUser));
+      if (!user) throw new Error('Kullanıcı bulunamadı');
+
+      // Update Firebase Auth profile if displayName or photoURL changed
+      if (data.displayName || data.photoURL) {
+        await updateProfile(auth.currentUser!, {
+          displayName: data.displayName || auth.currentUser!.displayName,
+          photoURL: data.photoURL || auth.currentUser!.photoURL
+        });
       }
+
+      // Update Firestore document
+      await updateDoc(doc(db, 'users', user.uid), data);
+      
     } catch (error: any) {
-      throw new Error(error.message || 'Profil güncellenemedi');
+      throw new Error(getFirebaseErrorMessage(error.code));
     }
   };
 
   const resetPassword = async (email: string) => {
     try {
-      // Password reset logic
-      
-      // Mock for demo
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Password reset email sent to:', email);
+      await sendPasswordResetEmail(auth, email);
     } catch (error: any) {
-      throw new Error(error.message || 'Şifre sıfırlama başarısız');
+      throw new Error(getFirebaseErrorMessage(error.code));
     }
   };
 
@@ -182,7 +215,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     register,
     logout,
-    updateProfile,
+    updateProfile: updateUserProfile,
     resetPassword
   };
 
@@ -201,6 +234,31 @@ export function useAuth() {
   return context;
 }
 
+// Helper function to convert Firebase error codes to Turkish messages
+function getFirebaseErrorMessage(errorCode: string): string {
+  switch (errorCode) {
+    case 'auth/user-not-found':
+      return 'Bu e-posta adresiyle kayıtlı kullanıcı bulunamadı';
+    case 'auth/wrong-password':
+      return 'Yanlış şifre';
+    case 'auth/email-already-in-use':
+      return 'Bu e-posta adresi zaten kullanımda';
+    case 'auth/weak-password':
+      return 'Şifre çok zayıf (en az 6 karakter olmalı)';
+    case 'auth/invalid-email':
+      return 'Geçersiz e-posta adresi';
+    case 'auth/user-disabled':
+      return 'Bu hesap devre dışı bırakılmış';
+    case 'auth/too-many-requests':
+      return 'Çok fazla başarısız deneme. Lütfen daha sonra tekrar deneyin';
+    case 'auth/network-request-failed':
+      return 'Ağ bağlantısı hatası. İnternet bağlantınızı kontrol edin';
+    case 'auth/invalid-credential':
+      return 'Geçersiz giriş bilgileri';
+    default:
+      return 'Bir hata oluştu. Lütfen tekrar deneyin';
+  }
+}
 
 // Export types for use in other components
 export type { User, RegisterData };
