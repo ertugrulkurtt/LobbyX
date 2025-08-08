@@ -104,10 +104,14 @@ export default function Login() {
 
         {/* Logo */}
         <div className="text-center mb-8 animate-fade-in-up">
-          <div className="flex items-center justify-center space-x-2 mb-4">
+          <div className="flex items-center justify-center space-x-3 mb-4">
             <div className="relative">
-              <Gamepad2 className="w-12 h-12 text-neon-purple animate-pulse-glow" />
-              <Zap className="absolute -top-1 -right-1 w-6 h-6 text-neon-cyan" />
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2F3fa3fe0360c74c0a80bb8a229c50ca2c%2F8524f1f78eaf4eddbe4c314d3298bfa8?format=webp&width=800"
+                alt="LobbyX Logo"
+                className="w-16 h-16 object-contain mix-blend-screen filter brightness-110 animate-pulse-glow"
+                style={{ filter: 'drop-shadow(0 0 15px rgba(168, 85, 247, 0.7))' }}
+              />
             </div>
           </div>
           <h1 className="text-3xl font-bold text-neon">LobbyX</h1>
