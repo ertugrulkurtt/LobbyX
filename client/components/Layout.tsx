@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 import {
   Home,
   MessageSquare,
@@ -13,7 +14,8 @@ import {
   Menu,
   X,
   Gamepad2,
-  Zap
+  Zap,
+  LogOut
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -21,7 +23,7 @@ interface LayoutProps {
 }
 
 const navItems = [
-  { id: 'home', label: 'Anasayfa', path: '/', icon: Home },
+  { id: 'dashboard', label: 'Anasayfa', path: '/dashboard', icon: Home },
   { id: 'chat', label: 'Sohbet Odaları', path: '/chat', icon: MessageSquare },
   { id: 'friends', label: 'Arkadaşlar', path: '/friends', icon: Users },
   { id: 'profile', label: 'Profilim', path: '/profile', icon: User },
