@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-// Mock user interface - in real app this would come from Firebase Auth
+// User interface
 interface User {
   uid: string;
   email: string;
@@ -50,8 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuthState = async () => {
       try {
-        // In real app: Firebase Auth listener
-        // firebase.auth().onAuthStateChanged(user => setUser(user))
+        // Check for existing authentication
         
         // For demo: Check localStorage
         const savedUser = localStorage.getItem('gaming-chat-user');
@@ -71,9 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string, rememberMe = false) => {
     setIsLoading(true);
     try {
-      // In real app: Firebase Authentication
-      // const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-      // const user = userCredential.user;
+      // Authentication logic
       
       // Mock login for demo
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
@@ -109,9 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (userData: RegisterData) => {
     setIsLoading(true);
     try {
-      // In real app: Firebase Authentication + Firestore
-      // const userCredential = await firebase.auth().createUserWithEmailAndPassword(userData.email, userData.password);
-      // await firebase.firestore().collection('users').doc(userCredential.user.uid).set(userData);
+      // Registration logic
       
       // Mock registration for demo
       await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
@@ -145,8 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      // In real app: Firebase Auth signOut
-      // await firebase.auth().signOut();
+      // Logout logic
       
       setUser(null);
       localStorage.removeItem('gaming-chat-user');
@@ -157,9 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = async (data: Partial<User>) => {
     try {
-      // In real app: Update Firebase Auth profile + Firestore document
-      // await firebase.auth().currentUser?.updateProfile(data);
-      // await firebase.firestore().collection('users').doc(user.uid).update(data);
+      // Update profile logic
       
       if (user) {
         const updatedUser = { ...user, ...data };
@@ -173,8 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resetPassword = async (email: string) => {
     try {
-      // In real app: Firebase Auth password reset
-      // await firebase.auth().sendPasswordResetEmail(email);
+      // Password reset logic
       
       // Mock for demo
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -210,15 +201,6 @@ export function useAuth() {
   return context;
 }
 
-// Firebase configuration placeholder
-export const firebaseConfig = {
-  apiKey: "your-api-key",
-  authDomain: "your-auth-domain",
-  projectId: "your-project-id",
-  storageBucket: "your-storage-bucket",
-  messagingSenderId: "your-sender-id",
-  appId: "your-app-id"
-};
 
 // Export types for use in other components
 export type { User, RegisterData };
