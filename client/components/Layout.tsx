@@ -121,29 +121,42 @@ export function Layout({ children }: LayoutProps) {
       <aside className={`fixed left-0 top-16 bottom-0 w-64 bg-gaming-surface/50 backdrop-blur-xl border-r border-gaming-border z-40 transform transition-transform duration-300 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0`}>
-        <nav className="p-4 space-y-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentPath === item.path;
-            
-            return (
-              <Link
-                key={item.id}
-                to={item.path}
-                onClick={() => setSidebarOpen(false)}
-                className={`nav-item ${
-                  isActive 
-                    ? 'bg-gaming-surface shadow-glow border border-neon-purple/20' 
-                    : 'hover:bg-gaming-surface/50'
-                }`}
-              >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-neon-purple' : 'text-gaming-muted'}`} />
-                <span className={`font-medium ${isActive ? 'text-neon-purple' : 'text-gaming-text'}`}>
-                  {item.label}
-                </span>
-              </Link>
-            );
-          })}
+        <nav className="p-4 space-y-2 flex flex-col h-full">
+          <div className="space-y-2 flex-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = currentPath === item.path;
+
+              return (
+                <Link
+                  key={item.id}
+                  to={item.path}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`nav-item ${
+                    isActive
+                      ? 'bg-gaming-surface shadow-glow border border-neon-purple/20'
+                      : 'hover:bg-gaming-surface/50'
+                  }`}
+                >
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-neon-purple' : 'text-gaming-muted'}`} />
+                  <span className={`font-medium ${isActive ? 'text-neon-purple' : 'text-gaming-text'}`}>
+                    {item.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Logout button at bottom of sidebar */}
+          <div className="border-t border-gaming-border pt-4">
+            <button
+              onClick={handleLogout}
+              className="nav-item w-full text-left hover:bg-red-500/10 hover:shadow-glow text-gaming-muted hover:text-red-400 transition-all duration-300"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="font-medium">Çıkış Yap</span>
+            </button>
+          </div>
         </nav>
       </aside>
 
