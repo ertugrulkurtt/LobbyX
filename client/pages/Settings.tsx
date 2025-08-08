@@ -220,27 +220,37 @@ export default function Settings() {
             <h3 className="font-medium text-gaming-text mb-3">Tema Seçimi</h3>
             <div className="grid grid-cols-2 gap-4">
               <button
-                onClick={theme === 'light' ? undefined : toggleTheme}
+                onClick={() => theme !== 'dark' && toggleTheme()}
                 className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                  theme === 'dark' 
-                    ? 'border-neon-purple bg-neon-purple/10' 
+                  theme === 'dark'
+                    ? 'border-neon-purple bg-neon-purple/10'
                     : 'border-gaming-border hover:border-neon-purple/50'
                 }`}
               >
                 <Moon className="w-8 h-8 mx-auto mb-2 text-neon-purple" />
                 <span className="text-gaming-text font-medium">Karanlık Mod</span>
+                {theme === 'dark' && (
+                  <div className="mt-2">
+                    <Check className="w-5 h-5 mx-auto text-neon-purple" />
+                  </div>
+                )}
               </button>
-              
+
               <button
-                onClick={theme === 'dark' ? undefined : toggleTheme}
+                onClick={() => theme !== 'light' && toggleTheme()}
                 className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                  theme === 'light' 
-                    ? 'border-neon-orange bg-neon-orange/10' 
+                  theme === 'light'
+                    ? 'border-neon-orange bg-neon-orange/10'
                     : 'border-gaming-border hover:border-neon-orange/50'
                 }`}
               >
                 <Sun className="w-8 h-8 mx-auto mb-2 text-neon-orange" />
                 <span className="text-gaming-text font-medium">Aydınlık Mod</span>
+                {theme === 'light' && (
+                  <div className="mt-2">
+                    <Check className="w-5 h-5 mx-auto text-neon-orange" />
+                  </div>
+                )}
               </button>
             </div>
           </div>
@@ -312,7 +322,7 @@ export default function Settings() {
                 onClick={() => setShowLogoutConfirm(false)}
                 className="flex-1 px-4 py-2 bg-gaming-surface text-gaming-text rounded-lg hover:bg-gaming-surface/80 transition-colors"
               >
-                İptal
+                ��ptal
               </button>
               <button
                 onClick={handleLogout}
