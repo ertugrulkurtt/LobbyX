@@ -44,6 +44,8 @@ export default function Settings() {
   });
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
 
   const handleLogout = async () => {
     try {
@@ -63,6 +65,50 @@ export default function Settings() {
       }
     }));
   };
+
+  const handleSaveSettings = async () => {
+    setIsSaving(true);
+    setSaveMessage('');
+
+    try {
+      // In real app: Save to Firebase
+      // await updateDoc(doc(db, 'users', user.uid), {
+      //   settings: settings,
+      //   preferences: {
+      //     ...user.preferences,
+      //     notifications: settings.notifications.systemUpdates
+      //   }
+      // });
+
+      // Mock save delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Save to localStorage for demo
+      localStorage.setItem('lobbyx-settings', JSON.stringify(settings));
+
+      setSaveMessage('Ayarlar başarıyla kaydedildi!');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (error) {
+      console.error('Settings save failed:', error);
+      setSaveMessage('Ayarlar kaydedilemedi. Lütfen tekrar deneyin.');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Load settings from localStorage on component mount
+  React.useEffect(() => {
+    const savedSettings = localStorage.getItem('lobbyx-settings');
+    if (savedSettings) {
+      try {
+        const parsedSettings = JSON.parse(savedSettings);
+        setSettings(parsedSettings);
+      } catch (error) {
+        console.error('Failed to load saved settings:', error);
+      }
+    }
+  }, []);
 
   return (
     <div className="space-y-8 animate-fade-in-up max-w-4xl mx-auto">
