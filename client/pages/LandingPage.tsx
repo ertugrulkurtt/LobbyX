@@ -71,7 +71,7 @@ export default function LandingPage() {
           <div className="flex items-center space-x-3">
             <div className="relative">
               <img
-                src="https://cdn.builder.io/api/v1/image/assets%2F3fa3fe0360c74c0a80bb8a229c50ca2c%2F8524f1f78eaf4eddbe4c314d3298bfa8?format=webp&width=800"
+                src="https://cdn.builder.io/api/v1/image/assets%2F3fa3fe0360c74c0a80bb8a229c50ca2c%2F1534e47ef84447238f7c9e292ce473f5?format=webp&width=800"
                 alt="LobbyX Logo"
                 className="w-10 h-10 object-contain mix-blend-screen filter brightness-110 animate-pulse-glow"
                 style={{ filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.5))' }}
