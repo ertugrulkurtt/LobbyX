@@ -357,9 +357,26 @@ export default function Notifications() {
         
         <div className="text-gaming-muted">
           <p>Bildirim tercihlerinizi ayarlamak için Ayarlar sayfasını ziyaret edin.</p>
-          <button className="mt-2 text-neon-cyan hover:text-neon-purple transition-colors">
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <span>Mesaj bildirimleri: </span>
+              <span className={notificationSettings.messages ? 'text-neon-green' : 'text-red-400'}>
+                {notificationSettings.messages ? 'Açık' : 'Kapalı'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Arkadaş istekleri: </span>
+              <span className={notificationSettings.friendRequests ? 'text-neon-green' : 'text-red-400'}>
+                {notificationSettings.friendRequests ? 'Açık' : 'Kapalı'}
+              </span>
+            </div>
+          </div>
+          <Link
+            to="/settings"
+            className="mt-4 inline-block text-neon-cyan hover:text-neon-purple transition-colors"
+          >
             Ayarlara Git →
-          </button>
+          </Link>
         </div>
       </div>
     </div>
