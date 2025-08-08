@@ -532,9 +532,14 @@ export default function Settings() {
 
                 <div className="bg-gaming-surface/50 rounded-lg p-4 mb-6">
                   <p className="text-sm text-gaming-muted mb-2">Manuel giriş için secret key:</p>
-                  <code className="text-neon-cyan font-mono text-sm break-all bg-gaming-bg px-2 py-1 rounded">
-                    {generatedSecret}
-                  </code>
+                  <div className="bg-gaming-bg rounded px-3 py-2 border border-gaming-border">
+                    <code className="text-neon-cyan font-mono text-sm block text-center">
+                      {generatedSecret.match(/.{1,4}/g)?.join(' ') || generatedSecret}
+                    </code>
+                  </div>
+                  <p className="text-xs text-gaming-muted mt-2">
+                    Bu 32 karakterlik Base32 anahtarını manuel olarak girebilirsiniz.
+                  </p>
                 </div>
 
                 <p className="text-gaming-muted text-sm mb-6">
