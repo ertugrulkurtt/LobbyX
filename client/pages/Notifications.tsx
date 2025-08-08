@@ -30,6 +30,25 @@ interface Notification {
 export default function Notifications() {
   const { user } = useAuth();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [notificationSettings, setNotificationSettings] = useState({
+    messages: true,
+    friendRequests: true,
+    groupInvites: false,
+    systemUpdates: true
+  });
+
+  // Load notification settings
+  React.useEffect(() => {
+    const savedSettings = localStorage.getItem('lobbyx-settings');
+    if (savedSettings) {
+      try {
+        const parsedSettings = JSON.parse(savedSettings);
+        setNotificationSettings(parsedSettings.notifications || notificationSettings);
+      } catch (error) {
+        console.error('Failed to load notification settings:', error);
+      }
+    }
+  }, []);
   
   // Mock notifications data
   const [notifications, setNotifications] = useState<Notification[]>([
