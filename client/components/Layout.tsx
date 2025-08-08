@@ -88,14 +88,30 @@ export function Layout({ children }: LayoutProps) {
             </button>
 
             {/* User avatar */}
-            <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gaming-surface transition-colors">
-              <div className="relative">
-                <div className="w-8 h-8 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-white" />
+            <div className="flex items-center space-x-3">
+              <Link
+                to="/profile"
+                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gaming-surface transition-colors"
+              >
+                <div className="relative">
+                  <div className="w-8 h-8 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center">
+                    <User className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 status-online"></div>
                 </div>
-                <div className="absolute -bottom-1 -right-1 status-online"></div>
-              </div>
-              <span className="hidden md:block text-sm font-medium">Oyuncu</span>
+                <span className="hidden md:block text-sm font-medium">
+                  {user?.displayName || user?.username || 'Oyuncu'}
+                </span>
+              </Link>
+
+              {/* Logout button */}
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-lg hover:bg-gaming-surface transition-all duration-300 hover:shadow-glow text-gaming-muted hover:text-red-400"
+                title="Çıkış Yap"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>
