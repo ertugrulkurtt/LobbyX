@@ -252,10 +252,6 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Firebase Integration Note */}
-        <div className="mt-6 text-center text-xs text-gaming-muted">
-          <p>🔥 Firebase Authentication ile güvenli giriş</p>
-        </div>
       </div>
     </div>
   );
