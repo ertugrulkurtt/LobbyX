@@ -231,7 +231,7 @@ export default function Register() {
           <div className="flex items-center justify-center space-x-3 mb-4">
             <div className="relative">
               <img
-                src="https://cdn.builder.io/api/v1/image/assets%2F3fa3fe0360c74c0a80bb8a229c50ca2c%2F1534e47ef84447238f7c9e292ce473f5?format=webp&width=800"
+                src="https://cdn.builder.io/api/v1/image/assets%2F3fa3fe0360c74c0a80bb8a229c50ca2c%2F194a69be9dc6491ab2ef7c9e292ce473f5?format=webp&width=800"
                 alt="LobbyX Logo"
                 className="w-16 h-16 object-contain mix-blend-screen filter brightness-110 animate-pulse-glow"
                 style={{ filter: 'drop-shadow(0 0 15px rgba(168, 85, 247, 0.7))' }}
