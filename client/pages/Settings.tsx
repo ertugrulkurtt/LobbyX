@@ -455,6 +455,192 @@ export default function Settings() {
         </div>
       </section>
 
+      {/* Two-Factor Authentication Setup Modal */}
+      {showTwoFactorSetup && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gaming-surface/95 backdrop-blur-xl rounded-2xl p-6 max-w-lg w-full border border-gaming-border">
+            {/* Step 1: Introduction */}
+            {twoFactorStep === 'intro' && (
+              <div className="text-center">
+                <div className="w-16 h-16 bg-neon-green/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Shield className="w-8 h-8 text-neon-green" />
+                </div>
+                <h3 className="text-2xl font-bold text-gaming-text mb-4">İki Adımlı Doğrulama</h3>
+                <p className="text-gaming-muted mb-6">
+                  Hesabınızı ekstra güvenlik katmanı ile koruyun. Bu özelliği aktifleştirmek için:
+                </p>
+                <div className="space-y-3 text-left mb-8">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-6 h-6 bg-neon-purple rounded-full flex items-center justify-center text-white text-sm font-bold">1</div>
+                    <span className="text-gaming-text">Google Authenticator veya benzeri bir uygulama indirin</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-6 h-6 bg-neon-purple rounded-full flex items-center justify-center text-white text-sm font-bold">2</div>
+                    <span className="text-gaming-text">QR kodu tarayarak hesabınızı ekleyin</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-6 h-6 bg-neon-purple rounded-full flex items-center justify-center text-white text-sm font-bold">3</div>
+                    <span className="text-gaming-text">Uygulamadan alacağınız kodu girerek doğrulayın</span>
+                  </div>
+                </div>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setShowTwoFactorSetup(false)}
+                    className="flex-1 px-4 py-2 bg-gaming-surface text-gaming-text rounded-lg hover:bg-gaming-surface/80 transition-colors"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    onClick={() => setTwoFactorStep('qr')}
+                    className="flex-1 px-4 py-2 bg-neon-green text-white rounded-lg hover:bg-neon-green/80 transition-colors"
+                  >
+                    Devam Et
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: QR Code */}
+            {twoFactorStep === 'qr' && (
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-gaming-text mb-6">QR Kodu Tarayın</h3>
+
+                <div className="bg-white p-4 rounded-lg mb-6 mx-auto w-fit">
+                  <img
+                    src={qrCodeUrl}
+                    alt="2FA QR Code"
+                    className="w-48 h-48 mx-auto"
+                  />
+                </div>
+
+                <div className="bg-gaming-surface/50 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-gaming-muted mb-2">Manuel giriş için secret key:</p>
+                  <code className="text-neon-cyan font-mono text-sm break-all bg-gaming-bg px-2 py-1 rounded">
+                    {generatedSecret}
+                  </code>
+                </div>
+
+                <p className="text-gaming-muted text-sm mb-6">
+                  Google Authenticator, Authy veya benzeri bir uygulamada QR kodu tarayın.
+                </p>
+
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setTwoFactorStep('intro')}
+                    className="flex-1 px-4 py-2 bg-gaming-surface text-gaming-text rounded-lg hover:bg-gaming-surface/80 transition-colors"
+                  >
+                    Geri
+                  </button>
+                  <button
+                    onClick={() => setTwoFactorStep('verify')}
+                    className="flex-1 px-4 py-2 bg-neon-purple text-white rounded-lg hover:bg-neon-purple/80 transition-colors"
+                  >
+                    Doğrula
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Verification */}
+            {twoFactorStep === 'verify' && (
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-gaming-text mb-6">Kodu Doğrulayın</h3>
+
+                <p className="text-gaming-muted mb-6">
+                  Authenticator uygulamanızdan 6 haneli kodu girin:
+                </p>
+
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                  placeholder="123456"
+                  className="w-32 h-12 text-center text-2xl font-mono bg-gaming-surface border border-gaming-border rounded-lg focus:outline-none focus:ring-2 focus:ring-neon-purple/50 text-gaming-text mx-auto block mb-6"
+                />
+
+                {verificationCode.length === 6 && !/^\d{6}$/.test(verificationCode) && (
+                  <p className="text-red-400 text-sm mb-4">L��tfen 6 haneli sayı girin</p>
+                )}
+
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setTwoFactorStep('qr')}
+                    className="flex-1 px-4 py-2 bg-gaming-surface text-gaming-text rounded-lg hover:bg-gaming-surface/80 transition-colors"
+                  >
+                    Geri
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (verifyTwoFactorCode()) {
+                        setTwoFactorStep('backup');
+                      } else {
+                        alert('Geçersiz kod. Lütfen tekrar deneyin.');
+                      }
+                    }}
+                    disabled={verificationCode.length !== 6}
+                    className="flex-1 px-4 py-2 bg-neon-green text-white rounded-lg hover:bg-neon-green/80 transition-colors disabled:opacity-50"
+                  >
+                    Doğrula
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Backup Codes */}
+            {twoFactorStep === 'backup' && (
+              <div>
+                <h3 className="text-xl font-bold text-gaming-text mb-6 text-center">Yedek Kodlarınız</h3>
+
+                <div className="bg-neon-orange/10 border border-neon-orange/30 rounded-lg p-4 mb-6">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <AlertTriangle className="w-5 h-5 text-neon-orange" />
+                    <span className="font-medium text-neon-orange">ÖNEMLİ!</span>
+                  </div>
+                  <p className="text-sm text-gaming-text">
+                    Bu kodları güvenli bir yerde saklayın. Telefonunuza erişim kaybettiğinizde hesabınıza giriş yapmanız için gereklidir.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 mb-6">
+                  {backupCodes.map((code, index) => (
+                    <div key={index} className="bg-gaming-surface p-3 rounded-lg font-mono text-center text-gaming-text">
+                      {code}
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => {
+                    const codesText = backupCodes.join('\n');
+                    navigator.clipboard?.writeText(codesText);
+                    alert('Yedek kodlar panoya kopyalandı!');
+                  }}
+                  className="w-full px-4 py-2 bg-neon-cyan/20 text-neon-cyan rounded-lg hover:bg-neon-cyan/30 transition-colors mb-4"
+                >
+                  Kodları Kopyala
+                </button>
+
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setTwoFactorStep('verify')}
+                    className="flex-1 px-4 py-2 bg-gaming-surface text-gaming-text rounded-lg hover:bg-gaming-surface/80 transition-colors"
+                  >
+                    Geri
+                  </button>
+                  <button
+                    onClick={completeTwoFactorSetup}
+                    className="flex-1 px-4 py-2 bg-neon-green text-white rounded-lg hover:bg-neon-green/80 transition-colors"
+                  >
+                    Kurulumu Tamamla
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
