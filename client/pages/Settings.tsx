@@ -153,10 +153,16 @@ export default function Settings() {
   };
 
   const verifyTwoFactorCode = () => {
-    // In real app: verify with authenticator library
-    // For demo, accept any 6-digit code
-    if (verificationCode.length === 6 && /^\d+$/.test(verificationCode)) {
-      setTwoFactorStep('backup');
+    // In real app: verify with authenticator library like speakeasy
+    // const verified = speakeasy.totp.verify({
+    //   secret: generatedSecret,
+    //   encoding: 'base32',
+    //   token: verificationCode,
+    //   window: 1
+    // });
+
+    // For demo, accept any 6-digit numeric code
+    if (verificationCode.length === 6 && /^\d{6}$/.test(verificationCode)) {
       return true;
     }
     return false;
