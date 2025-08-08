@@ -286,7 +286,13 @@ export default function Settings() {
             <h3 className="font-medium text-gaming-text mb-3">Tema Seçimi</h3>
             <div className="grid grid-cols-2 gap-4">
               <button
-                onClick={() => theme !== 'dark' && toggleTheme()}
+                onClick={() => {
+                  if (theme !== 'dark') {
+                    toggleTheme();
+                    // Auto-save theme change
+                    setTimeout(handleSaveSettings, 500);
+                  }
+                }}
                 className={`p-4 rounded-xl border-2 transition-all duration-200 ${
                   theme === 'dark'
                     ? 'border-neon-purple bg-neon-purple/10'
@@ -303,7 +309,13 @@ export default function Settings() {
               </button>
 
               <button
-                onClick={() => theme !== 'light' && toggleTheme()}
+                onClick={() => {
+                  if (theme !== 'light') {
+                    toggleTheme();
+                    // Auto-save theme change
+                    setTimeout(handleSaveSettings, 500);
+                  }
+                }}
                 className={`p-4 rounded-xl border-2 transition-all duration-200 ${
                   theme === 'light'
                     ? 'border-neon-orange bg-neon-orange/10'
