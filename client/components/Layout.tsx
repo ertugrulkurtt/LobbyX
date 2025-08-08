@@ -69,7 +69,7 @@ export function Layout({ children }: LayoutProps) {
               <Zap className="absolute -top-1 -right-1 w-4 h-4 text-neon-cyan" />
             </div>
             <span className="text-xl font-bold text-neon bg-gradient-to-r from-neon-purple to-neon-cyan bg-clip-text text-transparent">
-              GameChat
+              LobbyX
             </span>
           </div>
 
