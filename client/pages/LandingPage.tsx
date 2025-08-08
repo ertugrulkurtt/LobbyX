@@ -74,7 +74,7 @@ export default function LandingPage() {
               <Zap className="absolute -top-1 -right-1 w-4 h-4 text-neon-cyan" />
             </div>
             <span className="text-xl font-bold text-neon bg-gradient-to-r from-neon-purple to-neon-cyan bg-clip-text text-transparent">
-              GameChat
+              LobbyX
             </span>
           </div>
 
@@ -212,7 +212,7 @@ export default function LandingPage() {
           <section>
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gaming-text mb-4">
-                Neden GameChat?
+                Neden LobbyX?
               </h2>
               <p className="text-gaming-muted max-w-2xl mx-auto">
                 Modern teknoloji ile desteklenen en gelişmiş oyuncu deneyimi için tasarlandı.
