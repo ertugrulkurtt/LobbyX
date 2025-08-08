@@ -117,22 +117,38 @@ export default function Settings() {
     }
   }, []);
 
+  // Generate proper Base32 secret for TOTP (Google Authenticator compatible)
+  const generateBase32Secret = () => {
+    const base32chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let secret = '';
+    // Generate 32 character Base32 secret (160 bits)
+    for (let i = 0; i < 32; i++) {
+      secret += base32chars.charAt(Math.floor(Math.random() * base32chars.length));
+    }
+    return secret;
+  };
+
   // Generate 2FA secret and QR code
   const generateTwoFactorSecret = () => {
-    // In real app: use authenticator library like speakeasy
-    const secret = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    // Generate proper Base32 secret (160 bits / 32 characters)
+    const secret = generateBase32Secret();
     setGeneratedSecret(secret);
 
-    // Generate QR code URL (in real app use proper QR library)
+    // Generate QR code URL with proper TOTP format
     const appName = 'LobbyX Gaming Platform';
     const username = user?.email || user?.username || 'user';
-    const qrUrl = `otpauth://totp/${encodeURIComponent(appName)}:${encodeURIComponent(username)}?secret=${secret}&issuer=${encodeURIComponent(appName)}`;
+    const qrUrl = `otpauth://totp/${encodeURIComponent(appName)}:${encodeURIComponent(username)}?secret=${secret}&issuer=${encodeURIComponent(appName)}&algorithm=SHA1&digits=6&period=30`;
     setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`);
 
-    // Generate backup codes
-    const codes = Array.from({ length: 10 }, () =>
-      Math.random().toString(36).substring(2, 8).toUpperCase()
-    );
+    // Generate backup codes (8 characters each, alphanumeric)
+    const codes = Array.from({ length: 10 }, () => {
+      let code = '';
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    });
     setBackupCodes(codes);
   };
 
