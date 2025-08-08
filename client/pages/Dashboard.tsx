@@ -4,76 +4,85 @@ import {
   Users,
   MessageSquare,
   Trophy,
-  Zap,
+  Clock,
   Star,
-  TrendingUp,
   Play,
-  Shield,
+  UserPlus,
   Headphones,
-  Globe,
-  Bell,
-  User
+  Plus,
+  Shield,
+  Check
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Dashboard() {
   const { user } = useAuth();
 
-  const gameStats = [
-    { label: 'Aktif Arkadaşlar', value: '23', icon: Users, color: 'text-neon-green' },
-    { label: 'Bu Hafta Mesajlar', value: '1.2K', icon: MessageSquare, color: 'text-neon-cyan' },
-    { label: 'Oyun Saati', value: '47h', icon: Trophy, color: 'text-neon-orange' },
-    { label: 'Rank Puanı', value: '2,847', icon: Star, color: 'text-neon-pink' },
+  // User statistics
+  const userStats = [
+    { label: 'Toplam Arkadaş', value: '47', icon: Users, color: 'text-neon-green' },
+    { label: 'Gönderilen Mesaj', value: '2,847', icon: MessageSquare, color: 'text-neon-cyan' },
+    { label: 'Aktif Sohbet', value: '12', icon: Trophy, color: 'text-neon-orange' },
+    { label: 'Oyun Süresi', value: '128 saat', icon: Clock, color: 'text-neon-pink' },
   ];
 
-  const recentActivity = [
+  // Recent conversations - last 3 people
+  const recentConversations = [
     {
-      type: 'game',
-      title: 'Valorant Competitive',
-      description: '13-11 Kazandın - Bind',
-      time: '2 saat önce',
-      icon: Trophy,
-      color: 'text-neon-green'
+      id: 1,
+      name: 'LobbyXAdmin',
+      isVerified: true,
+      isOnline: true,
+      avatar: '/api/placeholder/40/40',
+      lastMessage: 'Sunucuya hoş geldiniz!',
+      time: '2 dk',
+      isSpecial: true
     },
     {
-      type: 'friend',
-      title: 'Yeni arkadaş',
-      description: 'ProGamer123 arkadaş listene eklendi',
-      time: '4 saat önce',
-      icon: Users,
-      color: 'text-neon-cyan'
+      id: 2,
+      name: 'ProGamer123',
+      isVerified: false,
+      isOnline: true,
+      avatar: '/api/placeholder/40/40',
+      lastMessage: 'Valorant oynayalım mı?',
+      time: '15 dk'
     },
     {
-      type: 'message',
-      title: 'Sohbet odası',
-      description: 'LoL Takım Arama odasında 5 yeni mesaj',
-      time: '6 saat önce',
-      icon: MessageSquare,
-      color: 'text-neon-purple'
+      id: 3,
+      name: 'GameMaster',
+      isVerified: false,
+      isOnline: false,
+      avatar: '/api/placeholder/40/40',
+      lastMessage: 'Bu akşam CS2 turnuvası var',
+      time: '1 saat'
     }
   ];
 
+  // Quick access actions
   const quickActions = [
     {
-      title: 'Hızlı Maç',
-      description: 'Anlık takım bul',
-      icon: Play,
-      color: 'from-neon-purple to-neon-cyan',
-      href: '/chat'
-    },
-    {
-      title: 'Arkadaş Ekle',
-      description: 'Yeni oyuncularla tanış',
-      icon: Users,
-      color: 'from-neon-green to-neon-cyan',
-      href: '/friends'
-    },
-    {
-      title: 'Ses Sohbeti',
-      description: 'Sesli odaya katıl',
+      title: 'Sesli Sohbete Gir',
+      description: 'Anında sesli odaya katıl',
       icon: Headphones,
+      color: 'from-neon-purple to-neon-cyan',
+      href: '/chat',
+      action: 'voice'
+    },
+    {
+      title: 'Yeni Grup Oluştur',
+      description: 'Arkadaşlarınla grup kur',
+      icon: Plus,
+      color: 'from-neon-green to-neon-cyan',
+      href: '/chat',
+      action: 'group'
+    },
+    {
+      title: 'Yeni Arkadaş Ekle',
+      description: 'Oyuncu topluluğunu genişlet',
+      icon: UserPlus,
       color: 'from-neon-orange to-neon-pink',
-      href: '/chat'
+      href: '/friends',
+      action: 'add'
     }
   ];
 
@@ -85,23 +94,27 @@ export default function Dashboard() {
         <div className="relative z-10">
           <div className="flex items-center space-x-4 mb-6">
             <div className="w-16 h-16 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-2xl flex items-center justify-center">
-              <User className="w-8 h-8 text-white" />
+              <Users className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-neon">
-                Hoş geldin, {user?.displayName || user?.username}!
+              <h1 className="text-3xl font-bold text-neon flex items-center space-x-2">
+                <span>Hoş geldin, {user?.displayName || user?.username}!</span>
+                {user?.username === 'LobbyXAdmin' && (
+                  <Shield className="w-6 h-6 text-neon-cyan" />
+                )}
               </h1>
-              <p className="text-gaming-muted">Bugün hangi oyunu oynayacaksın?</p>
+              <p className="text-gaming-muted">Bugün hangi maceraya atılacaksın?</p>
             </div>
           </div>
           
+          {/* User Statistics */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {gameStats.map((stat, index) => {
+            {userStats.map((stat, index) => {
               const Icon = stat.icon;
               return (
                 <div
                   key={stat.label}
-                  className="bg-gaming-surface/50 backdrop-blur-sm rounded-xl p-4 border border-gaming-border animate-scale-in"
+                  className="bg-gaming-surface/50 backdrop-blur-sm rounded-xl p-4 border border-gaming-border animate-scale-in hover:shadow-glow transition-all duration-300"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <Icon className={`w-6 h-6 mb-2 ${stat.color}`} />
@@ -117,8 +130,8 @@ export default function Dashboard() {
       {/* Quick Actions */}
       <section>
         <h2 className="text-2xl font-bold text-gaming-text mb-6 flex items-center space-x-2">
-          <Zap className="w-6 h-6 text-neon-orange" />
-          <span>Hızlı Eylemler</span>
+          <Star className="w-6 h-6 text-neon-orange" />
+          <span>Hızlı Erişim</span>
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -147,79 +160,107 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* Recent Activity */}
+      {/* Recent Conversations */}
       <section>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gaming-text flex items-center space-x-2">
-            <TrendingUp className="w-6 h-6 text-neon-green" />
-            <span>Son Aktiviteler</span>
+            <MessageSquare className="w-6 h-6 text-neon-green" />
+            <span>Son Konuşmalar</span>
           </h2>
           <Link
-            to="/notifications"
-            className="text-neon-cyan hover:text-neon-purple transition-colors font-medium flex items-center space-x-1"
-          >
-            <Bell className="w-4 h-4" />
-            <span>Tümünü Gör</span>
-          </Link>
-        </div>
-
-        <div className="space-y-4">
-          {recentActivity.map((activity, index) => {
-            const Icon = activity.icon;
-            return (
-              <div
-                key={index}
-                className="card-glass hover:shadow-3d transition-all duration-300 animate-fade-in-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="flex items-center space-x-4">
-                  <div className={`w-10 h-10 bg-gaming-surface rounded-lg flex items-center justify-center ${activity.color}`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gaming-text">{activity.title}</h4>
-                    <p className="text-sm text-gaming-muted">{activity.description}</p>
-                  </div>
-                  <span className="text-xs text-gaming-muted">{activity.time}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Active Friends */}
-      <section>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gaming-text flex items-center space-x-2">
-            <Users className="w-6 h-6 text-neon-cyan" />
-            <span>Çevrimiçi Arkadaşlar</span>
-          </h2>
-          <Link
-            to="/friends"
+            to="/chat"
             className="text-neon-cyan hover:text-neon-purple transition-colors font-medium"
           >
             Tümünü Gör →
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {[...Array(6)].map((_, index) => (
-            <div
-              key={index}
-              className="card-glass text-center hover:shadow-glow transition-all duration-300 animate-scale-in"
-              style={{ animationDelay: `${index * 0.05}s` }}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {recentConversations.map((conversation, index) => (
+            <Link
+              key={conversation.id}
+              to="/chat"
+              className={`group card-glass hover:shadow-glow transition-all duration-300 animate-fade-in-up ${
+                conversation.isSpecial ? 'border-neon-cyan/50 bg-gradient-to-br from-neon-cyan/5 to-transparent' : ''
+              }`}
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <div className="relative mx-auto mb-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center">
-                  <User className="w-6 h-6 text-white" />
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                    conversation.isSpecial 
+                      ? 'bg-gradient-to-br from-neon-cyan to-neon-blue' 
+                      : 'bg-gradient-to-br from-neon-purple to-neon-cyan'
+                  }`}>
+                    <Users className="w-6 h-6 text-white" />
+                  </div>
+                  {conversation.isOnline && (
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-neon-green rounded-full border-2 border-gaming-surface"></div>
+                  )}
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-neon-green rounded-full border-2 border-gaming-surface"></div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2">
+                    <h4 className={`font-medium truncate ${
+                      conversation.isSpecial ? 'text-neon-cyan' : 'text-gaming-text'
+                    }`}>
+                      {conversation.name}
+                    </h4>
+                    {conversation.isVerified && (
+                      <div className="flex items-center justify-center w-4 h-4 bg-neon-cyan rounded-full">
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm text-gaming-muted truncate">{conversation.lastMessage}</p>
+                  <span className="text-xs text-gaming-muted">{conversation.time} önce</span>
+                </div>
               </div>
-              <div className="text-sm font-medium text-gaming-text">Oyuncu{index + 1}</div>
-              <div className="text-xs text-gaming-muted">Valorant</div>
-            </div>
+            </Link>
           ))}
+        </div>
+      </section>
+
+      {/* Activity Feed Preview */}
+      <section>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gaming-text flex items-center space-x-2">
+            <Trophy className="w-6 h-6 text-neon-orange" />
+            <span>Son Aktiviteler</span>
+          </h2>
+          <Link
+            to="/notifications"
+            className="text-neon-cyan hover:text-neon-purple transition-colors font-medium"
+          >
+            Tümünü Gör →
+          </Link>
+        </div>
+
+        <div className="space-y-4">
+          <div className="card-glass hover:shadow-3d transition-all duration-300 animate-fade-in-up">
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 bg-neon-green/20 rounded-lg flex items-center justify-center">
+                <Users className="w-5 h-5 text-neon-green" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-medium text-gaming-text">Yeni arkadaş eklendi</h4>
+                <p className="text-sm text-gaming-muted">ProGamer123 arkadaş listene eklendi</p>
+              </div>
+              <span className="text-xs text-gaming-muted">5 dk önce</span>
+            </div>
+          </div>
+
+          <div className="card-glass hover:shadow-3d transition-all duration-300 animate-fade-in-up">
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 bg-neon-cyan/20 rounded-lg flex items-center justify-center">
+                <MessageSquare className="w-5 h-5 text-neon-cyan" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-medium text-gaming-text">LobbyX Resmi Sunucu</h4>
+                <p className="text-sm text-gaming-muted">Sunucuya davet edildiniz</p>
+              </div>
+              <span className="text-xs text-gaming-muted">15 dk önce</span>
+            </div>
+          </div>
         </div>
       </section>
     </div>
