@@ -63,15 +63,7 @@ export function Layout({ children }: LayoutProps) {
           </button>
 
           {/* Logo */}
-          <div className="flex items-center space-x-3">
-            <div className="relative">
-              <img
-                src="https://cdn.builder.io/api/v1/image/assets%2F3fa3fe0360c74c0a80bb8a229c50ca2c%2F194a69be9dc6491ab2ef7c9e292ce473f5?format=webp&width=800"
-                alt="LobbyX Logo"
-                className="w-10 h-10 object-contain mix-blend-screen filter brightness-110 animate-pulse-glow"
-                style={{ filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.5))' }}
-              />
-            </div>
+          <div className="flex items-center">
             <span className="text-xl font-bold text-neon bg-gradient-to-r from-neon-purple to-neon-cyan bg-clip-text text-transparent">
               LobbyX
             </span>
