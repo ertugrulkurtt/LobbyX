@@ -234,7 +234,7 @@ export default function Register() {
               <Zap className="absolute -top-1 -right-1 w-6 h-6 text-neon-cyan" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-neon">GameChat</h1>
+          <h1 className="text-3xl font-bold text-neon">LobbyX</h1>
           <p className="text-gaming-muted mt-2">Oyuncu topluluğuna katıl</p>
         </div>
 
