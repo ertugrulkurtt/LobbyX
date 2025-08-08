@@ -116,6 +116,43 @@ export default function Settings() {
     }
   }, []);
 
+  // Generate 2FA secret and QR code
+  const generateTwoFactorSecret = () => {
+    // In real app: use authenticator library like speakeasy
+    const secret = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    setGeneratedSecret(secret);
+
+    // Generate QR code URL (in real app use proper QR library)
+    const appName = 'LobbyX Gaming Platform';
+    const username = user?.email || user?.username || 'user';
+    const qrUrl = `otpauth://totp/${encodeURIComponent(appName)}:${encodeURIComponent(username)}?secret=${secret}&issuer=${encodeURIComponent(appName)}`;
+    setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`);
+
+    // Generate backup codes
+    const codes = Array.from({ length: 10 }, () =>
+      Math.random().toString(36).substring(2, 8).toUpperCase()
+    );
+    setBackupCodes(codes);
+  };
+
+  const verifyTwoFactorCode = () => {
+    // In real app: verify with authenticator library
+    // For demo, accept any 6-digit code
+    if (verificationCode.length === 6 && /^\d+$/.test(verificationCode)) {
+      setTwoFactorStep('backup');
+      return true;
+    }
+    return false;
+  };
+
+  const completeTwoFactorSetup = () => {
+    updateSetting('', 'twoFactorEnabled', true);
+    setShowTwoFactorSetup(false);
+    setTwoFactorStep('intro');
+    setVerificationCode('');
+    handleSaveSettings();
+  };
+
   return (
     <div className="space-y-8 animate-fade-in-up max-w-4xl mx-auto">
       {/* Header */}
