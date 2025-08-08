@@ -548,8 +548,19 @@ export default function Settings() {
                   </p>
                 </div>
 
-                <p className="text-gaming-muted text-sm mb-6">
-                  Google Authenticator, Authy veya benzeri bir uygulamada QR kodu tarayın.
+                <div className="bg-neon-purple/10 border border-neon-purple/30 rounded-lg p-4 mb-6">
+                  <h4 className="font-medium text-gaming-text mb-2">Kurulum Adımları:</h4>
+                  <ol className="text-sm text-gaming-muted space-y-1">
+                    <li>1. Google Authenticator uygulamasını açın</li>
+                    <li>2. "+" butonuna tıklayın</li>
+                    <li>3. "QR kod tarayın" seçeneğini seçin</li>
+                    <li>4. Yukarıdaki QR kodu telefonunuzla tarayın</li>
+                    <li>5. "LobbyX Gaming Platform" hesabı eklenecektir</li>
+                  </ol>
+                </div>
+
+                <p className="text-gaming-muted text-xs mb-4 text-center">
+                  QR kod çalışmıyorsa, yukarıdaki secret key'i manuel olarak girebilirsiniz.
                 </p>
 
                 <div className="flex space-x-3">
