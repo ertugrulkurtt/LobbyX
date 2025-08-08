@@ -352,17 +352,42 @@ export default function Settings() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-gaming-text">İki Adımlı Doğrulama</h3>
-              <p className="text-sm text-gaming-muted">Hesabınızı ekstra güvenlik katmanı ile koruyun</p>
+              <p className="text-sm text-gaming-muted">
+                {settings.twoFactorEnabled
+                  ? 'Hesabınız 2FA ile korunuyor'
+                  : 'Hesabınızı ekstra güvenlik katmanı ile koruyun'
+                }
+              </p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={settings.twoFactorEnabled}
-                onChange={(e) => updateSetting('', 'twoFactorEnabled', e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gaming-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-green"></div>
-            </label>
+            <div className="flex items-center space-x-3">
+              {settings.twoFactorEnabled && (
+                <div className="flex items-center space-x-2 text-neon-green">
+                  <Check className="w-4 h-4" />
+                  <span className="text-sm">Aktif</span>
+                </div>
+              )}
+              <button
+                onClick={() => {
+                  if (settings.twoFactorEnabled) {
+                    // Disable 2FA
+                    updateSetting('', 'twoFactorEnabled', false);
+                    handleSaveSettings();
+                  } else {
+                    // Start setup process
+                    setShowTwoFactorSetup(true);
+                    setTwoFactorStep('intro');
+                    generateTwoFactorSecret();
+                  }
+                }}
+                className={`px-4 py-2 rounded-lg transition-colors text-sm ${
+                  settings.twoFactorEnabled
+                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                    : 'bg-neon-green/20 text-neon-green hover:bg-neon-green/30'
+                }`}
+              >
+                {settings.twoFactorEnabled ? 'Devre Dışı Bırak' : 'Kurulum Başlat'}
+              </button>
+            </div>
           </div>
 
           <button className="w-full px-4 py-3 bg-neon-cyan/20 text-neon-cyan rounded-lg hover:bg-neon-cyan/30 transition-colors text-left flex items-center space-x-3">
