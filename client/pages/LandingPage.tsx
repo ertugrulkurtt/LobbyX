@@ -68,10 +68,14 @@ export default function LandingPage() {
       <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-gaming-surface/80 backdrop-blur-xl border-b border-gaming-border">
         <div className="flex items-center justify-between h-full px-6 max-w-7xl mx-auto">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             <div className="relative">
-              <Gamepad2 className="w-8 h-8 text-neon-purple animate-pulse-glow" />
-              <Zap className="absolute -top-1 -right-1 w-4 h-4 text-neon-cyan" />
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2F3fa3fe0360c74c0a80bb8a229c50ca2c%2F8524f1f78eaf4eddbe4c314d3298bfa8?format=webp&width=800"
+                alt="LobbyX Logo"
+                className="w-10 h-10 object-contain mix-blend-screen filter brightness-110 animate-pulse-glow"
+                style={{ filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.5))' }}
+              />
             </div>
             <span className="text-xl font-bold text-neon bg-gradient-to-r from-neon-purple to-neon-cyan bg-clip-text text-transparent">
               LobbyX
