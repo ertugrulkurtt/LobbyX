@@ -19,7 +19,16 @@ import {
   Server,
   UsersRound,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Mic,
+  MicOff,
+  Headphones,
+  Volume2,
+  VolumeX,
+  PhoneCall,
+  Video,
+  Monitor,
+  Phone
 } from 'lucide-react';
 
 interface LayoutProps {
