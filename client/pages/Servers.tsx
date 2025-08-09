@@ -708,7 +708,8 @@ export default function Servers() {
                       {!isCollapsed && (
                         <div className="ml-2 space-y-1">
                           {categoryChannels.map((channel) => {
-                            const canViewChannel = !channel.permissions?.adminOnly || user?.username === 'LobbyXAdmin';
+                            const canViewChannel = hasPermission(channel, 'readMessages');
+                            const canWriteChannel = canWriteToChannel(channel);
 
                             if (!canViewChannel) return null;
 
