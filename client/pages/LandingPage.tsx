@@ -203,32 +203,6 @@ export default function LandingPage() {
             </div>
           </section>
 
-          {/* CTA Section */}
-          <section className="text-center py-16">
-            <div className="max-w-3xl mx-auto">
-              <h2 className="text-4xl font-bold text-gaming-text mb-6">
-                Hazır mısın?
-              </h2>
-              <p className="text-xl text-gaming-muted mb-8">
-                Binlerce oyuncunun beklediği geleceğin gaming platformuna katıl.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  to="/login"
-                  className="btn-neon inline-flex items-center justify-center space-x-2 px-8 py-4 text-lg"
-                >
-                  <Play className="w-5 h-5" />
-                  <span>Sohbete Başla</span>
-                </Link>
-                <Link
-                  to="/register"
-                  className="px-8 py-4 rounded-xl bg-gaming-surface/50 backdrop-blur-sm border border-gaming-border hover:border-neon-cyan transition-all duration-300 font-semibold text-center text-lg"
-                >
-                  Profil Oluştur
-                </Link>
-              </div>
-            </div>
-          </section>
         </div>
       </main>
     </div>
