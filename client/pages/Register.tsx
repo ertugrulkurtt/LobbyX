@@ -528,13 +528,21 @@ export default function Register() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <label htmlFor="privacyAgreement" className="text-sm text-gaming-text cursor-pointer">
-                    <span className="font-medium text-neon-cyan hover:text-neon-purple transition-colors">
+                    <Link
+                      to="/privacy"
+                      className="font-medium text-neon-cyan hover:text-neon-purple transition-colors underline"
+                      target="_blank"
+                    >
                       Gizlilik Sözleşmesi
-                    </span>
+                    </Link>
                     <span className="text-gaming-muted"> ve </span>
-                    <span className="font-medium text-neon-cyan hover:text-neon-purple transition-colors">
+                    <Link
+                      to="/terms"
+                      className="font-medium text-neon-cyan hover:text-neon-purple transition-colors underline"
+                      target="_blank"
+                    >
                       Kullanım Şartları
-                    </span>
+                    </Link>
                     <span className="text-gaming-muted">'nı okudum ve kabul ediyorum.</span>
                   </label>
                 </div>
