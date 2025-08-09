@@ -224,11 +224,77 @@ export default function Servers() {
         }
       ],
       channels: [
-        { id: 'announcements', name: 'duyurular', description: 'Resmi duyurular', type: 'text', isPrivate: false, memberCount: 1247, categoryId: 'genel', permissions: { canRead: true, canWrite: false, adminOnly: true } },
-        { id: 'general', name: 'sohbet', description: 'Genel konuşma kanalı', type: 'text', isPrivate: false, memberCount: 856, isActive: true, categoryId: 'genel', permissions: { canRead: true, canWrite: true } },
-        { id: 'help', name: 'yardım', description: 'Yardım ve destek', type: 'text', isPrivate: false, memberCount: 234, categoryId: 'genel', permissions: { canRead: true, canWrite: true } },
-        { id: 'voice-general', name: 'Genel Ses', description: 'Sesli sohbet', type: 'voice', isPrivate: false, memberCount: 12, categoryId: 'genel', permissions: { canRead: true, canWrite: true } },
-        { id: 'admin-chat', name: 'admin-sohbeti', description: 'Admin iletişimi', type: 'text', isPrivate: true, memberCount: 3, categoryId: 'yonetim', permissions: { canRead: false, canWrite: false, adminOnly: true } }
+        {
+          id: 'announcements',
+          name: 'duyurular',
+          description: 'Resmi duyurular',
+          type: 'text',
+          isPrivate: false,
+          memberCount: 1247,
+          categoryId: 'genel',
+          permissions: [
+            { roleId: 'admin', allow: ['readMessages', 'sendMessages'], deny: [] },
+            { roleId: 'moderator', allow: ['readMessages'], deny: ['sendMessages'] },
+            { roleId: 'member', allow: ['readMessages'], deny: ['sendMessages'] }
+          ]
+        },
+        {
+          id: 'general',
+          name: 'sohbet',
+          description: 'Genel konuşma kanalı',
+          type: 'text',
+          isPrivate: false,
+          memberCount: 856,
+          isActive: true,
+          categoryId: 'genel',
+          permissions: [
+            { roleId: 'admin', allow: ['readMessages', 'sendMessages', 'manageMessages'], deny: [] },
+            { roleId: 'moderator', allow: ['readMessages', 'sendMessages', 'manageMessages'], deny: [] },
+            { roleId: 'member', allow: ['readMessages', 'sendMessages'], deny: [] }
+          ]
+        },
+        {
+          id: 'help',
+          name: 'yardım',
+          description: 'Yardım ve destek',
+          type: 'text',
+          isPrivate: false,
+          memberCount: 234,
+          categoryId: 'genel',
+          permissions: [
+            { roleId: 'admin', allow: ['readMessages', 'sendMessages', 'manageMessages'], deny: [] },
+            { roleId: 'moderator', allow: ['readMessages', 'sendMessages', 'manageMessages'], deny: [] },
+            { roleId: 'member', allow: ['readMessages', 'sendMessages'], deny: [] }
+          ]
+        },
+        {
+          id: 'voice-general',
+          name: 'Genel Ses',
+          description: 'Sesli sohbet',
+          type: 'voice',
+          isPrivate: false,
+          memberCount: 12,
+          categoryId: 'genel',
+          permissions: [
+            { roleId: 'admin', allow: ['connectVoice', 'speakVoice'], deny: [] },
+            { roleId: 'moderator', allow: ['connectVoice', 'speakVoice'], deny: [] },
+            { roleId: 'member', allow: ['connectVoice', 'speakVoice'], deny: [] }
+          ]
+        },
+        {
+          id: 'admin-chat',
+          name: 'admin-sohbeti',
+          description: 'Admin iletişimi',
+          type: 'text',
+          isPrivate: true,
+          memberCount: 3,
+          categoryId: 'yonetim',
+          permissions: [
+            { roleId: 'admin', allow: ['readMessages', 'sendMessages'], deny: [] },
+            { roleId: 'moderator', allow: [], deny: ['readMessages', 'sendMessages'] },
+            { roleId: 'member', allow: [], deny: ['readMessages', 'sendMessages'] }
+          ]
+        }
       ]
     },
     {
