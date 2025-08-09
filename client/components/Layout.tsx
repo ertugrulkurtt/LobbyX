@@ -70,6 +70,20 @@ export function Layout({ children }: LayoutProps) {
 
   const currentPath = location.pathname;
 
+  // Listen for voice channel join events from other components
+  React.useEffect(() => {
+    const handleJoinVoiceChannel = (event: CustomEvent) => {
+      const { channelId, channelName, serverName } = event.detail;
+      joinVoiceChannel(channelId, channelName, serverName);
+    };
+
+    window.addEventListener('joinVoiceChannel', handleJoinVoiceChannel as EventListener);
+
+    return () => {
+      window.removeEventListener('joinVoiceChannel', handleJoinVoiceChannel as EventListener);
+    };
+  }, [user]);
+
   const handleLogout = async () => {
     try {
       await logout();
