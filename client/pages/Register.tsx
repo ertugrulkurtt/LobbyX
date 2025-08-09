@@ -25,6 +25,7 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>({ score: 0, label: '', color: '' });
+  const [privacyAgreement, setPrivacyAgreement] = useState(false);
 
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ export default function Register() {
       label = 'Güçlü';
       color = 'text-neon-cyan';
     } else {
-      label = 'Çok Güçlü';
+      label = 'Çok G��çlü';
       color = 'text-neon-green';
     }
 
