@@ -18,6 +18,8 @@ import { Layout } from "./components/Layout";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import Dashboard from "./pages/Dashboard";
 import Chat from "./pages/Chat";
 import Friends from "./pages/Friends";
