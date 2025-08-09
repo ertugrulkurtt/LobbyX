@@ -15,7 +15,9 @@ import {
   X,
   Gamepad2,
   Zap,
-  LogOut
+  LogOut,
+  Server,
+  UsersRound
 } from 'lucide-react';
 
 interface LayoutProps {
