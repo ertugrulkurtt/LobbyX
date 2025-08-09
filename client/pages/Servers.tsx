@@ -62,15 +62,39 @@ interface ServerChannel {
   };
 }
 
+interface ServerRole {
+  id: string;
+  name: string;
+  color: string;
+  position: number;
+  permissions: {
+    administrator?: boolean;
+    manageChannels?: boolean;
+    manageRoles?: boolean;
+    kickMembers?: boolean;
+    banMembers?: boolean;
+    sendMessages?: boolean;
+    readMessages?: boolean;
+    manageMessages?: boolean;
+    connectVoice?: boolean;
+    speakVoice?: boolean;
+    mentionEveryone?: boolean;
+  };
+  memberCount: number;
+}
+
+interface ChannelPermission {
+  roleId: string;
+  allow: string[];
+  deny: string[];
+}
+
 interface ServerCategory {
   id: string;
   name: string;
   position: number;
   isCollapsed?: boolean;
-  permissions?: {
-    adminOnly?: boolean;
-    moderatorOnly?: boolean;
-  };
+  permissions?: ChannelPermission[];
 }
 
 interface GameServer {
