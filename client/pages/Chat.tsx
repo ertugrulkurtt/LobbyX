@@ -267,42 +267,37 @@ export default function Chat() {
           </div>
         </div>
 
-        {/* Chat List */}
+        {/* Friends List */}
         <div className="flex-1 overflow-y-auto">
           {filteredChats.map((chat) => (
             <div
               key={chat.id}
               onClick={() => setSelectedChat(chat.id)}
               className={`p-4 border-b border-gaming-border/50 cursor-pointer transition-all duration-200 ${
-                selectedChat === chat.id 
-                  ? 'bg-neon-purple/10 border-l-4 border-l-neon-purple' 
+                selectedChat === chat.id
+                  ? 'bg-neon-purple/10 border-l-4 border-l-neon-purple'
                   : 'hover:bg-gaming-surface/30'
-              } ${chat.isSpecial ? 'bg-gradient-to-r from-neon-cyan/5 to-transparent' : ''}`}
+              } ${chat.isMuted ? 'opacity-60' : ''}`}
             >
               <div className="flex items-center space-x-3">
                 <div className="relative">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    chat.isSpecial 
-                      ? 'bg-gradient-to-br from-neon-cyan to-neon-blue' 
-                      : 'bg-gradient-to-br from-neon-purple to-neon-cyan'
-                  }`}>
-                    {chat.type === 'group' ? (
-                      <Users className="w-6 h-6 text-white" />
-                    ) : (
-                      <MessageSquare className="w-6 h-6 text-white" />
-                    )}
+                  <div className="w-12 h-12 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center">
+                    <MessageSquare className="w-6 h-6 text-white" />
                   </div>
                   {chat.isOnline && (
                     <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-neon-green rounded-full border-2 border-gaming-surface"></div>
                   )}
+                  {chat.isFavorite && (
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-neon-orange rounded-full border-2 border-gaming-surface flex items-center justify-center">
+                      <Star className="w-2 h-2 text-white" />
+                    </div>
+                  )}
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <h3 className={`font-medium truncate ${
-                        chat.isSpecial ? 'text-neon-cyan' : 'text-gaming-text'
-                      }`}>
+                      <h3 className="font-medium truncate text-gaming-text">
                         {chat.name}
                       </h3>
                       {chat.isVerified && (
@@ -310,11 +305,16 @@ export default function Chat() {
                           <Check className="w-3 h-3 text-white" />
                         </div>
                       )}
+                      {chat.isMuted && (
+                        <Mute className="w-3 h-3 text-gaming-muted" />
+                      )}
                     </div>
                     <span className="text-xs text-gaming-muted">{chat.lastMessageTime}</span>
                   </div>
-                  
-                  <div className="flex items-center justify-between">
+
+                  <p className="text-xs text-gaming-muted">@{chat.username}</p>
+
+                  <div className="flex items-center justify-between mt-1">
                     <p className="text-sm text-gaming-muted truncate flex-1">
                       {chat.lastMessage}
                     </p>
@@ -324,18 +324,21 @@ export default function Chat() {
                       </span>
                     )}
                   </div>
-                  
-                  {chat.type === 'group' && chat.members && (
-                    <p className="text-xs text-gaming-muted mt-1">
-                      {chat.members.toLocaleString()} üye
-                    </p>
-                  )}
-                  
-                  {chat.type === 'individual' && !chat.isOnline && chat.lastSeen && (
-                    <p className="text-xs text-gaming-muted mt-1 flex items-center space-x-1">
-                      <Clock className="w-3 h-3" />
-                      <span>Son görülme: {chat.lastSeen}</span>
-                    </p>
+
+                  {chat.gameStatus && (
+                    <div className="mt-1">
+                      {chat.isOnline ? (
+                        <p className="text-xs text-neon-cyan flex items-center space-x-1">
+                          <span className="w-2 h-2 bg-neon-cyan rounded-full"></span>
+                          <span>{chat.gameStatus.game} - {chat.gameStatus.status}</span>
+                        </p>
+                      ) : (
+                        <p className="text-xs text-gaming-muted flex items-center space-x-1">
+                          <Clock className="w-3 h-3" />
+                          <span>Son görülme: {chat.lastSeen}</span>
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
