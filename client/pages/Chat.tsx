@@ -19,7 +19,7 @@ import {
   UserPlus,
   Star,
   Archive,
-  Mute,
+  VolumeX,
   Settings
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
