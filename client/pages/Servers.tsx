@@ -187,10 +187,15 @@ export default function Servers() {
       tags: ['Indie', 'Topluluk', 'Keşif'],
       lastActivity: '15 dk',
       isJoined: joinedServers.has('indie-games'),
+      categories: [
+        { id: 'genel', name: 'GENEL', position: 0 },
+        { id: 'oyunlar', name: 'OYUNLAR', position: 1 }
+      ],
       channels: [
-        { id: 'indie-discovery', name: 'oyun-keşfi', description: 'Yeni indie oyunlar', type: 'text', isPrivate: false, memberCount: 445, isActive: true },
-        { id: 'indie-reviews', name: 'incelemeler', description: 'Oyun incelemeleri', type: 'text', isPrivate: false, memberCount: 234 },
-        { id: 'indie-voice', name: 'Sohbet Ses', description: 'Sesli indie sohbet', type: 'voice', isPrivate: false, memberCount: 3 }
+        { id: 'indie-sohbet', name: 'sohbet', description: 'Genel indie sohbet', type: 'text', isPrivate: false, memberCount: 445, categoryId: 'genel', permissions: { canRead: true, canWrite: true } },
+        { id: 'indie-discovery', name: 'oyun-keşfi', description: 'Yeni indie oyunlar', type: 'text', isPrivate: false, memberCount: 445, isActive: true, categoryId: 'oyunlar', permissions: { canRead: true, canWrite: true } },
+        { id: 'indie-reviews', name: 'incelemeler', description: 'Oyun incelemeleri', type: 'text', isPrivate: false, memberCount: 234, categoryId: 'oyunlar', permissions: { canRead: true, canWrite: true } },
+        { id: 'indie-voice', name: 'Sohbet Ses', description: 'Sesli indie sohbet', type: 'voice', isPrivate: false, memberCount: 3, categoryId: 'genel', permissions: { canRead: true, canWrite: true } }
       ]
     }
   ];
