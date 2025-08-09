@@ -222,15 +222,44 @@ export default function Chat() {
 
   return (
     <div className="flex h-[calc(100vh-8rem)] bg-gaming-bg rounded-2xl overflow-hidden">
-      {/* Chat List Sidebar */}
+      {/* Friends Chat List Sidebar */}
       <div className="w-80 bg-gaming-surface/50 backdrop-blur-xl border-r border-gaming-border flex flex-col">
-        {/* Search Header */}
+        {/* Header */}
         <div className="p-4 border-b border-gaming-border">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gaming-text">Sohbet</h2>
+            <button className="p-2 rounded-lg hover:bg-gaming-surface transition-colors">
+              <UserPlus className="w-4 h-4 text-gaming-muted" />
+            </button>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex space-x-1 mb-4">
+            {[
+              { id: 'all', label: 'Tümü' },
+              { id: 'online', label: 'Çevrimiçi' },
+              { id: 'favorites', label: 'Favoriler' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-neon-purple text-white'
+                    : 'text-gaming-muted hover:text-gaming-text hover:bg-gaming-surface/50'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gaming-muted" />
             <input
               type="text"
-              placeholder="Sohbet ara..."
+              placeholder="Arkadaş ara..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-gaming-surface rounded-lg border border-gaming-border focus:outline-none focus:ring-2 focus:ring-neon-purple/50 text-gaming-text"
