@@ -118,8 +118,8 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-gaming-bg">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-gaming-surface/80 backdrop-blur-xl border-b border-gaming-border">
-        <div className="flex items-center justify-between h-full px-4">
+      <header className={`fixed top-0 left-0 right-0 z-50 ${voiceChannel ? 'h-32' : 'h-16'} bg-gaming-surface/80 backdrop-blur-xl border-b border-gaming-border transition-all duration-300`}>
+        <div className="flex items-center justify-between h-16 px-4">
           {/* Mobile menu button */}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -177,6 +177,118 @@ export function Layout({ children }: LayoutProps) {
             </div>
           </div>
         </div>
+
+        {/* Voice Channel Controls */}
+        {voiceChannel && (
+          <div className="px-4 py-3 border-t border-gaming-border/50 bg-gaming-surface/50">
+            <div className="flex items-center justify-between">
+              {/* Voice Channel Info */}
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-neon-green rounded-full animate-pulse"></div>
+                  <Headphones className="w-4 h-4 text-neon-green" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gaming-text">{voiceChannel.name}</p>
+                  <p className="text-xs text-gaming-muted">{voiceChannel.server} • {voiceChannel.members.length} kişi</p>
+                </div>
+              </div>
+
+              {/* Voice Controls */}
+              <div className="flex items-center space-x-2">
+                {/* Mute Button */}
+                <button
+                  onClick={toggleMute}
+                  className={`p-2 rounded-lg transition-all duration-200 ${
+                    voiceSettings.isMuted
+                      ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400'
+                      : 'bg-gaming-surface/50 hover:bg-gaming-surface text-gaming-muted hover:text-neon-green'
+                  }`}
+                  title={voiceSettings.isMuted ? 'Mikrofonu Aç' : 'Mikrofonu Kapat'}
+                >
+                  {voiceSettings.isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                </button>
+
+                {/* Deafen Button */}
+                <button
+                  onClick={toggleDeafen}
+                  className={`p-2 rounded-lg transition-all duration-200 ${
+                    voiceSettings.isDeafened
+                      ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400'
+                      : 'bg-gaming-surface/50 hover:bg-gaming-surface text-gaming-muted hover:text-neon-blue'
+                  }`}
+                  title={voiceSettings.isDeafened ? 'Sesi Aç' : 'Sesi Kapat'}
+                >
+                  {voiceSettings.isDeafened ? <VolumeX className="w-4 h-4" /> : <Headphones className="w-4 h-4" />}
+                </button>
+
+                {/* Video Button */}
+                <button
+                  onClick={toggleVideo}
+                  className={`p-2 rounded-lg transition-all duration-200 ${
+                    voiceSettings.videoEnabled
+                      ? 'bg-neon-blue/20 hover:bg-neon-blue/30 text-neon-blue'
+                      : 'bg-gaming-surface/50 hover:bg-gaming-surface text-gaming-muted hover:text-neon-blue'
+                  }`}
+                  title={voiceSettings.videoEnabled ? 'Kamerayı Kapat' : 'Kamerayı Aç'}
+                >
+                  <Video className="w-4 h-4" />
+                </button>
+
+                {/* Screen Share Button */}
+                <button
+                  onClick={toggleScreenShare}
+                  className={`p-2 rounded-lg transition-all duration-200 ${
+                    voiceSettings.screenShare
+                      ? 'bg-neon-purple/20 hover:bg-neon-purple/30 text-neon-purple'
+                      : 'bg-gaming-surface/50 hover:bg-gaming-surface text-gaming-muted hover:text-neon-purple'
+                  }`}
+                  title={voiceSettings.screenShare ? 'Ekran Paylaşımını Durdur' : 'Ekran Paylaş'}
+                >
+                  <Monitor className="w-4 h-4" />
+                </button>
+
+                {/* Settings */}
+                <button
+                  className="p-2 rounded-lg bg-gaming-surface/50 hover:bg-gaming-surface text-gaming-muted hover:text-gaming-text transition-colors"
+                  title="Ses Ayarları"
+                >
+                  <Settings className="w-4 h-4" />
+                </button>
+
+                {/* Leave Channel */}
+                <button
+                  onClick={leaveVoiceChannel}
+                  className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
+                  title="Kanaldan Ayrıl"
+                >
+                  <Phone className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Voice Channel Members */}
+              <div className="hidden xl:flex items-center space-x-2">
+                {voiceChannel.members.slice(0, 3).map((member) => (
+                  <div
+                    key={member.id}
+                    className={`flex items-center space-x-1 px-2 py-1 rounded-lg bg-gaming-surface/50 ${
+                      member.isMuted ? 'opacity-60' : ''
+                    }`}
+                  >
+                    <div className="w-5 h-5 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center">
+                      <User className="w-3 h-3 text-white" />
+                    </div>
+                    <span className="text-xs text-gaming-text">{member.name}</span>
+                    {member.isMuted && <MicOff className="w-3 h-3 text-red-400" />}
+                  </div>
+                ))}
+                {voiceChannel.members.length > 3 && (
+                  <span className="text-xs text-gaming-muted">+{voiceChannel.members.length - 3}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Sidebar */}
