@@ -63,6 +63,7 @@ interface GameServer {
   channels: ServerChannel[];
   owner?: string;
   lastActivity: string;
+  isJoined?: boolean;
 }
 
 export default function Servers() {
