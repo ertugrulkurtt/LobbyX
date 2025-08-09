@@ -207,7 +207,7 @@ export function Layout({ children }: LayoutProps) {
       )}
 
       {/* Main content */}
-      <main className="pt-16 lg:pl-64 min-h-screen">
+      <main className={`pt-16 min-h-screen transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'}`}>
         <div className="p-6">
           {children}
         </div>
