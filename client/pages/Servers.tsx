@@ -672,10 +672,10 @@ export default function Servers() {
                 .sort((a, b) => a.position - b.position)
                 .map((category) => {
                   const categoryChannels = selectedServerData.channels.filter(
-                    channel => channel.categoryId === category.id
+                    channel => channel.categoryId === category.id && hasPermission(channel, 'readMessages')
                   );
                   const isCollapsed = collapsedCategories.has(category.id);
-                  const canViewCategory = !category.permissions?.adminOnly || user?.username === 'LobbyXAdmin';
+                  const canViewCategory = hasPermission(category, 'readMessages');
 
                   if (!canViewCategory) return null;
 
