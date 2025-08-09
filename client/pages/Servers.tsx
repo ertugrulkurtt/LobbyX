@@ -458,6 +458,43 @@ export default function Servers() {
     });
   };
 
+  const hasPermission = (channelOrCategory: ServerChannel | ServerCategory, permission: string): boolean => {
+    const currentUserRoles = userRoles.get(user?.username || '') || ['member'];
+
+    if (!channelOrCategory.permissions) return true;
+
+    // Check each role the user has
+    for (const userRole of currentUserRoles) {
+      const rolePermission = channelOrCategory.permissions.find(p => p.roleId === userRole);
+      if (rolePermission) {
+        if (rolePermission.deny.includes(permission)) return false;
+        if (rolePermission.allow.includes(permission)) return true;
+      }
+    }
+
+    // Default behavior based on role hierarchy
+    if (currentUserRoles.includes('admin')) return true;
+    if (permission === 'readMessages') return true;
+
+    return false;
+  };
+
+  const canWriteToChannel = (channel: ServerChannel): boolean => {
+    const currentUserRoles = userRoles.get(user?.username || '') || ['member'];
+
+    if (!channel.permissions) return true;
+
+    for (const userRole of currentUserRoles) {
+      const rolePermission = channel.permissions.find(p => p.roleId === userRole);
+      if (rolePermission) {
+        if (rolePermission.deny.includes('sendMessages')) return false;
+        if (rolePermission.allow.includes('sendMessages')) return true;
+      }
+    }
+
+    return currentUserRoles.includes('admin');
+  };
+
   return (
     <div className="flex h-[calc(100vh-8rem)] bg-gaming-bg rounded-2xl overflow-hidden">
       {/* Server List Sidebar */}
