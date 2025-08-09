@@ -26,7 +26,9 @@ interface LayoutProps {
 
 const navItems = [
   { id: 'dashboard', label: 'Anasayfa', path: '/dashboard', icon: Home },
-  { id: 'chat', label: 'Sohbet Odaları', path: '/chat', icon: MessageSquare },
+  { id: 'servers', label: 'Sunucular', path: '/servers', icon: Server },
+  { id: 'groups', label: 'Gruplar', path: '/groups', icon: UsersRound },
+  { id: 'chat', label: 'Sohbet', path: '/chat', icon: MessageSquare },
   { id: 'friends', label: 'Arkadaşlar', path: '/friends', icon: Users },
   { id: 'profile', label: 'Profilim', path: '/profile', icon: User },
   { id: 'settings', label: 'Ayarlar', path: '/settings', icon: Settings },
