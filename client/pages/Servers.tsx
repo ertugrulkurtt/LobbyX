@@ -138,11 +138,18 @@ export default function Servers() {
       tags: ['Valorant', 'Türkiye', 'Rekabetçi'],
       lastActivity: '1 dk',
       isJoined: joinedServers.has('valorant-tr'),
+      categories: [
+        { id: 'genel', name: 'GENEL', position: 0 },
+        { id: 'oyun', name: 'OYUN', position: 1 },
+        { id: 'moderasyon', name: 'MODERASYON', position: 2, permissions: { moderatorOnly: true } }
+      ],
       channels: [
-        { id: 'val-general', name: 'genel', description: 'Genel Valorant sohbeti', type: 'text', isPrivate: false, memberCount: 2843, isActive: true },
-        { id: 'val-lfg', name: 'takım-arama', description: 'Takım arkadaşı bulma', type: 'text', isPrivate: false, memberCount: 892 },
-        { id: 'val-ranked', name: 'ranked-sohbet', description: 'Ranked oyun tartışmaları', type: 'text', isPrivate: false, memberCount: 567 },
-        { id: 'val-voice', name: 'Oyun Ses', description: 'Oyun sırasında ses', type: 'voice', isPrivate: false, memberCount: 23 }
+        { id: 'val-duyuru', name: 'duyurular', description: 'Sunucu duyuruları', type: 'text', isPrivate: false, memberCount: 2843, categoryId: 'genel', permissions: { canRead: true, canWrite: false, adminOnly: true } },
+        { id: 'val-general', name: 'sohbet', description: 'Genel sohbet', type: 'text', isPrivate: false, memberCount: 2843, isActive: true, categoryId: 'genel', permissions: { canRead: true, canWrite: true } },
+        { id: 'val-lfg', name: 'takım-arama', description: 'Takım arkadaşı bulma', type: 'text', isPrivate: false, memberCount: 892, categoryId: 'oyun', permissions: { canRead: true, canWrite: true } },
+        { id: 'val-ranked', name: 'ranked-sohbet', description: 'Ranked oyun tartışmaları', type: 'text', isPrivate: false, memberCount: 567, categoryId: 'oyun', permissions: { canRead: true, canWrite: true } },
+        { id: 'val-voice', name: 'Oyun Sohbeti', description: 'Sesli oyun', type: 'voice', isPrivate: false, memberCount: 23, categoryId: 'oyun', permissions: { canRead: true, canWrite: true } },
+        { id: 'val-mod', name: 'moderatör-sohbeti', description: 'Moderatör iletişimi', type: 'text', isPrivate: true, memberCount: 5, categoryId: 'moderasyon', permissions: { canRead: false, canWrite: false, adminOnly: true } }
       ]
     },
     {
