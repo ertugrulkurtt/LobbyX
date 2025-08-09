@@ -15,7 +15,12 @@ import {
   Shield,
   Clock,
   Image,
-  Mic
+  Mic,
+  UserPlus,
+  Star,
+  Archive,
+  Mute,
+  Settings
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -28,21 +33,27 @@ interface Message {
   type: 'text' | 'image' | 'file';
   replyTo?: string;
   reactions?: { emoji: string; users: string[] }[];
-  isSpecial?: boolean;
+  isDelivered: boolean;
+  isRead: boolean;
 }
 
-interface Chat {
+interface FriendChat {
   id: string;
   name: string;
-  type: 'individual' | 'group';
+  username: string;
   isOnline: boolean;
   lastSeen?: string;
   lastMessage: string;
   lastMessageTime: string;
   unreadCount: number;
-  members?: number;
   isVerified?: boolean;
-  isSpecial?: boolean;
+  isFavorite?: boolean;
+  isMuted?: boolean;
+  isBlocked?: boolean;
+  gameStatus?: {
+    game: string;
+    status: string;
+  };
 }
 
 export default function Chat() {
