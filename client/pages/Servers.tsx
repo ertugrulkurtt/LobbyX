@@ -413,7 +413,7 @@ export default function Servers() {
                         className="px-3 py-1 text-xs bg-neon-green/20 hover:bg-neon-green/30 border border-neon-green/30 rounded text-neon-green transition-colors"
                       >
                         <UserPlus className="w-3 h-3 inline mr-1" />
-                        Kat��l
+                        Katıl
                       </button>
                     )}
                   </div>
@@ -634,10 +634,15 @@ export default function Servers() {
 
             {/* Message Input */}
             <div className="p-4 bg-gaming-surface/30 backdrop-blur-xl border-t border-gaming-border">
-              {selectedServerData.isOfficial && selectedChannelData.id === 'announcements' && user?.username !== 'LobbyXAdmin' ? (
+              {selectedChannelData.permissions?.adminOnly && user?.username !== 'LobbyXAdmin' ? (
                 <div className="text-center p-4 text-gaming-muted">
                   <Shield className="w-6 h-6 mx-auto mb-2 text-neon-cyan" />
                   <p>Bu kanalda sadece yöneticiler mesaj gönderebilir.</p>
+                </div>
+              ) : !selectedChannelData.permissions?.canWrite ? (
+                <div className="text-center p-4 text-gaming-muted">
+                  <EyeOff className="w-6 h-6 mx-auto mb-2 text-gaming-muted" />
+                  <p>Bu kanala mesaj gönderme izniniz yok.</p>
                 </div>
               ) : (
                 <div className="flex items-center space-x-3">
