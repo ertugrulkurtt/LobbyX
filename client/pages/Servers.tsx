@@ -413,7 +413,7 @@ export default function Servers() {
                         className="px-3 py-1 text-xs bg-neon-green/20 hover:bg-neon-green/30 border border-neon-green/30 rounded text-neon-green transition-colors"
                       >
                         <UserPlus className="w-3 h-3 inline mr-1" />
-                        Katıl
+                        Kat��l
                       </button>
                     )}
                   </div>
@@ -444,41 +444,104 @@ export default function Servers() {
             </p>
           </div>
 
-          {/* Channel List */}
+          {/* Channel List with Categories */}
           <div className="flex-1 overflow-y-auto p-2">
             <div className="space-y-1">
-              {selectedServerData.channels.map((channel) => (
-                <button
-                  key={channel.id}
-                  onClick={() => setSelectedChannel(channel.id)}
-                  className={`w-full text-left p-2 rounded-lg transition-all duration-200 ${
-                    selectedChannel === channel.id
-                      ? 'bg-neon-purple/20 text-neon-purple'
-                      : 'hover:bg-gaming-surface/50 text-gaming-muted hover:text-gaming-text'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2">
-                    {channel.type === 'voice' ? (
-                      <Mic className="w-4 h-4" />
-                    ) : channel.isPrivate ? (
-                      <Lock className="w-4 h-4" />
-                    ) : (
-                      <Globe className="w-4 h-4" />
-                    )}
-                    <span className="text-sm font-medium truncate">
-                      {channel.name}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-xs truncate">
-                      {channel.description}
-                    </p>
-                    <span className="text-xs text-gaming-muted">
-                      {channel.memberCount}
-                    </span>
-                  </div>
-                </button>
-              ))}
+              {selectedServerData.categories
+                .sort((a, b) => a.position - b.position)
+                .map((category) => {
+                  const categoryChannels = selectedServerData.channels.filter(
+                    channel => channel.categoryId === category.id
+                  );
+                  const isCollapsed = collapsedCategories.has(category.id);
+                  const canViewCategory = !category.permissions?.adminOnly || user?.username === 'LobbyXAdmin';
+
+                  if (!canViewCategory) return null;
+
+                  return (
+                    <div key={category.id} className="mb-4">
+                      {/* Category Header */}
+                      <button
+                        onClick={() => toggleCategory(category.id)}
+                        className="w-full flex items-center justify-between p-2 hover:bg-gaming-surface/30 rounded transition-colors group"
+                      >
+                        <div className="flex items-center space-x-2">
+                          {isCollapsed ? (
+                            <ChevronRight className="w-3 h-3 text-gaming-muted" />
+                          ) : (
+                            <ChevronDown className="w-3 h-3 text-gaming-muted" />
+                          )}
+                          <span className="text-xs font-bold text-gaming-muted uppercase tracking-wider">
+                            {category.name}
+                          </span>
+                          {category.permissions?.adminOnly && (
+                            <Shield className="w-3 h-3 text-neon-orange" />
+                          )}
+                        </div>
+                        {!isCollapsed && (
+                          <Plus className="w-3 h-3 text-gaming-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+                        )}
+                      </button>
+
+                      {/* Category Channels */}
+                      {!isCollapsed && (
+                        <div className="ml-2 space-y-1">
+                          {categoryChannels.map((channel) => {
+                            const canViewChannel = !channel.permissions?.adminOnly || user?.username === 'LobbyXAdmin';
+
+                            if (!canViewChannel) return null;
+
+                            return (
+                              <button
+                                key={channel.id}
+                                onClick={() => setSelectedChannel(channel.id)}
+                                className={`w-full text-left p-2 rounded-lg transition-all duration-200 ${
+                                  selectedChannel === channel.id
+                                    ? 'bg-neon-purple/20 text-neon-purple'
+                                    : 'hover:bg-gaming-surface/50 text-gaming-muted hover:text-gaming-text'
+                                }`}
+                              >
+                                <div className="flex items-center space-x-2">
+                                  {channel.type === 'voice' ? (
+                                    <Volume2 className="w-4 h-4" />
+                                  ) : channel.isPrivate ? (
+                                    <Lock className="w-4 h-4" />
+                                  ) : (
+                                    <Hash className="w-4 h-4" />
+                                  )}
+                                  <span className="text-sm font-medium truncate">
+                                    {channel.name}
+                                  </span>
+                                  {channel.permissions?.adminOnly && (
+                                    <Shield className="w-3 h-3 text-neon-orange" />
+                                  )}
+                                  {channel.isPrivate && (
+                                    <EyeOff className="w-3 h-3 text-gaming-muted" />
+                                  )}
+                                </div>
+                                <div className="flex items-center justify-between mt-1">
+                                  <p className="text-xs truncate text-gaming-muted">
+                                    {channel.description}
+                                  </p>
+                                  <span className="text-xs text-gaming-muted">
+                                    {channel.type === 'voice' ? (
+                                      <span className="flex items-center space-x-1">
+                                        <Users className="w-3 h-3" />
+                                        <span>{channel.memberCount}</span>
+                                      </span>
+                                    ) : (
+                                      channel.memberCount
+                                    )}
+                                  </span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
             </div>
           </div>
         </div>
