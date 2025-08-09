@@ -359,7 +359,7 @@ export default function Servers() {
     {
       id: 'indie-games',
       name: 'İndie Oyunlar Topluluğu',
-      description: 'Indie oyun sevenler için özel topluluk.',
+      description: 'Indie oyun sevenler için ��zel topluluk.',
       isOfficial: false,
       isOnline: true,
       memberCount: 445,
@@ -726,12 +726,18 @@ export default function Servers() {
                             return (
                               <button
                                 key={channel.id}
-                                onClick={() => setSelectedChannel(channel.id)}
+                                onClick={() => {
+                                  if (channel.type === 'voice') {
+                                    joinVoiceChannel(channel.id, channel.name, selectedServerData.name);
+                                  } else {
+                                    setSelectedChannel(channel.id);
+                                  }
+                                }}
                                 className={`w-full text-left p-2 rounded-lg transition-all duration-200 ${
                                   selectedChannel === channel.id
                                     ? 'bg-neon-purple/20 text-neon-purple'
                                     : 'hover:bg-gaming-surface/50 text-gaming-muted hover:text-gaming-text'
-                                }`}
+                                } ${channel.type === 'voice' ? 'hover:bg-neon-green/10' : ''}`}
                               >
                                 <div className="flex items-center space-x-2">
                                   {channel.type === 'voice' ? (
