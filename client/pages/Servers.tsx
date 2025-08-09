@@ -142,9 +142,86 @@ export default function Servers() {
       tags: ['Resmi', 'Genel', 'Duyuru'],
       lastActivity: '2 dk',
       isJoined: joinedServers.has('lobbyx-official'),
+      roles: [
+        {
+          id: 'admin',
+          name: 'Admin',
+          color: '#ff6b35',
+          position: 100,
+          permissions: {
+            administrator: true,
+            manageChannels: true,
+            manageRoles: true,
+            kickMembers: true,
+            banMembers: true,
+            sendMessages: true,
+            readMessages: true,
+            manageMessages: true,
+            connectVoice: true,
+            speakVoice: true,
+            mentionEveryone: true
+          },
+          memberCount: 3
+        },
+        {
+          id: 'moderator',
+          name: 'Moderatör',
+          color: '#4ecdc4',
+          position: 50,
+          permissions: {
+            administrator: false,
+            manageChannels: false,
+            manageRoles: false,
+            kickMembers: true,
+            banMembers: false,
+            sendMessages: true,
+            readMessages: true,
+            manageMessages: true,
+            connectVoice: true,
+            speakVoice: true,
+            mentionEveryone: false
+          },
+          memberCount: 8
+        },
+        {
+          id: 'member',
+          name: 'Üye',
+          color: '#95a5a6',
+          position: 1,
+          permissions: {
+            administrator: false,
+            manageChannels: false,
+            manageRoles: false,
+            kickMembers: false,
+            banMembers: false,
+            sendMessages: true,
+            readMessages: true,
+            manageMessages: false,
+            connectVoice: true,
+            speakVoice: true,
+            mentionEveryone: false
+          },
+          memberCount: 1236
+        }
+      ],
       categories: [
-        { id: 'genel', name: 'GENEL', position: 0 },
-        { id: 'yonetim', name: 'YÖNETİM', position: 1, permissions: { adminOnly: true } }
+        {
+          id: 'genel',
+          name: 'GENEL',
+          position: 0,
+          permissions: [
+            { roleId: 'member', allow: ['readMessages'], deny: [] }
+          ]
+        },
+        {
+          id: 'yonetim',
+          name: 'YÖNETİM',
+          position: 1,
+          permissions: [
+            { roleId: 'admin', allow: ['readMessages', 'sendMessages'], deny: [] },
+            { roleId: 'member', allow: [], deny: ['readMessages'] }
+          ]
+        }
       ],
       channels: [
         { id: 'announcements', name: 'duyurular', description: 'Resmi duyurular', type: 'text', isPrivate: false, memberCount: 1247, categoryId: 'genel', permissions: { canRead: true, canWrite: false, adminOnly: true } },
