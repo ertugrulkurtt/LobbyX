@@ -30,7 +30,9 @@ import {
   Hash,
   Volume2,
   Eye,
-  EyeOff
+  EyeOff,
+  UserCog,
+  Palette
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -226,7 +228,7 @@ export default function Servers() {
       id: '1',
       senderId: 'lobbyx-admin',
       senderName: 'LobbyXAdmin',
-      content: 'LobbyX Resmi Sunucusuna hoş geldiniz! Bu sunucuda t��m duyurular ve güncellemeler paylaşılacak.',
+      content: 'LobbyX Resmi Sunucusuna hoş geldiniz! Bu sunucuda tüm duyurular ve güncellemeler paylaşılacak.',
       timestamp: '14:30',
       type: 'text',
       isSpecial: true
