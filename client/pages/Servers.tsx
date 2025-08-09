@@ -78,6 +78,7 @@ interface GameServer {
   isVerified: boolean;
   tags: string[];
   channels: ServerChannel[];
+  categories: ServerCategory[];
   owner?: string;
   lastActivity: string;
   isJoined?: boolean;
