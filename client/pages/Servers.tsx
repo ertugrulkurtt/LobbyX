@@ -122,6 +122,11 @@ export default function Servers() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [joinedServers, setJoinedServers] = useState<Set<string>>(new Set(['lobbyx-official']));
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [userRoles, setUserRoles] = useState<Map<string, string[]>>(new Map([
+    ['LobbyXAdmin', ['admin']],
+    [user?.username || '', ['member']]
+  ]));
 
   // Mock server data with isJoined property
   const servers: GameServer[] = [
