@@ -21,6 +21,8 @@ import Register from "./pages/Register";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Dashboard from "./pages/Dashboard";
+import Servers from "./pages/Servers";
+import Groups from "./pages/Groups";
 import Chat from "./pages/Chat";
 import Friends from "./pages/Friends";
 import Profile from "./pages/Profile";
