@@ -306,7 +306,7 @@ export default function Chat() {
                         </div>
                       )}
                       {chat.isMuted && (
-                        <Mute className="w-3 h-3 text-gaming-muted" />
+                        <VolumeX className="w-3 h-3 text-gaming-muted" />
                       )}
                     </div>
                     <span className="text-xs text-gaming-muted">{chat.lastMessageTime}</span>
