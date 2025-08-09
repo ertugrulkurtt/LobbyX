@@ -128,6 +128,16 @@ export default function Servers() {
     [user?.username || '', ['member']]
   ]));
 
+  // Voice channel integration - in a real app this would come from a context
+  const joinVoiceChannel = (channelId: string, channelName: string, serverName: string) => {
+    // This would trigger the Layout component's voice channel state
+    console.log('Joining voice channel:', channelName, 'in server:', serverName);
+    // For demo purposes, we'll simulate the join
+    window.dispatchEvent(new CustomEvent('joinVoiceChannel', {
+      detail: { channelId, channelName, serverName }
+    }));
+  };
+
   // Mock server data with isJoined property
   const servers: GameServer[] = [
     {
