@@ -164,11 +164,15 @@ export default function Servers() {
       tags: ['CS2', 'Profesyonel', 'Turnuva'],
       lastActivity: '5 dk',
       isJoined: joinedServers.has('cs2-pro'),
+      categories: [
+        { id: 'genel', name: 'GENEL', position: 0 },
+        { id: 'turnuva', name: 'TURNUVA', position: 1 }
+      ],
       channels: [
-        { id: 'cs2-announcements', name: 'turnuva-duyuruları', description: 'Turnuva duyuruları', type: 'text', isPrivate: false, memberCount: 1567 },
-        { id: 'cs2-general', name: 'genel-sohbet', description: 'CS2 genel sohbet', type: 'text', isPrivate: false, memberCount: 1234, isActive: true },
-        { id: 'cs2-strategy', name: 'strateji', description: 'Oyun stratejileri', type: 'text', isPrivate: false, memberCount: 456 },
-        { id: 'cs2-voice', name: 'Takım Ses', description: 'Takım koordinasyonu', type: 'voice', isPrivate: false, memberCount: 8 }
+        { id: 'cs2-announcements', name: 'turnuva-duyuruları', description: 'Turnuva duyuruları', type: 'text', isPrivate: false, memberCount: 1567, categoryId: 'turnuva', permissions: { canRead: true, canWrite: false, adminOnly: true } },
+        { id: 'cs2-general', name: 'genel-sohbet', description: 'CS2 genel sohbet', type: 'text', isPrivate: false, memberCount: 1234, isActive: true, categoryId: 'genel', permissions: { canRead: true, canWrite: true } },
+        { id: 'cs2-strategy', name: 'strateji', description: 'Oyun stratejileri', type: 'text', isPrivate: false, memberCount: 456, categoryId: 'turnuva', permissions: { canRead: true, canWrite: true } },
+        { id: 'cs2-voice', name: 'Takım Ses', description: 'Takım koordinasyonu', type: 'voice', isPrivate: false, memberCount: 8, categoryId: 'turnuva', permissions: { canRead: true, canWrite: true } }
       ]
     },
     {
