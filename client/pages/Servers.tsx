@@ -48,6 +48,23 @@ interface ServerChannel {
   isPrivate: boolean;
   memberCount: number;
   isActive?: boolean;
+  categoryId: string;
+  permissions?: {
+    canRead: boolean;
+    canWrite: boolean;
+    adminOnly?: boolean;
+  };
+}
+
+interface ServerCategory {
+  id: string;
+  name: string;
+  position: number;
+  isCollapsed?: boolean;
+  permissions?: {
+    adminOnly?: boolean;
+    moderatorOnly?: boolean;
+  };
 }
 
 interface GameServer {
