@@ -734,11 +734,11 @@ export default function Servers() {
                                   <span className="text-sm font-medium truncate">
                                     {channel.name}
                                   </span>
-                                  {channel.permissions?.adminOnly && (
-                                    <Shield className="w-3 h-3 text-neon-orange" />
+                                  {!canWriteChannel && (
+                                    <EyeOff className="w-3 h-3 text-gaming-muted" title="Sadece okuma" />
                                   )}
                                   {channel.isPrivate && (
-                                    <EyeOff className="w-3 h-3 text-gaming-muted" />
+                                    <Lock className="w-3 h-3 text-neon-orange" title="Özel kanal" />
                                   )}
                                 </div>
                                 <div className="flex items-center justify-between mt-1">
