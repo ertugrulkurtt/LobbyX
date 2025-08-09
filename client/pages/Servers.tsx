@@ -237,8 +237,12 @@ export default function Servers() {
         <div className="p-4 border-b border-gaming-border">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold text-gaming-text">Sunucular</h2>
-            <button className="p-2 rounded-lg hover:bg-gaming-surface transition-colors">
-              <Plus className="w-4 h-4 text-gaming-muted" />
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="p-2 rounded-lg bg-neon-purple/20 hover:bg-neon-purple/30 transition-colors"
+              title="Sunucu Oluştur"
+            >
+              <Plus className="w-4 h-4 text-neon-purple" />
             </button>
           </div>
           <div className="relative">
