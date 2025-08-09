@@ -160,6 +160,25 @@ export function Layout({ children }: LayoutProps) {
               )}
             </button>
 
+            {/* Settings and Notifications */}
+            <div className="flex items-center space-x-2">
+              <Link
+                to="/notifications"
+                className="p-2 rounded-lg hover:bg-gaming-surface transition-all duration-300 hover:shadow-glow text-gaming-muted hover:text-neon-cyan"
+                title="Bildirimler"
+              >
+                <Bell className="w-5 h-5" />
+              </Link>
+
+              <Link
+                to="/settings"
+                className="p-2 rounded-lg hover:bg-gaming-surface transition-all duration-300 hover:shadow-glow text-gaming-muted hover:text-neon-cyan"
+                title="Ayarlar"
+              >
+                <Settings className="w-5 h-5" />
+              </Link>
+            </div>
+
             {/* User avatar */}
             <div className="flex items-center space-x-3">
               <Link
@@ -176,15 +195,6 @@ export function Layout({ children }: LayoutProps) {
                   {user?.displayName || user?.username || 'Oyuncu'}
                 </span>
               </Link>
-
-              {/* Logout button */}
-              <button
-                onClick={handleLogout}
-                className="p-2 rounded-lg hover:bg-gaming-surface transition-all duration-300 hover:shadow-glow text-gaming-muted hover:text-red-400"
-                title="Çıkış Yap"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
             </div>
           </div>
         </div>
