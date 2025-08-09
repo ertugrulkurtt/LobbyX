@@ -180,9 +180,14 @@ export default function Register() {
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
     }
-    
+
     // Real-time validation
     validateField(field, value);
+  };
+
+  const handlePrivacyAgreementChange = (checked: boolean) => {
+    setPrivacyAgreement(checked);
+    validateField('privacyAgreement', checked ? 'true' : '');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
