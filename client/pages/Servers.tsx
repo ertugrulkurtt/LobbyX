@@ -856,14 +856,9 @@ export default function Servers() {
 
             {/* Message Input */}
             <div className="p-4 bg-gaming-surface/30 backdrop-blur-xl border-t border-gaming-border">
-              {selectedChannelData.permissions?.adminOnly && user?.username !== 'LobbyXAdmin' ? (
+              {!canWriteToChannel(selectedChannelData) ? (
                 <div className="text-center p-4 text-gaming-muted">
                   <Shield className="w-6 h-6 mx-auto mb-2 text-neon-cyan" />
-                  <p>Bu kanalda sadece yöneticiler mesaj gönderebilir.</p>
-                </div>
-              ) : !selectedChannelData.permissions?.canWrite ? (
-                <div className="text-center p-4 text-gaming-muted">
-                  <EyeOff className="w-6 h-6 mx-auto mb-2 text-gaming-muted" />
                   <p>Bu kanala mesaj gönderme izniniz yok.</p>
                 </div>
               ) : (
