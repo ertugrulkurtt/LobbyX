@@ -72,6 +72,8 @@ export default function Servers() {
   const [selectedChannel, setSelectedChannel] = useState<string | null>('general');
   const [messageText, setMessageText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [joinedServers, setJoinedServers] = useState<Set<string>>(new Set(['lobbyx-official']));
 
   // Mock server data
   const servers: GameServer[] = [
