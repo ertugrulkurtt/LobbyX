@@ -41,9 +41,6 @@ const navItems = [
   { id: 'groups', label: 'Gruplar', path: '/groups', icon: UsersRound },
   { id: 'chat', label: 'Sohbet', path: '/chat', icon: MessageSquare },
   { id: 'friends', label: 'Arkadaşlar', path: '/friends', icon: Users },
-  { id: 'profile', label: 'Profilim', path: '/profile', icon: User },
-  { id: 'settings', label: 'Ayarlar', path: '/settings', icon: Settings },
-  { id: 'notifications', label: 'Bildirimler', path: '/notifications', icon: Bell },
 ];
 
 export function Layout({ children }: LayoutProps) {
