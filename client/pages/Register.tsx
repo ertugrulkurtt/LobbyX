@@ -509,13 +509,51 @@ export default function Register() {
               </div>
             </div>
 
+            {/* Privacy Agreement */}
+            <div className="space-y-2">
+              <div className="flex items-start space-x-3">
+                <div className="flex items-center h-5">
+                  <input
+                    type="checkbox"
+                    id="privacyAgreement"
+                    checked={privacyAgreement}
+                    onChange={(e) => handlePrivacyAgreementChange(e.target.checked)}
+                    className={`w-4 h-4 rounded border-2 bg-gaming-surface/50 backdrop-blur-sm focus:ring-2 focus:ring-offset-0 transition-all duration-300 ${
+                      errors.privacyAgreement
+                        ? 'border-red-500 focus:ring-red-500/50'
+                        : 'border-gaming-border focus:ring-neon-purple/50 text-neon-purple'
+                    }`}
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <label htmlFor="privacyAgreement" className="text-sm text-gaming-text cursor-pointer">
+                    <span className="font-medium text-neon-cyan hover:text-neon-purple transition-colors">
+                      Gizlilik Sözleşmesi
+                    </span>
+                    <span className="text-gaming-muted"> ve </span>
+                    <span className="font-medium text-neon-cyan hover:text-neon-purple transition-colors">
+                      Kullanım Şartları
+                    </span>
+                    <span className="text-gaming-muted">'nı okudum ve kabul ediyorum.</span>
+                  </label>
+                </div>
+              </div>
+              {errors.privacyAgreement && (
+                <p className="text-red-400 text-sm animate-fade-in-up flex items-center space-x-1 ml-7">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{errors.privacyAgreement}</span>
+                </p>
+              )}
+            </div>
+
             {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading || Object.keys(errors).length > 0}
               className={`w-full btn-neon relative ${
-                isLoading || Object.keys(errors).length > 0 
-                  ? 'opacity-70 cursor-not-allowed' 
+                isLoading || Object.keys(errors).length > 0
+                  ? 'opacity-70 cursor-not-allowed'
                   : ''
               }`}
             >
