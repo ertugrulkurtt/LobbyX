@@ -64,7 +64,7 @@ export default function Register() {
       label = 'Güçlü';
       color = 'text-neon-cyan';
     } else {
-      label = 'Çok G��çlü';
+      label = 'Çok Güçlü';
       color = 'text-neon-green';
     }
 
@@ -159,6 +159,14 @@ export default function Register() {
           newErrors.confirmPassword = 'Şifreler eşleşmiyor';
         } else {
           delete newErrors.confirmPassword;
+        }
+        break;
+
+      case 'privacyAgreement':
+        if (!privacyAgreement) {
+          newErrors.privacyAgreement = 'Gizlilik sözleşmesini kabul etmelisiniz';
+        } else {
+          delete newErrors.privacyAgreement;
         }
         break;
     }
