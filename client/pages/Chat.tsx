@@ -355,22 +355,17 @@ export default function Chat() {
             <div className="p-4 bg-gaming-surface/30 backdrop-blur-xl border-b border-gaming-border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    selectedChatData.isSpecial 
-                      ? 'bg-gradient-to-br from-neon-cyan to-neon-blue' 
-                      : 'bg-gradient-to-br from-neon-purple to-neon-cyan'
-                  }`}>
-                    {selectedChatData.type === 'group' ? (
-                      <Users className="w-5 h-5 text-white" />
-                    ) : (
+                  <div className="relative">
+                    <div className="w-10 h-10 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center">
                       <MessageSquare className="w-5 h-5 text-white" />
+                    </div>
+                    {selectedChatData.isOnline && (
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-neon-green rounded-full border-2 border-gaming-surface"></div>
                     )}
                   </div>
                   <div>
                     <div className="flex items-center space-x-2">
-                      <h2 className={`font-semibold ${
-                        selectedChatData.isSpecial ? 'text-neon-cyan' : 'text-gaming-text'
-                      }`}>
+                      <h2 className="font-semibold text-gaming-text">
                         {selectedChatData.name}
                       </h2>
                       {selectedChatData.isVerified && (
@@ -378,19 +373,29 @@ export default function Chat() {
                           <Check className="w-3 h-3 text-white" />
                         </div>
                       )}
-                      {selectedChatData.isSpecial && (
-                        <Shield className="w-4 h-4 text-neon-cyan" />
+                      {selectedChatData.isFavorite && (
+                        <Star className="w-4 h-4 text-neon-orange" />
                       )}
                     </div>
-                    <p className="text-sm text-gaming-muted">
-                      {selectedChatData.type === 'group' ? (
-                        `${selectedChatData.members?.toLocaleString()} üye`
-                      ) : selectedChatData.isOnline ? (
-                        'Çevrimiçi'
-                      ) : (
-                        `Son gör��lme: ${selectedChatData.lastSeen}`
+                    <div className="flex items-center space-x-2">
+                      <p className="text-sm text-gaming-muted">@{selectedChatData.username}</p>
+                      {selectedChatData.gameStatus && selectedChatData.isOnline && (
+                        <>
+                          <span className="text-gaming-muted">•</span>
+                          <p className="text-sm text-neon-cyan">
+                            {selectedChatData.gameStatus.game} - {selectedChatData.gameStatus.status}
+                          </p>
+                        </>
                       )}
-                    </p>
+                      {!selectedChatData.isOnline && selectedChatData.lastSeen && (
+                        <>
+                          <span className="text-gaming-muted">•</span>
+                          <p className="text-sm text-gaming-muted">
+                            Son görülme: {selectedChatData.lastSeen}
+                          </p>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
