@@ -24,7 +24,13 @@ import {
   UserPlus,
   UserMinus,
   Settings,
-  Upload
+  Upload,
+  ChevronDown,
+  ChevronRight,
+  Hash,
+  Volume2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
