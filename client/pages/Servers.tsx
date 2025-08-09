@@ -107,6 +107,7 @@ interface GameServer {
   tags: string[];
   channels: ServerChannel[];
   categories: ServerCategory[];
+  roles: ServerRole[];
   owner?: string;
   lastActivity: string;
   isJoined?: boolean;
