@@ -19,7 +19,12 @@ import {
   Plus,
   Globe,
   Lock,
-  Crown
+  Crown,
+  X,
+  UserPlus,
+  UserMinus,
+  Settings,
+  Upload
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
