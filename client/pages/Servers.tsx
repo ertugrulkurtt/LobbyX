@@ -908,6 +908,137 @@ export default function Servers() {
           </div>
         )}
       </div>
+
+      {/* Role Management Modal */}
+      {showRoleModal && selectedServerData && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gaming-surface/90 backdrop-blur-xl border border-gaming-border rounded-2xl w-full max-w-4xl max-h-[80vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gaming-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <UserCog className="w-6 h-6 text-neon-purple" />
+                  <h2 className="text-xl font-bold text-gaming-text">Rol Yönetimi</h2>
+                </div>
+                <button
+                  onClick={() => setShowRoleModal(false)}
+                  className="p-2 rounded-lg hover:bg-gaming-surface transition-colors"
+                >
+                  <X className="w-5 h-5 text-gaming-muted" />
+                </button>
+              </div>
+              <p className="text-gaming-muted mt-2">{selectedServerData.name} sunucusu için roller ve izinler</p>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              {/* Roles List */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gaming-text">Sunucu Rolleri</h3>
+                  <button className="px-4 py-2 bg-neon-purple/20 hover:bg-neon-purple/30 border border-neon-purple/30 rounded-lg text-neon-purple transition-colors">
+                    <Plus className="w-4 h-4 inline mr-2" />
+                    Yeni Rol
+                  </button>
+                </div>
+
+                {selectedServerData.roles
+                  .sort((a, b) => b.position - a.position)
+                  .map((role) => (
+                    <div key={role.id} className="p-4 bg-gaming-surface/50 rounded-xl border border-gaming-border">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <div
+                            className="w-4 h-4 rounded-full"
+                            style={{ backgroundColor: role.color }}
+                          ></div>
+                          <div>
+                            <h4 className="font-semibold text-gaming-text">{role.name}</h4>
+                            <p className="text-sm text-gaming-muted">{role.memberCount} üye</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button className="p-2 rounded-lg hover:bg-gaming-surface transition-colors">
+                            <Palette className="w-4 h-4 text-gaming-muted" />
+                          </button>
+                          <button className="p-2 rounded-lg hover:bg-gaming-surface transition-colors">
+                            <Settings className="w-4 h-4 text-gaming-muted" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Role Permissions */}
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {Object.entries(role.permissions).map(([permission, hasPermission]) => {
+                          const permissionLabels: Record<string, string> = {
+                            administrator: 'Yönetici',
+                            manageChannels: 'Kanal Yönetimi',
+                            manageRoles: 'Rol Yönetimi',
+                            kickMembers: 'Üye Atma',
+                            banMembers: 'Üye Yasaklama',
+                            sendMessages: 'Mesaj Gönderme',
+                            readMessages: 'Mesaj Okuma',
+                            manageMessages: 'Mesaj Yönetimi',
+                            connectVoice: 'Ses Kanalına Katılma',
+                            speakVoice: 'Konuşma',
+                            mentionEveryone: 'Herkesi Etiketleme'
+                          };
+
+                          return (
+                            <div
+                              key={permission}
+                              className={`flex items-center space-x-2 p-2 rounded-lg ${
+                                hasPermission
+                                  ? 'bg-neon-green/10 border border-neon-green/20'
+                                  : 'bg-red-500/10 border border-red-500/20'
+                              }`}
+                            >
+                              <div className={`w-2 h-2 rounded-full ${
+                                hasPermission ? 'bg-neon-green' : 'bg-red-500'
+                              }`}></div>
+                              <span className={`text-xs ${
+                                hasPermission ? 'text-neon-green' : 'text-red-400'
+                              }`}>
+                                {permissionLabels[permission] || permission}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+
+              {/* Channel Permissions Overview */}
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold text-gaming-text mb-4">Kanal İzinleri</h3>
+                <div className="space-y-3">
+                  {selectedServerData.channels.map((channel) => (
+                    <div key={channel.id} className="p-3 bg-gaming-surface/30 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          {channel.type === 'voice' ? (
+                            <Volume2 className="w-4 h-4 text-gaming-muted" />
+                          ) : (
+                            <Hash className="w-4 h-4 text-gaming-muted" />
+                          )}
+                          <span className="font-medium text-gaming-text">{channel.name}</span>
+                          {channel.isPrivate && (
+                            <Lock className="w-3 h-3 text-neon-orange" />
+                          )}
+                        </div>
+                        <button className="text-xs px-3 py-1 bg-gaming-surface hover:bg-gaming-surface/80 rounded text-gaming-muted transition-colors">
+                          İzinleri Düzenle
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
