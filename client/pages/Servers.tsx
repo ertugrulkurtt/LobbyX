@@ -199,6 +199,36 @@ export default function Servers() {
     }
   };
 
+  const handleJoinServer = (serverId: string) => {
+    setJoinedServers(prev => new Set([...prev, serverId]));
+    console.log('Joined server:', serverId);
+    // In real app, this would send request to Firebase
+  };
+
+  const handleLeaveServer = (serverId: string) => {
+    if (serverId === 'lobbyx-official') {
+      alert('LobbyX Resmi Sunucusundan ayrılamazsınız!');
+      return;
+    }
+    setJoinedServers(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(serverId);
+      return newSet;
+    });
+    if (selectedServer === serverId) {
+      setSelectedServer('lobbyx-official');
+      setSelectedChannel('general');
+    }
+    console.log('Left server:', serverId);
+    // In real app, this would update Firebase
+  };
+
+  const handleCreateServer = (serverData: any) => {
+    console.log('Creating server:', serverData);
+    // In real app, this would create server in Firebase
+    setShowCreateModal(false);
+  };
+
   return (
     <div className="flex h-[calc(100vh-8rem)] bg-gaming-bg rounded-2xl overflow-hidden">
       {/* Server List Sidebar */}
