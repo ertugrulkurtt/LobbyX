@@ -637,6 +637,7 @@ export default function Servers() {
         <div className="w-64 bg-gaming-surface/30 backdrop-blur-xl border-r border-gaming-border flex flex-col">
           {/* Server Header */}
           <div className="p-4 border-b border-gaming-border">
+            <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <h3 className={`font-semibold truncate ${
                 selectedServerData.isOfficial ? 'text-neon-cyan' : 'text-gaming-text'
@@ -647,9 +648,21 @@ export default function Servers() {
                 <Check className="w-4 h-4 text-neon-cyan" />
               )}
             </div>
-            <p className="text-sm text-gaming-muted mt-1">
-              {selectedServerData.memberCount.toLocaleString()} üye
-            </p>
+
+            {/* Role Management Button */}
+            {userRoles.get(user?.username || '')?.includes('admin') && (
+              <button
+                onClick={() => setShowRoleModal(true)}
+                className="p-1 rounded hover:bg-gaming-surface/50 transition-colors"
+                title="Rol Yönetimi"
+              >
+                <UserCog className="w-4 h-4 text-gaming-muted hover:text-neon-purple" />
+              </button>
+            )}
+          </div>
+          <p className="text-sm text-gaming-muted mt-1">
+            {selectedServerData.memberCount.toLocaleString()} üye
+          </p>
           </div>
 
           {/* Channel List with Categories */}
