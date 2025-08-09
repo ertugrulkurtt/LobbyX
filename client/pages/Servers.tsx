@@ -98,6 +98,7 @@ export default function Servers() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [joinedServers, setJoinedServers] = useState<Set<string>>(new Set(['lobbyx-official']));
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
 
   // Mock server data with isJoined property
   const servers: GameServer[] = [
