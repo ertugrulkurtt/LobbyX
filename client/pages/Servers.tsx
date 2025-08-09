@@ -302,15 +302,18 @@ export default function Servers() {
                       {server.isOfficial && (
                         <Crown className="w-4 h-4 text-neon-orange" />
                       )}
+                      {server.isJoined && (
+                        <div className="w-2 h-2 bg-neon-green rounded-full"></div>
+                      )}
                     </div>
                     <span className="text-xs text-gaming-muted">{server.lastActivity}</span>
                   </div>
-                  
+
                   <p className="text-sm text-gaming-muted truncate mb-2">
                     {server.description}
                   </p>
-                  
-                  <div className="flex items-center justify-between">
+
+                  <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-1">
                       <Users className="w-3 h-3 text-gaming-muted" />
                       <span className="text-xs text-gaming-muted">
@@ -319,7 +322,7 @@ export default function Servers() {
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {server.tags.slice(0, 2).map((tag) => (
-                        <span 
+                        <span
                           key={tag}
                           className="text-xs px-2 py-1 bg-gaming-surface rounded text-gaming-muted"
                         >
@@ -327,6 +330,34 @@ export default function Servers() {
                         </span>
                       ))}
                     </div>
+                  </div>
+
+                  {/* Join/Leave Button */}
+                  <div className="flex justify-end">
+                    {server.isJoined ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLeaveServer(server.id);
+                        }}
+                        className="px-3 py-1 text-xs bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded text-red-400 transition-colors"
+                        disabled={server.isOfficial}
+                      >
+                        <UserMinus className="w-3 h-3 inline mr-1" />
+                        {server.isOfficial ? 'Resmi' : 'Ayrıl'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleJoinServer(server.id);
+                        }}
+                        className="px-3 py-1 text-xs bg-neon-green/20 hover:bg-neon-green/30 border border-neon-green/30 rounded text-neon-green transition-colors"
+                      >
+                        <UserPlus className="w-3 h-3 inline mr-1" />
+                        Katıl
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
