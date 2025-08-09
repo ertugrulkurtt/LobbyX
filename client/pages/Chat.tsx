@@ -509,8 +509,8 @@ export default function Chat() {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <MessageSquare className="w-16 h-16 text-gaming-muted mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gaming-text mb-2">Sohbet Seç</h3>
-              <p className="text-gaming-muted">Mesajlaşmaya başlamak için bir sohbet seçin</p>
+              <h3 className="text-xl font-semibold text-gaming-text mb-2">Arkadaş Seç</h3>
+              <p className="text-gaming-muted">Mesajlaşmaya başlamak için bir arkadaşınızı seçin</p>
             </div>
           </div>
         )}
