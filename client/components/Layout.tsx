@@ -17,7 +17,9 @@ import {
   Zap,
   LogOut,
   Server,
-  UsersRound
+  UsersRound,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 interface LayoutProps {
