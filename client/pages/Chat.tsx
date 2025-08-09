@@ -58,55 +58,95 @@ interface FriendChat {
 
 export default function Chat() {
   const { user } = useAuth();
-  const [selectedChat, setSelectedChat] = useState<string | null>('lobbyx-official');
+  const [selectedChat, setSelectedChat] = useState<string | null>('progamer123');
   const [messageText, setMessageText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'all' | 'online' | 'favorites'>('all');
 
-  // Mock chat data
-  const chats: Chat[] = [
-    {
-      id: 'lobbyx-official',
-      name: 'LobbyX Resmi Sunucu',
-      type: 'group',
-      isOnline: true,
-      lastMessage: 'LobbyXAdmin: Sunucuya hoş geldiniz!',
-      lastMessageTime: '2 dk',
-      unreadCount: 1,
-      members: 1247,
-      isVerified: true,
-      isSpecial: true
-    },
+  // Mock friend chat data
+  const friendChats: FriendChat[] = [
     {
       id: 'progamer123',
       name: 'ProGamer123',
-      type: 'individual',
+      username: 'progamer123',
       isOnline: true,
       lastMessage: 'Valorant oynayalım mı?',
       lastMessageTime: '15 dk',
       unreadCount: 2,
-      isVerified: false
+      isVerified: true,
+      isFavorite: true,
+      gameStatus: {
+        game: 'Valorant',
+        status: 'Ranked maçta'
+      }
     },
     {
       id: 'gamemaster',
       name: 'GameMaster',
-      type: 'individual',
+      username: 'gamemaster',
       isOnline: false,
       lastSeen: '1 saat önce',
       lastMessage: 'Bu akşam CS2 turnuvası var',
       lastMessageTime: '1 saat',
       unreadCount: 0,
-      isVerified: false
+      isVerified: false,
+      gameStatus: {
+        game: 'Counter-Strike 2',
+        status: 'Çevrimdışı'
+      }
     },
     {
-      id: 'valorant-team',
-      name: 'Valorant Takımı',
-      type: 'group',
+      id: 'valorantking',
+      name: 'Valorant King',
+      username: 'valorantking',
       isOnline: true,
-      lastMessage: 'Bugün ranked oynuyoruz',
-      lastMessageTime: '3 saat',
-      unreadCount: 5,
-      members: 8,
-      isVerified: false
+      lastMessage: 'Gg wp!',
+      lastMessageTime: '2 saat',
+      unreadCount: 0,
+      isVerified: false,
+      isFavorite: false,
+      gameStatus: {
+        game: 'Valorant',
+        status: 'Menüde'
+      }
+    },
+    {
+      id: 'cs2ninja',
+      name: 'CS2 Ninja',
+      username: 'cs2ninja',
+      isOnline: true,
+      lastMessage: 'Takım kuruyoruz, gel',
+      lastMessageTime: '30 dk',
+      unreadCount: 1,
+      isVerified: false,
+      gameStatus: {
+        game: 'Counter-Strike 2',
+        status: 'Lobby\'de'
+      }
+    },
+    {
+      id: 'indielover',
+      name: 'Indie Lover',
+      username: 'indielover',
+      isOnline: false,
+      lastSeen: '3 saat önce',
+      lastMessage: 'O oyunu da bitirdim!',
+      lastMessageTime: '1 gün',
+      unreadCount: 0,
+      isVerified: false,
+      isFavorite: true
+    },
+    {
+      id: 'casualgamer',
+      name: 'Casual Gamer',
+      username: 'casualgamer',
+      isOnline: false,
+      lastSeen: '1 gün önce',
+      lastMessage: 'Yarın online olurum',
+      lastMessageTime: '2 gün',
+      unreadCount: 0,
+      isVerified: false,
+      isMuted: true
     }
   ];
 
