@@ -100,7 +100,9 @@ function AppRouter() {
           <Register />
         </PublicRoute>
       } />
-      
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+
       {/* Protected routes - only accessible when logged in */}
       <Route path="/dashboard" element={
         <ProtectedRoute>
