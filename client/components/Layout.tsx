@@ -53,6 +53,20 @@ export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [voiceChannel, setVoiceChannel] = useState<{
+    id: string;
+    name: string;
+    server: string;
+    members: Array<{ id: string; name: string; isMuted: boolean; isDeafened: boolean; }>;
+  } | null>(null);
+  const [voiceSettings, setVoiceSettings] = useState({
+    isMuted: false,
+    isDeafened: false,
+    volume: 80,
+    pushToTalk: false,
+    videoEnabled: false,
+    screenShare: false
+  });
 
   const currentPath = location.pathname;
 
