@@ -121,10 +121,25 @@ export function Layout({ children }: LayoutProps) {
       </header>
 
       {/* Sidebar */}
-      <aside className={`fixed left-0 top-16 bottom-0 w-64 bg-gaming-surface/50 backdrop-blur-xl border-r border-gaming-border z-40 transform transition-transform duration-300 ${
+      <aside className={`fixed left-0 top-16 bottom-0 ${sidebarCollapsed ? 'w-16' : 'w-64'} bg-gaming-surface/50 backdrop-blur-xl border-r border-gaming-border z-40 transform transition-all duration-300 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0`}>
-        <nav className="p-4 space-y-2 flex flex-col h-full">
+        {/* Collapse Toggle Button */}
+        <div className="hidden lg:block absolute -right-3 top-6 z-50">
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="w-6 h-6 bg-gaming-surface border border-gaming-border rounded-full flex items-center justify-center hover:bg-gaming-surface/80 transition-all duration-300 hover:shadow-glow"
+            title={sidebarCollapsed ? 'Genişlet' : 'Daralt'}
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight className="w-3 h-3 text-gaming-muted" />
+            ) : (
+              <ChevronLeft className="w-3 h-3 text-gaming-muted" />
+            )}
+          </button>
+        </div>
+
+        <nav className={`${sidebarCollapsed ? 'p-2' : 'p-4'} space-y-2 flex flex-col h-full transition-all duration-300`}>
           <div className="space-y-2 flex-1">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -135,16 +150,26 @@ export function Layout({ children }: LayoutProps) {
                   key={item.id}
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`nav-item ${
+                  className={`${sidebarCollapsed ? 'p-3 justify-center' : 'nav-item'} group relative flex items-center rounded-xl transition-all duration-300 ${
                     isActive
                       ? 'bg-gaming-surface shadow-glow border border-neon-purple/20'
                       : 'hover:bg-gaming-surface/50'
                   }`}
+                  title={sidebarCollapsed ? item.label : ''}
                 >
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-neon-purple' : 'text-gaming-muted'}`} />
-                  <span className={`font-medium ${isActive ? 'text-neon-purple' : 'text-gaming-text'}`}>
-                    {item.label}
-                  </span>
+                  <Icon className={`${sidebarCollapsed ? 'w-5 h-5' : 'w-5 h-5'} ${isActive ? 'text-neon-purple' : 'text-gaming-muted'}`} />
+                  {!sidebarCollapsed && (
+                    <span className={`ml-3 font-medium ${isActive ? 'text-neon-purple' : 'text-gaming-text'}`}>
+                      {item.label}
+                    </span>
+                  )}
+
+                  {/* Tooltip for collapsed state */}
+                  {sidebarCollapsed && (
+                    <div className="absolute left-full ml-2 px-2 py-1 bg-gaming-surface border border-gaming-border rounded text-sm text-gaming-text opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                      {item.label}
+                    </div>
+                  )}
                 </Link>
               );
             })}
@@ -154,10 +179,20 @@ export function Layout({ children }: LayoutProps) {
           <div className="border-t border-gaming-border pt-4">
             <button
               onClick={handleLogout}
-              className="nav-item w-full text-left hover:bg-red-500/10 hover:shadow-glow text-gaming-muted hover:text-red-400 transition-all duration-300"
+              className={`${sidebarCollapsed ? 'p-3 justify-center' : 'nav-item'} group relative w-full flex items-center rounded-xl text-left hover:bg-red-500/10 hover:shadow-glow text-gaming-muted hover:text-red-400 transition-all duration-300`}
+              title={sidebarCollapsed ? 'Çıkış Yap' : ''}
             >
               <LogOut className="w-5 h-5" />
-              <span className="font-medium">Çıkış Yap</span>
+              {!sidebarCollapsed && (
+                <span className="ml-3 font-medium">Çıkış Yap</span>
+              )}
+
+              {/* Tooltip for collapsed state */}
+              {sidebarCollapsed && (
+                <div className="absolute left-full ml-2 px-2 py-1 bg-gaming-surface border border-gaming-border rounded text-sm text-gaming-text opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  Çıkış Yap
+                </div>
+              )}
             </button>
           </div>
         </nav>
