@@ -107,6 +107,7 @@ export default function Servers() {
       isVerified: true,
       tags: ['Valorant', 'Türkiye', 'Rekabetçi'],
       lastActivity: '1 dk',
+      isJoined: joinedServers.has('valorant-tr'),
       channels: [
         { id: 'val-general', name: 'genel', description: 'Genel Valorant sohbeti', type: 'text', isPrivate: false, memberCount: 2843, isActive: true },
         { id: 'val-lfg', name: 'takım-arama', description: 'Takım arkadaşı bulma', type: 'text', isPrivate: false, memberCount: 892 },
@@ -125,6 +126,7 @@ export default function Servers() {
       isVerified: true,
       tags: ['CS2', 'Profesyonel', 'Turnuva'],
       lastActivity: '5 dk',
+      isJoined: joinedServers.has('cs2-pro'),
       channels: [
         { id: 'cs2-announcements', name: 'turnuva-duyuruları', description: 'Turnuva duyuruları', type: 'text', isPrivate: false, memberCount: 1567 },
         { id: 'cs2-general', name: 'genel-sohbet', description: 'CS2 genel sohbet', type: 'text', isPrivate: false, memberCount: 1234, isActive: true },
@@ -143,6 +145,7 @@ export default function Servers() {
       isVerified: false,
       tags: ['Indie', 'Topluluk', 'Keşif'],
       lastActivity: '15 dk',
+      isJoined: joinedServers.has('indie-games'),
       channels: [
         { id: 'indie-discovery', name: 'oyun-keşfi', description: 'Yeni indie oyunlar', type: 'text', isPrivate: false, memberCount: 445, isActive: true },
         { id: 'indie-reviews', name: 'incelemeler', description: 'Oyun incelemeleri', type: 'text', isPrivate: false, memberCount: 234 },
