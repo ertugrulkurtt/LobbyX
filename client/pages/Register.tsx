@@ -198,6 +198,7 @@ export default function Register() {
       validateField(key, formData[key as keyof RegisterData]);
     });
     validateField('confirmPassword', confirmPassword);
+    validateField('privacyAgreement', privacyAgreement ? 'true' : '');
 
     if (Object.keys(errors).length > 0) return;
 
