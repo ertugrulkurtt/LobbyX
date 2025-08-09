@@ -79,6 +79,42 @@ export function Layout({ children }: LayoutProps) {
     }
   };
 
+  const joinVoiceChannel = (channelId: string, channelName: string, serverName: string) => {
+    setVoiceChannel({
+      id: channelId,
+      name: channelName,
+      server: serverName,
+      members: [
+        { id: user?.uid || '', name: user?.displayName || user?.username || 'Sen', isMuted: false, isDeafened: false },
+        { id: 'user2', name: 'ProGamer123', isMuted: false, isDeafened: false },
+        { id: 'user3', name: 'GameMaster', isMuted: true, isDeafened: false }
+      ]
+    });
+    console.log('Ses kanalına katıldı:', channelName);
+  };
+
+  const leaveVoiceChannel = () => {
+    setVoiceChannel(null);
+    setVoiceSettings(prev => ({ ...prev, videoEnabled: false, screenShare: false }));
+    console.log('Ses kanalından ayrıldı');
+  };
+
+  const toggleMute = () => {
+    setVoiceSettings(prev => ({ ...prev, isMuted: !prev.isMuted }));
+  };
+
+  const toggleDeafen = () => {
+    setVoiceSettings(prev => ({ ...prev, isDeafened: !prev.isDeafened, isMuted: prev.isDeafened ? prev.isMuted : true }));
+  };
+
+  const toggleVideo = () => {
+    setVoiceSettings(prev => ({ ...prev, videoEnabled: !prev.videoEnabled }));
+  };
+
+  const toggleScreenShare = () => {
+    setVoiceSettings(prev => ({ ...prev, screenShare: !prev.screenShare }));
+  };
+
   return (
     <div className="min-h-screen bg-gaming-bg">
       {/* Header */}
