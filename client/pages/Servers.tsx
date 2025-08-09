@@ -75,7 +75,7 @@ export default function Servers() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [joinedServers, setJoinedServers] = useState<Set<string>>(new Set(['lobbyx-official']));
 
-  // Mock server data
+  // Mock server data with isJoined property
   const servers: GameServer[] = [
     {
       id: 'lobbyx-official',
@@ -88,6 +88,7 @@ export default function Servers() {
       isVerified: true,
       tags: ['Resmi', 'Genel', 'Duyuru'],
       lastActivity: '2 dk',
+      isJoined: joinedServers.has('lobbyx-official'),
       channels: [
         { id: 'announcements', name: 'duyurular', description: 'Resmi duyurular', type: 'text', isPrivate: false, memberCount: 1247 },
         { id: 'general', name: 'genel-sohbet', description: 'Genel konuşma kanalı', type: 'text', isPrivate: false, memberCount: 856, isActive: true },
