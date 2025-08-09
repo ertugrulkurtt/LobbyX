@@ -114,11 +114,16 @@ export default function Servers() {
       tags: ['Resmi', 'Genel', 'Duyuru'],
       lastActivity: '2 dk',
       isJoined: joinedServers.has('lobbyx-official'),
+      categories: [
+        { id: 'genel', name: 'GENEL', position: 0 },
+        { id: 'yonetim', name: 'YÖNETİM', position: 1, permissions: { adminOnly: true } }
+      ],
       channels: [
-        { id: 'announcements', name: 'duyurular', description: 'Resmi duyurular', type: 'text', isPrivate: false, memberCount: 1247 },
-        { id: 'general', name: 'genel-sohbet', description: 'Genel konuşma kanalı', type: 'text', isPrivate: false, memberCount: 856, isActive: true },
-        { id: 'help', name: 'yardım', description: 'Yardım ve destek', type: 'text', isPrivate: false, memberCount: 234 },
-        { id: 'voice-general', name: 'Genel Ses', description: 'Sesli sohbet', type: 'voice', isPrivate: false, memberCount: 12 }
+        { id: 'announcements', name: 'duyurular', description: 'Resmi duyurular', type: 'text', isPrivate: false, memberCount: 1247, categoryId: 'genel', permissions: { canRead: true, canWrite: false, adminOnly: true } },
+        { id: 'general', name: 'sohbet', description: 'Genel konuşma kanalı', type: 'text', isPrivate: false, memberCount: 856, isActive: true, categoryId: 'genel', permissions: { canRead: true, canWrite: true } },
+        { id: 'help', name: 'yardım', description: 'Yardım ve destek', type: 'text', isPrivate: false, memberCount: 234, categoryId: 'genel', permissions: { canRead: true, canWrite: true } },
+        { id: 'voice-general', name: 'Genel Ses', description: 'Sesli sohbet', type: 'voice', isPrivate: false, memberCount: 12, categoryId: 'genel', permissions: { canRead: true, canWrite: true } },
+        { id: 'admin-chat', name: 'admin-sohbeti', description: 'Admin iletişimi', type: 'text', isPrivate: true, memberCount: 3, categoryId: 'yonetim', permissions: { canRead: false, canWrite: false, adminOnly: true } }
       ]
     },
     {
