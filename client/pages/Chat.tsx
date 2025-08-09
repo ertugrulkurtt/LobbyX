@@ -463,10 +463,10 @@ export default function Chat() {
 
             {/* Message Input */}
             <div className="p-4 bg-gaming-surface/30 backdrop-blur-xl border-t border-gaming-border">
-              {selectedChatData.isSpecial && selectedChatData.id === 'lobbyx-official' && user?.username !== 'LobbyXAdmin' ? (
+              {selectedChatData.isBlocked ? (
                 <div className="text-center p-4 text-gaming-muted">
-                  <Shield className="w-6 h-6 mx-auto mb-2 text-neon-cyan" />
-                  <p>Bu sunucuda sadece yöneticiler mesaj gönderebilir.</p>
+                  <Shield className="w-6 h-6 mx-auto mb-2 text-red-400" />
+                  <p>Bu kullanıcı engellendi. Mesaj gönderemezsiniz.</p>
                 </div>
               ) : (
                 <div className="flex items-center space-x-3">
@@ -476,18 +476,18 @@ export default function Chat() {
                   <button className="p-2 rounded-lg hover:bg-gaming-surface transition-colors">
                     <Image className="w-5 h-5 text-gaming-muted" />
                   </button>
-                  
+
                   <div className="flex-1 relative">
                     <input
                       type="text"
-                      placeholder="Mesajınızı yazın..."
+                      placeholder={`${selectedChatData.name}'e mesaj gönder...`}
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
                       onKeyPress={handleKeyPress}
                       className="w-full px-4 py-2 bg-gaming-surface rounded-xl border border-gaming-border focus:outline-none focus:ring-2 focus:ring-neon-purple/50 text-gaming-text"
                     />
                   </div>
-                  
+
                   <button className="p-2 rounded-lg hover:bg-gaming-surface transition-colors">
                     <Smile className="w-5 h-5 text-gaming-muted" />
                   </button>
