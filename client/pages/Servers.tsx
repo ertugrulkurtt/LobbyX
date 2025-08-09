@@ -275,6 +275,18 @@ export default function Servers() {
     setShowCreateModal(false);
   };
 
+  const toggleCategory = (categoryId: string) => {
+    setCollapsedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <div className="flex h-[calc(100vh-8rem)] bg-gaming-bg rounded-2xl overflow-hidden">
       {/* Server List Sidebar */}
