@@ -55,11 +55,7 @@ interface ServerChannel {
   memberCount: number;
   isActive?: boolean;
   categoryId: string;
-  permissions?: {
-    canRead: boolean;
-    canWrite: boolean;
-    adminOnly?: boolean;
-  };
+  permissions?: ChannelPermission[];
 }
 
 interface ServerRole {
@@ -230,7 +226,7 @@ export default function Servers() {
       id: '1',
       senderId: 'lobbyx-admin',
       senderName: 'LobbyXAdmin',
-      content: 'LobbyX Resmi Sunucusuna hoş geldiniz! Bu sunucuda tüm duyurular ve güncellemeler paylaşılacak.',
+      content: 'LobbyX Resmi Sunucusuna hoş geldiniz! Bu sunucuda t��m duyurular ve güncellemeler paylaşılacak.',
       timestamp: '14:30',
       type: 'text',
       isSpecial: true
