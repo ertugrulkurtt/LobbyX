@@ -154,29 +154,56 @@ export default function Chat() {
   const messages: Message[] = [
     {
       id: '1',
-      senderId: 'lobbyx-admin',
-      senderName: 'LobbyXAdmin',
-      content: 'LobbyX Resmi Sunucusuna hoş geldiniz! Bu sunucuda tüm duyurular ve güncellemeler paylaşılacak.',
-      timestamp: '14:30',
+      senderId: 'progamer123',
+      senderName: 'ProGamer123',
+      content: 'Selam! Bugün Valorant oynayacak mısın?',
+      timestamp: '19:45',
       type: 'text',
-      isSpecial: true
+      isDelivered: true,
+      isRead: true
     },
     {
       id: '2',
-      senderId: 'lobbyx-admin',
-      senderName: 'LobbyXAdmin',
-      content: 'Lütfen sunucu kurallarına uyarak nezaket çerçevesinde iletişim kurunuz.',
-      timestamp: '14:32',
+      senderId: user?.uid || '',
+      senderName: user?.displayName || user?.username || 'Sen',
+      content: 'Evet, akşam müsaitim. Hangi saatte?',
+      timestamp: '19:47',
       type: 'text',
-      isSpecial: true
+      isDelivered: true,
+      isRead: true
+    },
+    {
+      id: '3',
+      senderId: 'progamer123',
+      senderName: 'ProGamer123',
+      content: '20:00 gibi nasıl? Ranked oynayalım.',
+      timestamp: '19:48',
+      type: 'text',
+      isDelivered: true,
+      isRead: false
+    },
+    {
+      id: '4',
+      senderId: 'progamer123',
+      senderName: 'ProGamer123',
+      content: 'Valorant oynayalım mı?',
+      timestamp: '20:15',
+      type: 'text',
+      isDelivered: true,
+      isRead: false
     }
   ];
 
-  const selectedChatData = chats.find(chat => chat.id === selectedChat);
+  const selectedChatData = friendChats.find(chat => chat.id === selectedChat);
 
-  const filteredChats = chats.filter(chat =>
-    chat.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredChats = friendChats.filter(chat => {
+    const matchesSearch = chat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         chat.username.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (activeTab === 'online') return matchesSearch && chat.isOnline;
+    if (activeTab === 'favorites') return matchesSearch && chat.isFavorite;
+    return matchesSearch;
+  });
 
   const handleSendMessage = () => {
     if (!messageText.trim()) return;
