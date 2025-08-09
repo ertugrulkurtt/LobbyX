@@ -111,6 +111,16 @@ function AppRouter() {
           <Dashboard />
         </ProtectedRoute>
       } />
+      <Route path="/servers" element={
+        <ProtectedRoute>
+          <Servers />
+        </ProtectedRoute>
+      } />
+      <Route path="/groups" element={
+        <ProtectedRoute>
+          <Groups />
+        </ProtectedRoute>
+      } />
       <Route path="/chat" element={
         <ProtectedRoute>
           <Chat />
