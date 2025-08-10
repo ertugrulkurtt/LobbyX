@@ -226,52 +226,40 @@ export default function Profile() {
 
   const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Dosya boyutu 5MB\'dan küçük olmalıdır.');
-      return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      alert('Sadece resim dosyaları yüklenebilir.');
+    if (!file || !user) {
       return;
     }
 
     setIsUploading(true);
 
     try {
-      // Create unique filename with user ID and timestamp
-      const timestamp = Date.now();
-      const fileExtension = file.name.split('.').pop();
-      const fileName = `profile_${user.uid}_${timestamp}.${fileExtension}`;
+      console.log('Starting photo upload for user:', user.uid);
 
-      // Create storage reference
-      const storageRef = ref(storage, `profile-photos/${fileName}`);
+      // Use the storage service to upload the photo
+      const result = await uploadProfilePhoto(file, user.uid);
 
-      // Upload file to Firebase Storage
-      console.log('Uploading file to Firebase Storage...');
-      const snapshot = await uploadBytes(storageRef, file);
+      if (result.success && result.url) {
+        console.log('Photo uploaded successfully. URL:', result.url);
 
-      // Get download URL
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      console.log('File uploaded successfully. Download URL:', downloadURL);
+        // Update user profile with new photo URL
+        await updateProfile({ photoURL: result.url });
 
-      // Update user profile with new photo URL
-      await updateProfile({ photoURL: downloadURL });
+        alert('Profil fotoğrafı başarıyla güncellendi!');
 
-      setIsUploading(false);
-      alert('Profil fotoğrafı başarıyla güncellendi!');
-
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      } else {
+        console.error('Upload failed:', result.error);
+        alert(result.error || 'Fotoğraf yüklenemedi. Lütfen tekrar deneyin.');
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Fotoğraf yükleme hatası:', error);
+      alert(`Fotoğraf yüklenemedi: ${error.message || 'Bilinmeyen hata'}`);
+    } finally {
       setIsUploading(false);
-      alert('Fotoğraf yüklenemedi. Lütfen tekrar deneyin.');
     }
   };
 
