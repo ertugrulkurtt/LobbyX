@@ -18,7 +18,12 @@ import {
   MapPin,
   Calendar,
   Eye,
-  EyeOff
+  EyeOff,
+  Palette,
+  Image,
+  Star,
+  Award,
+  Settings
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -75,12 +80,21 @@ export default function Profile() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showTwoFactorModal, setShowTwoFactorModal] = useState(false);
   const [showSessionModal, setShowSessionModal] = useState(false);
+  const [showCustomizationModal, setShowCustomizationModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   
   const [editData, setEditData] = useState({
     displayName: user?.displayName || '',
     username: user?.username || '',
-    bio: user?.bio || 'Gaming enthusiast, competitive player, always looking for new challenges!'
+    bio: user?.bio || 'Gaming enthusiast, competitive player, always looking for new challenges!',
+    status: user?.status || '🎮 Ready to game!'
+  });
+
+  const [customization, setCustomization] = useState({
+    profileBackground: user?.customization?.profileBackground || 'gradient-1',
+    themeColor: user?.customization?.themeColor || 'purple',
+    backgroundType: user?.customization?.backgroundType || 'gradient',
+    profileFrame: user?.customization?.profileFrame || 'none'
   });
 
   // Password change state
@@ -98,6 +112,42 @@ export default function Profile() {
   // Two-factor state
   const [twoFactorCode, setTwoFactorCode] = useState(['', '', '', '', '', '']);
 
+  // Profile background options
+  const backgroundOptions = {
+    gradient: [
+      { id: 'gradient-1', name: 'Neon Purple', class: 'bg-gradient-to-br from-neon-purple/30 via-neon-cyan/20 to-neon-pink/30' },
+      { id: 'gradient-2', name: 'Cyber Blue', class: 'bg-gradient-to-br from-neon-cyan/30 via-neon-blue/20 to-neon-green/30' },
+      { id: 'gradient-3', name: 'Gaming Red', class: 'bg-gradient-to-br from-red-500/30 via-neon-orange/20 to-neon-pink/30' },
+      { id: 'gradient-4', name: 'Matrix Green', class: 'bg-gradient-to-br from-neon-green/30 via-green-400/20 to-neon-cyan/30' },
+      { id: 'gradient-5', name: 'Royal Gold', class: 'bg-gradient-to-br from-yellow-500/30 via-neon-orange/20 to-red-500/30' }
+    ],
+    color: [
+      { id: 'purple', name: 'Purple', class: 'bg-neon-purple/20' },
+      { id: 'cyan', name: 'Cyan', class: 'bg-neon-cyan/20' },
+      { id: 'pink', name: 'Pink', class: 'bg-neon-pink/20' },
+      { id: 'green', name: 'Green', class: 'bg-neon-green/20' },
+      { id: 'orange', name: 'Orange', class: 'bg-neon-orange/20' }
+    ]
+  };
+
+  // Theme color options
+  const themeColors = [
+    { id: 'purple', name: 'Purple', primary: 'text-neon-purple', bg: 'bg-neon-purple' },
+    { id: 'cyan', name: 'Cyan', primary: 'text-neon-cyan', bg: 'bg-neon-cyan' },
+    { id: 'pink', name: 'Pink', primary: 'text-neon-pink', bg: 'bg-neon-pink' },
+    { id: 'green', name: 'Green', primary: 'text-neon-green', bg: 'bg-neon-green' },
+    { id: 'orange', name: 'Orange', primary: 'text-neon-orange', bg: 'bg-neon-orange' },
+    { id: 'blue', name: 'Blue', primary: 'text-neon-blue', bg: 'bg-neon-blue' }
+  ];
+
+  // Profile frames
+  const profileFrames = [
+    { id: 'none', name: 'None', class: '' },
+    { id: 'gold', name: 'Gold Elite', class: 'ring-4 ring-yellow-500/50' },
+    { id: 'diamond', name: 'Diamond', class: 'ring-4 ring-cyan-500/50' },
+    { id: 'legendary', name: 'Legendary', class: 'ring-4 ring-purple-500/50 ring-offset-2 ring-offset-purple-500/20' }
+  ];
+
   const userStats = getUserStats(user?.uid || '');
   const sessionHistory = getSessionHistory();
 
@@ -108,12 +158,41 @@ export default function Profile() {
     { label: 'Başarımlar', value: userStats.achievements.toString(), icon: Trophy, color: 'text-neon-pink' },
   ];
 
+  // Get current profile background class
+  const getCurrentBackgroundClass = () => {
+    const backgroundType = user?.customization?.backgroundType || customization.backgroundType;
+    const backgroundId = user?.customization?.profileBackground || customization.profileBackground;
+    
+    if (backgroundType === 'gradient') {
+      const gradient = backgroundOptions.gradient.find(g => g.id === backgroundId);
+      return gradient?.class || backgroundOptions.gradient[0].class;
+    } else {
+      const color = backgroundOptions.color.find(c => c.id === backgroundId);
+      return color?.class || backgroundOptions.color[0].class;
+    }
+  };
+
+  // Get current theme color
+  const getCurrentThemeColor = () => {
+    const themeColorId = user?.customization?.themeColor || customization.themeColor;
+    const theme = themeColors.find(t => t.id === themeColorId);
+    return theme || themeColors[0];
+  };
+
+  // Get current profile frame
+  const getCurrentProfileFrame = () => {
+    const frameId = user?.customization?.profileFrame || customization.profileFrame;
+    const frame = profileFrames.find(f => f.id === frameId);
+    return frame?.class || '';
+  };
+
   const handleSave = async () => {
     try {
       await updateProfile({
         displayName: editData.displayName,
         username: editData.username,
-        bio: editData.bio
+        bio: editData.bio,
+        status: editData.status
       });
       setIsEditing(false);
     } catch (error) {
@@ -122,11 +201,24 @@ export default function Profile() {
     }
   };
 
+  const handleCustomizationSave = async () => {
+    try {
+      await updateProfile({
+        customization: customization
+      });
+      setShowCustomizationModal(false);
+    } catch (error) {
+      console.error('Customization update failed:', error);
+      alert('Özelleştirme kaydedilemedi. Lütfen tekrar deneyin.');
+    }
+  };
+
   const handleCancel = () => {
     setEditData({
       displayName: user?.displayName || '',
       username: user?.username || '',
-      bio: user?.bio || 'Gaming enthusiast, competitive player, always looking for new challenges!'
+      bio: user?.bio || 'Gaming enthusiast, competitive player, always looking for new challenges!',
+      status: user?.status || '🎮 Ready to game!'
     });
     setIsEditing(false);
   };
@@ -220,7 +312,7 @@ export default function Profile() {
       />
 
       {/* Profile Header */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-neon-purple/10 via-neon-cyan/10 to-neon-pink/10 p-8">
+      <section className={`relative overflow-hidden rounded-3xl ${getCurrentBackgroundClass()} p-8`}>
         <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8">
@@ -229,8 +321,8 @@ export default function Profile() {
               <div className={`w-32 h-32 rounded-full flex items-center justify-center ${
                 user?.username === 'LobbyXAdmin' 
                   ? 'bg-gradient-to-br from-neon-cyan to-neon-blue' 
-                  : 'bg-gradient-to-br from-neon-purple to-neon-cyan'
-              } ${isUploading ? 'opacity-50' : ''}`}>
+                  : `bg-gradient-to-br from-${getCurrentThemeColor().id} to-neon-cyan`
+              } ${getCurrentProfileFrame()} ${isUploading ? 'opacity-50' : ''}`}>
                 {user?.photoURL ? (
                   <img 
                     src={user.photoURL} 
@@ -283,6 +375,18 @@ export default function Profile() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gaming-text mb-2">
+                      Durum Mesajı
+                    </label>
+                    <input
+                      type="text"
+                      value={editData.status}
+                      onChange={(e) => setEditData({...editData, status: e.target.value})}
+                      placeholder="🎮 Ready to game!"
+                      className="w-full px-4 py-2 bg-gaming-surface rounded-lg border border-gaming-border focus:outline-none focus:ring-2 focus:ring-neon-purple/50 text-gaming-text"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gaming-text mb-2">
                       Hakkında
                     </label>
                     <textarea
@@ -313,7 +417,7 @@ export default function Profile() {
                 <div>
                   <div className="flex items-center justify-center md:justify-start space-x-3 mb-2">
                     <h1 className={`text-3xl font-bold ${
-                      user?.username === 'LobbyXAdmin' ? 'text-neon-cyan' : 'text-gaming-text'
+                      user?.username === 'LobbyXAdmin' ? 'text-neon-cyan' : getCurrentThemeColor().primary
                     }`}>
                       {user?.displayName || 'Kullanıcı'}
                     </h1>
@@ -326,7 +430,8 @@ export default function Profile() {
                       </>
                     )}
                   </div>
-                  <p className="text-gaming-muted mb-4">@{user?.username}</p>
+                  <p className="text-gaming-muted mb-2">@{user?.username}</p>
+                  <p className={`text-sm mb-4 ${getCurrentThemeColor().primary}`}>{user?.status || editData.status}</p>
                   <p className="text-gaming-text max-w-md">{editData.bio}</p>
                   <div className="flex items-center space-x-4 mt-4 text-sm text-gaming-muted">
                     <span className="flex items-center space-x-1">
@@ -338,13 +443,22 @@ export default function Profile() {
                       <span>Son aktiflik: {userStats.lastActivity}</span>
                     </span>
                   </div>
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="mt-4 px-4 py-2 bg-neon-purple text-white rounded-lg hover:bg-neon-purple/80 transition-colors flex items-center space-x-2"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                    <span>Profili Düzenle</span>
-                  </button>
+                  <div className="flex flex-wrap gap-3 mt-4">
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className={`px-4 py-2 ${getCurrentThemeColor().bg} text-white rounded-lg hover:opacity-80 transition-colors flex items-center space-x-2`}
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      <span>Profili Düzenle</span>
+                    </button>
+                    <button
+                      onClick={() => setShowCustomizationModal(true)}
+                      className="px-4 py-2 bg-gaming-surface text-gaming-text rounded-lg hover:bg-gaming-surface/80 transition-colors flex items-center space-x-2 border border-gaming-border"
+                    >
+                      <Palette className="w-4 h-4" />
+                      <span>Özelleştir</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -449,6 +563,125 @@ export default function Profile() {
             </div>
           </div>
         </section>
+      )}
+
+      {/* Customization Modal */}
+      {showCustomizationModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gaming-surface/90 backdrop-blur-xl rounded-2xl p-6 max-w-2xl w-full border border-gaming-border max-h-[80vh] overflow-y-auto">
+            <h3 className="text-xl font-bold text-gaming-text mb-6 flex items-center space-x-2">
+              <Palette className="w-6 h-6" />
+              <span>Profil Özelleştirme</span>
+            </h3>
+            
+            <div className="space-y-6">
+              {/* Background Type Selection */}
+              <div>
+                <h4 className="text-lg font-semibold text-gaming-text mb-3">Arka Plan Türü</h4>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setCustomization({...customization, backgroundType: 'gradient'})}
+                    className={`px-4 py-2 rounded-lg transition-colors ${
+                      customization.backgroundType === 'gradient' 
+                        ? 'bg-neon-purple text-white' 
+                        : 'bg-gaming-surface text-gaming-text border border-gaming-border'
+                    }`}
+                  >
+                    Gradyan
+                  </button>
+                  <button
+                    onClick={() => setCustomization({...customization, backgroundType: 'color'})}
+                    className={`px-4 py-2 rounded-lg transition-colors ${
+                      customization.backgroundType === 'color' 
+                        ? 'bg-neon-purple text-white' 
+                        : 'bg-gaming-surface text-gaming-text border border-gaming-border'
+                    }`}
+                  >
+                    Düz Renk
+                  </button>
+                </div>
+              </div>
+
+              {/* Background Selection */}
+              <div>
+                <h4 className="text-lg font-semibold text-gaming-text mb-3">Arka Plan</h4>
+                <div className="grid grid-cols-3 gap-3">
+                  {backgroundOptions[customization.backgroundType as keyof typeof backgroundOptions].map((bg) => (
+                    <button
+                      key={bg.id}
+                      onClick={() => setCustomization({...customization, profileBackground: bg.id})}
+                      className={`h-20 rounded-lg ${bg.class} border-2 transition-all ${
+                        customization.profileBackground === bg.id 
+                          ? 'border-neon-purple' 
+                          : 'border-gaming-border hover:border-gaming-border/60'
+                      }`}
+                      title={bg.name}
+                    >
+                      <div className="h-full w-full rounded-md flex items-center justify-center text-xs text-white font-medium">
+                        {bg.name}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Theme Color Selection */}
+              <div>
+                <h4 className="text-lg font-semibold text-gaming-text mb-3">Tema Rengi</h4>
+                <div className="grid grid-cols-6 gap-3">
+                  {themeColors.map((color) => (
+                    <button
+                      key={color.id}
+                      onClick={() => setCustomization({...customization, themeColor: color.id})}
+                      className={`h-12 w-12 rounded-full ${color.bg} border-2 transition-all ${
+                        customization.themeColor === color.id 
+                          ? 'border-white' 
+                          : 'border-gaming-border hover:border-gaming-border/60'
+                      }`}
+                      title={color.name}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Profile Frame Selection */}
+              <div>
+                <h4 className="text-lg font-semibold text-gaming-text mb-3">Profil Çerçevesi</h4>
+                <div className="grid grid-cols-4 gap-3">
+                  {profileFrames.map((frame) => (
+                    <button
+                      key={frame.id}
+                      onClick={() => setCustomization({...customization, profileFrame: frame.id})}
+                      className={`p-3 rounded-lg border transition-all ${
+                        customization.profileFrame === frame.id 
+                          ? 'border-neon-purple bg-gaming-surface' 
+                          : 'border-gaming-border hover:border-gaming-border/60'
+                      }`}
+                    >
+                      <div className={`w-12 h-12 rounded-full bg-neon-purple/20 mx-auto ${frame.class}`}></div>
+                      <p className="text-xs text-gaming-text mt-2">{frame.name}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowCustomizationModal(false)}
+                className="flex-1 px-4 py-2 bg-gaming-surface text-gaming-text rounded-lg hover:bg-gaming-surface/80 transition-colors"
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleCustomizationSave}
+                className="flex-1 px-4 py-2 bg-neon-purple text-white rounded-lg hover:bg-neon-purple/80 transition-colors"
+              >
+                Kaydet
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Password Change Modal */}
