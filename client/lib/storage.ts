@@ -120,3 +120,8 @@ service firebase.storage {
   }
 }
 */
+
+export default {
+  uploadProfilePhoto,
+  deleteProfilePhoto
+};
