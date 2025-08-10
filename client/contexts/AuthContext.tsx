@@ -24,9 +24,29 @@ interface User {
   phoneNumber?: string;
   isOnline?: boolean;
   createdAt?: string;
+  bio?: string;
+  status?: string;
+  level?: number;
+  xp?: number;
+  badges?: string[];
+  customization?: {
+    profileBackground?: string;
+    themeColor?: string;
+    backgroundType?: 'gradient' | 'image' | 'color';
+    profileFrame?: string;
+  };
   preferences?: {
     theme: 'light' | 'dark';
     notifications: boolean;
+    allowDMsFromFriends?: boolean;
+    showActivity?: boolean;
+    allowServerInvites?: boolean;
+  };
+  gameStats?: {
+    favoriteGames?: string[];
+    totalPlayTime?: number;
+    achievements?: number;
+    rank?: string;
   };
 }
 
