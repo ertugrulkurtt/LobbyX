@@ -347,7 +347,24 @@ export default function Servers() {
         { id: 'val-general', name: 'sohbet', description: 'Genel sohbet', type: 'text', isPrivate: false, memberCount: 2843, isActive: true, categoryId: 'genel', permissions: { canRead: true, canWrite: true } },
         { id: 'val-lfg', name: 'takım-arama', description: 'Takım arkadaşı bulma', type: 'text', isPrivate: false, memberCount: 892, categoryId: 'oyun', permissions: { canRead: true, canWrite: true } },
         { id: 'val-ranked', name: 'ranked-sohbet', description: 'Ranked oyun tartışmaları', type: 'text', isPrivate: false, memberCount: 567, categoryId: 'oyun', permissions: { canRead: true, canWrite: true } },
-        { id: 'val-voice', name: 'Oyun Sohbeti', description: 'Sesli oyun', type: 'voice', isPrivate: false, memberCount: 23, categoryId: 'oyun', permissions: { canRead: true, canWrite: true } },
+        {
+          id: 'val-voice',
+          name: 'Oyun Sohbeti',
+          description: 'Sesli oyun',
+          type: 'voice',
+          isPrivate: false,
+          memberCount: 23,
+          categoryId: 'oyun',
+          permissions: [
+            { roleId: 'admin', allow: ['connectVoice', 'speakVoice'], deny: [] },
+            { roleId: 'moderator', allow: ['connectVoice', 'speakVoice'], deny: [] },
+            { roleId: 'member', allow: ['connectVoice', 'speakVoice'], deny: [] }
+          ],
+          connectedUsers: [
+            { id: 'user4', username: 'AcePlayer', displayName: 'Ace Player', isMuted: false, isDeafened: false, isSpeaking: false },
+            { id: 'user5', username: 'ValorantPro', displayName: 'Valorant Pro', isMuted: false, isDeafened: true, isSpeaking: false }
+          ]
+        },
         { id: 'val-mod', name: 'moderatör-sohbeti', description: 'Moderatör iletişimi', type: 'text', isPrivate: true, memberCount: 5, categoryId: 'moderasyon', permissions: { canRead: false, canWrite: false, adminOnly: true } }
       ]
     },
