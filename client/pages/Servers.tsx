@@ -32,7 +32,10 @@ import {
   Eye,
   EyeOff,
   UserCog,
-  Palette
+  Palette,
+  MicOff,
+  Headphones,
+  User
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
