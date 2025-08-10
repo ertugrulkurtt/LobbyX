@@ -508,12 +508,32 @@ export default function Servers() {
 
     if (!channelOrCategory.permissions) return true;
 
-    // Check each role the user has
-    for (const userRole of currentUserRoles) {
-      const rolePermission = channelOrCategory.permissions.find(p => p.roleId === userRole);
-      if (rolePermission) {
-        if (rolePermission.deny.includes(permission)) return false;
-        if (rolePermission.allow.includes(permission)) return true;
+    // Handle array format (ChannelPermission[])
+    if (Array.isArray(channelOrCategory.permissions)) {
+      // Check each role the user has
+      for (const userRole of currentUserRoles) {
+        const rolePermission = channelOrCategory.permissions.find(p => p.roleId === userRole);
+        if (rolePermission) {
+          if (rolePermission.deny.includes(permission)) return false;
+          if (rolePermission.allow.includes(permission)) return true;
+        }
+      }
+    } else {
+      // Handle object format (legacy format with boolean properties)
+      const perms = channelOrCategory.permissions as any;
+
+      // Check specific permission mappings
+      if (permission === 'readMessages' && perms.canRead !== undefined) {
+        return perms.canRead;
+      }
+      if (permission === 'sendMessages' && perms.canWrite !== undefined) {
+        return perms.canWrite;
+      }
+      if (perms.adminOnly && !currentUserRoles.includes('admin')) {
+        return false;
+      }
+      if (perms.moderatorOnly && !currentUserRoles.includes('admin') && !currentUserRoles.includes('moderator')) {
+        return false;
       }
     }
 
