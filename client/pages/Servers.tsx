@@ -302,6 +302,11 @@ export default function Servers() {
             { roleId: 'admin', allow: ['connectVoice', 'speakVoice'], deny: [] },
             { roleId: 'moderator', allow: ['connectVoice', 'speakVoice'], deny: [] },
             { roleId: 'member', allow: ['connectVoice', 'speakVoice'], deny: [] }
+          ],
+          connectedUsers: [
+            { id: 'user1', username: 'ProGamer123', displayName: 'ProGamer123', isMuted: false, isDeafened: false, isSpeaking: true },
+            { id: 'user2', username: 'GameMaster', displayName: 'GameMaster', isMuted: true, isDeafened: false, isSpeaking: false },
+            { id: 'user3', username: 'ValorantKing', displayName: 'Valorant King', isMuted: false, isDeafened: false, isSpeaking: false }
           ]
         },
         {
