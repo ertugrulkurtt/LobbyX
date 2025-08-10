@@ -26,8 +26,7 @@ import {
   Settings
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { storage } from '../lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadProfilePhoto } from '../lib/storage';
 
 // Real user statistics
 const getUserStats = (userId: string) => {
