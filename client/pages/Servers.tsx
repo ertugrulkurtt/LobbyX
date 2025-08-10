@@ -51,6 +51,15 @@ interface Message {
   isSpecial?: boolean;
 }
 
+interface VoiceChannelUser {
+  id: string;
+  username: string;
+  displayName: string;
+  isMuted: boolean;
+  isDeafened: boolean;
+  isSpeaking: boolean;
+}
+
 interface ServerChannel {
   id: string;
   name: string;
@@ -61,6 +70,7 @@ interface ServerChannel {
   isActive?: boolean;
   categoryId: string;
   permissions?: ChannelPermission[];
+  connectedUsers?: VoiceChannelUser[];
 }
 
 interface ServerRole {
