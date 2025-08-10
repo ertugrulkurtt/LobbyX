@@ -227,7 +227,7 @@ export default function Profile() {
 
   const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || !user) return;
 
     if (file.size > 5 * 1024 * 1024) {
       alert('Dosya boyutu 5MB\'dan küçük olmalıdır.');
@@ -240,18 +240,37 @@ export default function Profile() {
     }
 
     setIsUploading(true);
-    
+
     try {
-      // In real app, upload to Firebase Storage
-      // const downloadURL = await uploadToFirebaseStorage(file, user.uid);
-      // await updateProfile({ photoURL: downloadURL });
-      
-      // Mock upload
-      setTimeout(() => {
-        setIsUploading(false);
-        alert('Profil fotoğrafı başarıyla güncellendi!');
-      }, 2000);
+      // Create unique filename with user ID and timestamp
+      const timestamp = Date.now();
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `profile_${user.uid}_${timestamp}.${fileExtension}`;
+
+      // Create storage reference
+      const storageRef = ref(storage, `profile-photos/${fileName}`);
+
+      // Upload file to Firebase Storage
+      console.log('Uploading file to Firebase Storage...');
+      const snapshot = await uploadBytes(storageRef, file);
+
+      // Get download URL
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      console.log('File uploaded successfully. Download URL:', downloadURL);
+
+      // Update user profile with new photo URL
+      await updateProfile({ photoURL: downloadURL });
+
+      setIsUploading(false);
+      alert('Profil fotoğrafı başarıyla güncellendi!');
+
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+
     } catch (error) {
+      console.error('Fotoğraf yükleme hatası:', error);
       setIsUploading(false);
       alert('Fotoğraf yüklenemedi. Lütfen tekrar deneyin.');
     }
