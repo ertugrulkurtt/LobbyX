@@ -759,55 +759,93 @@ export default function Servers() {
                             if (!canViewChannel) return null;
 
                             return (
-                              <button
-                                key={channel.id}
-                                onClick={() => {
-                                  if (channel.type === 'voice') {
-                                    joinVoiceChannel(channel.id, channel.name, selectedServerData.name);
-                                  } else {
-                                    setSelectedChannel(channel.id);
-                                  }
-                                }}
-                                className={`w-full text-left p-2 rounded-lg transition-all duration-200 ${
-                                  selectedChannel === channel.id
-                                    ? 'bg-neon-purple/20 text-neon-purple'
-                                    : 'hover:bg-gaming-surface/50 text-gaming-muted hover:text-gaming-text'
-                                } ${channel.type === 'voice' ? 'hover:bg-neon-green/10' : ''}`}
-                              >
-                                <div className="flex items-center space-x-2">
-                                  {channel.type === 'voice' ? (
-                                    <Volume2 className="w-4 h-4" />
-                                  ) : channel.isPrivate ? (
-                                    <Lock className="w-4 h-4" />
-                                  ) : (
-                                    <Hash className="w-4 h-4" />
-                                  )}
-                                  <span className="text-sm font-medium truncate">
-                                    {channel.name}
-                                  </span>
-                                  {!canWriteChannel && (
-                                    <EyeOff className="w-3 h-3 text-gaming-muted" title="Sadece okuma" />
-                                  )}
-                                  {channel.isPrivate && (
-                                    <Lock className="w-3 h-3 text-neon-orange" title="Özel kanal" />
-                                  )}
-                                </div>
-                                <div className="flex items-center justify-between mt-1">
-                                  <p className="text-xs truncate text-gaming-muted">
-                                    {channel.description}
-                                  </p>
-                                  <span className="text-xs text-gaming-muted">
+                              <div key={channel.id} className="space-y-1">
+                                <button
+                                  onClick={() => {
+                                    if (channel.type === 'voice') {
+                                      joinVoiceChannel(channel.id, channel.name, selectedServerData.name);
+                                    } else {
+                                      setSelectedChannel(channel.id);
+                                    }
+                                  }}
+                                  className={`w-full text-left p-2 rounded-lg transition-all duration-200 ${
+                                    selectedChannel === channel.id
+                                      ? 'bg-neon-purple/20 text-neon-purple'
+                                      : 'hover:bg-gaming-surface/50 text-gaming-muted hover:text-gaming-text'
+                                  } ${channel.type === 'voice' ? 'hover:bg-neon-green/10' : ''}`}
+                                >
+                                  <div className="flex items-center space-x-2">
                                     {channel.type === 'voice' ? (
-                                      <span className="flex items-center space-x-1">
-                                        <Users className="w-3 h-3" />
-                                        <span>{channel.memberCount}</span>
-                                      </span>
+                                      <Volume2 className="w-4 h-4" />
+                                    ) : channel.isPrivate ? (
+                                      <Lock className="w-4 h-4" />
                                     ) : (
-                                      channel.memberCount
+                                      <Hash className="w-4 h-4" />
                                     )}
-                                  </span>
-                                </div>
-                              </button>
+                                    <span className="text-sm font-medium truncate">
+                                      {channel.name}
+                                    </span>
+                                    {!canWriteChannel && (
+                                      <EyeOff className="w-3 h-3 text-gaming-muted" title="Sadece okuma" />
+                                    )}
+                                    {channel.isPrivate && (
+                                      <Lock className="w-3 h-3 text-neon-orange" title="Özel kanal" />
+                                    )}
+                                  </div>
+                                  <div className="flex items-center justify-between mt-1">
+                                    <p className="text-xs truncate text-gaming-muted">
+                                      {channel.description}
+                                    </p>
+                                    <span className="text-xs text-gaming-muted">
+                                      {channel.type === 'voice' ? (
+                                        <span className="flex items-center space-x-1">
+                                          <Users className="w-3 h-3" />
+                                          <span>{channel.connectedUsers?.length || 0}</span>
+                                        </span>
+                                      ) : (
+                                        channel.memberCount
+                                      )}
+                                    </span>
+                                  </div>
+                                </button>
+
+                                {/* Connected Users for Voice Channels */}
+                                {channel.type === 'voice' && channel.connectedUsers && channel.connectedUsers.length > 0 && (
+                                  <div className="ml-6 space-y-1">
+                                    {channel.connectedUsers.map((connectedUser) => (
+                                      <div
+                                        key={connectedUser.id}
+                                        className="flex items-center space-x-2 p-1 rounded hover:bg-gaming-surface/30 transition-colors"
+                                      >
+                                        <div className="relative">
+                                          <div className="w-4 h-4 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center">
+                                            <User className="w-2 h-2 text-white" />
+                                          </div>
+                                          {connectedUser.isSpeaking && (
+                                            <div className="absolute -inset-1 rounded-full border-2 border-neon-green animate-pulse"></div>
+                                          )}
+                                        </div>
+
+                                        <span className="text-xs text-gaming-text flex-1 truncate">
+                                          {connectedUser.displayName}
+                                        </span>
+
+                                        <div className="flex items-center space-x-1">
+                                          {connectedUser.isMuted && (
+                                            <MicOff className="w-3 h-3 text-red-400" title="Mikrofon kapalı" />
+                                          )}
+                                          {connectedUser.isDeafened && (
+                                            <Headphones className="w-3 h-3 text-red-400" title="Kulaklık kapalı" />
+                                          )}
+                                          {!connectedUser.isMuted && !connectedUser.isDeafened && (
+                                            <Mic className="w-3 h-3 text-neon-green" title="Aktif" />
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                             );
                           })}
                         </div>
