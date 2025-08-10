@@ -15,7 +15,8 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  PlusCircle
+  PlusCircle,
+  Crown
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
