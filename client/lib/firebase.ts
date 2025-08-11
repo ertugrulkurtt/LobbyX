@@ -229,4 +229,21 @@ const showFirebaseErrorNotification = () => {
   }, 3000);
 };
 
+// Immediate connection test on load
+setTimeout(async () => {
+  try {
+    // Quick test to see if Firebase is accessible
+    const testRef = collection(db, 'connectionTest');
+    await getDocs(testRef);
+    console.log('✅ Firebase connection test passed');
+  } catch (error: any) {
+    console.error('❌ Firebase connection test failed:', error.message);
+
+    if (error.message?.includes('Failed to fetch')) {
+      console.warn('🔄 Attempting Firebase reconnection due to fetch failure...');
+      await forceFirebaseReconnect();
+    }
+  }
+}, 1000);
+
 export default app;
