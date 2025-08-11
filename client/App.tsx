@@ -104,6 +104,9 @@ function AppRouter() {
     initializeConnectionMonitoring();
     initializeErrorHandler();
 
+    // Initialize authentication-aware Firebase testing
+    initializeAuthAwareFirebaseTest();
+
     // Run health check after services are initialized
     setTimeout(() => {
       systemHealthCheck.runHealthCheck().then(() => {
