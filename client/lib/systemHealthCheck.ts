@@ -40,6 +40,9 @@ class SystemHealthCheck {
     // Check UI components
     await this.checkUIComponents();
 
+    // Run detailed UI health check
+    await this.checkUIHealth();
+
     console.log('🏥 System health check completed');
     this.printHealthReport();
     
