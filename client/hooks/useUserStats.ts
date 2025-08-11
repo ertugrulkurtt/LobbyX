@@ -67,7 +67,6 @@ export const useUserStats = (): UseUserStatsReturn => {
 
         // Set up real-time subscription
         unsubscribe = subscribeToUserStats(user.uid, async (updatedStats) => {
-          console.log('Stats updated:', updatedStats);
           setStats(updatedStats);
 
           // Recalculate rank (non-blocking)
