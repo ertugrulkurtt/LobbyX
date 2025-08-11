@@ -177,24 +177,28 @@ function AppRouter() {
   );
 }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <ErrorBoundary>
-        <ThemeProvider>
-          <AuthProvider>
-            <NotificationProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <AppRouter />
-              </BrowserRouter>
-            </NotificationProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </ErrorBoundary>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  console.log('🚀 LobbyX App starting...');
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <AuthProvider>
+              <NotificationProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <AppRouter />
+                </BrowserRouter>
+              </NotificationProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 createRoot(document.getElementById("root")!).render(<App />);
