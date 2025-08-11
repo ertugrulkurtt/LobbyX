@@ -141,8 +141,12 @@ export function useCallManager(): [CallState, CallActions] {
     callService.startListening(user.uid);
 
     return () => {
-      callService.stopListening();
-      clearTimer();
+      try {
+        callService.stopListening();
+        clearTimer();
+      } catch (error) {
+        console.warn('Error cleaning up call service:', error);
+      }
     };
   }, [user?.uid]);
 
