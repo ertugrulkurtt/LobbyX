@@ -35,6 +35,7 @@ import { getOrCreateDirectConversation } from '../lib/messageService';
 export default function FriendsReal() {
   const { user } = useAuth();
   const { addFriend, removeFriend } = useUserStats();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'online' | 'all' | 'pending' | 'add'>('online');
   const [searchQuery, setSearchQuery] = useState('');
   const [newFriendUsername, setNewFriendUsername] = useState('');
