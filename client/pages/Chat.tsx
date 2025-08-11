@@ -1204,6 +1204,7 @@ export default function ChatReal() {
         onEndCall={handleEndCall}
         onToggleMute={handleToggleMute}
         onToggleDeafen={handleToggleDeafen}
+        onForceClose={handleForceCloseCall}
       />
 
       {/* Call Error Alert */}
