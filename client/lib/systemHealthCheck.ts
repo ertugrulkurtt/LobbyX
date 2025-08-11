@@ -5,6 +5,7 @@
 
 import { callSystemTest } from './callSystemTest';
 import { unifiedErrorHandler } from './unifiedErrorHandler';
+import { uiHealthCheck } from './uiHealthCheck';
 
 interface HealthCheckResult {
   component: string;
