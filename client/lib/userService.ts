@@ -66,13 +66,15 @@ export interface Conversation {
 export const getAllUsers = async (): Promise<RealUser[]> => {
   try {
     const usersRef = collection(db, 'users');
-    const q = query(usersRef, orderBy('displayName'));
-    const snapshot = await getDocs(q);
-    
-    return snapshot.docs.map(doc => ({
+    const snapshot = await getDocs(usersRef);
+
+    const users = snapshot.docs.map(doc => ({
       uid: doc.id,
       ...doc.data()
     })) as RealUser[];
+
+    // Sort on client side to avoid permission issues
+    return users.sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
   } catch (error) {
     console.error('Error fetching users:', error);
     throw error;
@@ -85,13 +87,16 @@ export const getAllUsers = async (): Promise<RealUser[]> => {
 export const getOnlineUsers = async (): Promise<RealUser[]> => {
   try {
     const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('isOnline', '==', true), orderBy('displayName'));
+    const q = query(usersRef, where('isOnline', '==', true));
     const snapshot = await getDocs(q);
-    
-    return snapshot.docs.map(doc => ({
+
+    const users = snapshot.docs.map(doc => ({
       uid: doc.id,
       ...doc.data()
     })) as RealUser[];
+
+    // Sort on client side to avoid permission issues
+    return users.sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
   } catch (error) {
     console.error('Error fetching online users:', error);
     throw error;
@@ -309,16 +314,15 @@ export const getUserConversations = async (userId: string): Promise<Conversation
     const conversationsRef = collection(db, 'conversations');
     const q = query(
       conversationsRef,
-      where('participants', 'array-contains', userId),
-      orderBy('updatedAt', 'desc')
+      where('participants', 'array-contains', userId)
     );
-    
+
     const snapshot = await getDocs(q);
-    
+
     const conversations = await Promise.all(
       snapshot.docs.map(async (conversationDoc) => {
         const conversationData = conversationDoc.data();
-        
+
         // Get participant details
         const participantDetails = await Promise.all(
           conversationData.participants.map(async (participantId: string) => {
@@ -326,7 +330,7 @@ export const getUserConversations = async (userId: string): Promise<Conversation
             return { uid: userDoc.id, ...userDoc.data() } as RealUser;
           })
         );
-        
+
         return {
           id: conversationDoc.id,
           ...conversationData,
@@ -334,8 +338,9 @@ export const getUserConversations = async (userId: string): Promise<Conversation
         } as Conversation;
       })
     );
-    
-    return conversations;
+
+    // Sort on client side by updatedAt descending
+    return conversations.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   } catch (error) {
     console.error('Error fetching conversations:', error);
     throw error;
@@ -348,41 +353,27 @@ export const getUserConversations = async (userId: string): Promise<Conversation
 export const searchUsers = async (searchTerm: string): Promise<RealUser[]> => {
   try {
     if (!searchTerm.trim()) return [];
-    
+
     const usersRef = collection(db, 'users');
-    
-    // Search by username
-    const usernameQuery = query(
-      usersRef,
-      where('username', '>=', searchTerm.toLowerCase()),
-      where('username', '<=', searchTerm.toLowerCase() + '\uf8ff'),
-      limit(10)
-    );
-    
-    // Search by display name
-    const displayNameQuery = query(
-      usersRef,
-      where('displayName', '>=', searchTerm),
-      where('displayName', '<=', searchTerm + '\uf8ff'),
-      limit(10)
-    );
-    
-    const [usernameSnapshot, displayNameSnapshot] = await Promise.all([
-      getDocs(usernameQuery),
-      getDocs(displayNameQuery)
-    ]);
-    
-    const userMap = new Map();
-    
-    usernameSnapshot.docs.forEach(doc => {
-      userMap.set(doc.id, { uid: doc.id, ...doc.data() });
+
+    // Get all users and filter on client side to avoid permission issues
+    const snapshot = await getDocs(usersRef);
+
+    const allUsers = snapshot.docs.map(doc => ({
+      uid: doc.id,
+      ...doc.data()
+    })) as RealUser[];
+
+    // Client-side search
+    const searchTermLower = searchTerm.toLowerCase();
+    const filteredUsers = allUsers.filter(user => {
+      const username = (user.username || '').toLowerCase();
+      const displayName = (user.displayName || '').toLowerCase();
+      return username.includes(searchTermLower) || displayName.includes(searchTermLower);
     });
-    
-    displayNameSnapshot.docs.forEach(doc => {
-      userMap.set(doc.id, { uid: doc.id, ...doc.data() });
-    });
-    
-    return Array.from(userMap.values()) as RealUser[];
+
+    // Return first 10 results
+    return filteredUsers.slice(0, 10);
   } catch (error) {
     console.error('Error searching users:', error);
     throw error;
