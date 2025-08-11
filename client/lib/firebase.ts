@@ -229,21 +229,34 @@ const showFirebaseErrorNotification = () => {
   }, 3000);
 };
 
-// Immediate connection test on load
-setTimeout(async () => {
+// Firebase connection test with authentication check
+export const testFirebaseConnection = async (): Promise<boolean> => {
   try {
-    // Quick test to see if Firebase is accessible
-    const testRef = collection(db, 'connectionTest');
+    // Check if user is authenticated first
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      console.log('ℹ️ Firebase connection test skipped - user not authenticated');
+      return false;
+    }
+
+    // Test Firebase connectivity with a simple authenticated operation
+    const testRef = collection(db, 'users');
     await getDocs(testRef);
     console.log('✅ Firebase connection test passed');
+    return true;
   } catch (error: any) {
     console.error('❌ Firebase connection test failed:', error.message);
 
-    if (error.message?.includes('Failed to fetch')) {
-      console.warn('🔄 Attempting Firebase reconnection due to fetch failure...');
+    // Only attempt reconnection for network errors
+    if (error.message?.includes('Failed to fetch') ||
+        error.message?.includes('network-request-failed')) {
+      console.warn('🔄 Attempting Firebase reconnection due to network failure...');
       await forceFirebaseReconnect();
     }
+
+    return false;
   }
-}, 1000);
+};
 
 export default app;
