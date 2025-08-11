@@ -18,7 +18,7 @@ export const testFirestoreConnection = async (): Promise<ConnectionTestResult> =
 
   try {
     // Check authentication first
-    const { auth } = await import('./firebase');
+    const { auth } = require('./firebase');
     const currentUser = auth.currentUser;
 
     if (!currentUser) {
