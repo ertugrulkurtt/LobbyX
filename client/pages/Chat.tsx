@@ -138,12 +138,6 @@ export default function ChatReal() {
 
     setLoading(true);
 
-    // Test Firebase connection first
-    testFirebaseConnection().then(isConnected => {
-      if (!isConnected) {
-        console.error('Firebase connection failed - trying to continue anyway');
-      }
-    });
 
     // Subscribe to real-time conversations with better error handling
     const unsubscribe = subscribeToConversations(user.uid, (realTimeConversations) => {
