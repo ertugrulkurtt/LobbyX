@@ -187,7 +187,15 @@ export function Layout({ children }: LayoutProps) {
               >
                 <div className="relative">
                   <div className="w-8 h-8 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-white" />
+                    {user?.photoURL ? (
+                      <img
+                        src={user.photoURL}
+                        alt="Profile"
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <User className="w-5 h-5 text-white" />
+                    )}
                   </div>
                   <div className="absolute -bottom-1 -right-1 status-online"></div>
                 </div>
