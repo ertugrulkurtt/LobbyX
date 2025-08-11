@@ -85,7 +85,7 @@ export const getAllUsers = async (): Promise<RealUser[]> => {
 
     // Sort on client side to avoid permission issues
     return users.sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
-  });
+  }, 'getAllUsers');
 };
 
 /**
@@ -255,7 +255,7 @@ export const sendFriendRequest = async (fromUserId: string, toUserId: string): P
       console.error('Error creating friend request notification:', notificationError);
       // Don't fail the friend request if notification creation fails
     }
-  });
+  }, 'sendFriendRequest');
 };
 
 /**
