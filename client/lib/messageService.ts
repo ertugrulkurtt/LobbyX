@@ -334,7 +334,11 @@ export const markMessagesAsRead = async (
   conversationId: string,
   userId: string
 ): Promise<void> => {
-  try {
+  return withRetry(async () => {
+    // Ensure user is authenticated
+    if (!auth.currentUser) {
+      throw new Error('User must be authenticated to mark messages as read');
+    }
     // Reset unread count for this user
     const conversationRef = doc(db, 'conversations', conversationId);
     const conversationDoc = await getDoc(conversationRef);
@@ -387,10 +391,15 @@ export const markMessagesAsRead = async (
 
     // Mark related message notifications as read
     await markMessageNotificationsAsRead(conversationId, userId);
-  } catch (error) {
+  }, 'markMessagesAsRead').catch((error) => {
+    // Handle permission errors gracefully
+    if (error.code === 'permission-denied') {
+      console.warn('🔒 Permission denied marking messages as read - Firestore rules need deployment');
+      return; // Don't throw, just warn
+    }
     console.error('Error marking messages as read:', error);
     throw error;
-  }
+  });
 };
 
 /**
