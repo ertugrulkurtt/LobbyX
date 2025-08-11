@@ -97,6 +97,13 @@ function AppRouter() {
     initFileCleanupService();
     initializeConnectionMonitoring();
     initializeErrorHandler();
+
+    // Run health check after services are initialized
+    setTimeout(() => {
+      systemHealthCheck.runHealthCheck().then(() => {
+        systemHealthCheck.createHealthIndicator();
+      });
+    }, 2000);
   }, []);
 
   if (isLoading) {
