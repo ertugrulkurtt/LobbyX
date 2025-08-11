@@ -199,6 +199,34 @@ export default function ChatReal() {
     }
   };
 
+  // Profile modal handlers
+  const handleUserProfileClick = (user: RealUser) => {
+    setSelectedUserProfile(user);
+    setIsProfileModalOpen(true);
+  };
+
+  const handleCloseProfileModal = () => {
+    setIsProfileModalOpen(false);
+    setSelectedUserProfile(null);
+  };
+
+  const handleSendMessageFromProfile = async (targetUserId: string) => {
+    if (!user?.uid) return;
+
+    try {
+      const conversationId = await getOrCreateDirectConversation(user.uid, targetUserId);
+      setSelectedChat(conversationId);
+      handleCloseProfileModal();
+    } catch (error: any) {
+      console.error('Error starting conversation from profile:', error);
+      if (error.message.includes('arkadaş')) {
+        alert(error.message);
+      } else {
+        alert('Sohbet başlatılamadı.');
+      }
+    }
+  };
+
   // Get conversation details
   const selectedChatData = conversations.find(c => c.id === selectedChat);
 
