@@ -1,0 +1,333 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions for security
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isParticipant(participants) {
+      return isAuthenticated() && request.auth.uid in participants;
+    }
+    
+    function isServerMember(serverId) {
+      return isAuthenticated() && exists(/databases/$(database)/documents/servers/$(serverId)/members/$(request.auth.uid));
+    }
+    
+    function isServerOwner(ownerId) {
+      return isAuthenticated() && request.auth.uid == ownerId;
+    }
+
+    // USERS COLLECTION
+    match /users/{userId} {
+      // Users can read their own data and public data of others
+      allow read: if isAuthenticated();
+      // Users can only write their own data
+      allow write: if isOwner(userId);
+      // Allow creation only for the user's own document
+      allow create: if isOwner(userId);
+    }
+
+    // FRIEND REQUESTS COLLECTION
+    match /friendRequests/{requestId} {
+      // Users can read requests they sent or received
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == resource.data.fromUserId || 
+         request.auth.uid == resource.data.toUserId);
+      
+      // Users can create requests they are sending
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.fromUserId;
+      
+      // Users can update requests they sent or received (accept/reject)
+      allow update: if isAuthenticated() && 
+        (request.auth.uid == resource.data.fromUserId || 
+         request.auth.uid == resource.data.toUserId);
+      
+      // Users can delete their own sent requests
+      allow delete: if isAuthenticated() && 
+        request.auth.uid == resource.data.fromUserId;
+    }
+
+    // CONVERSATIONS COLLECTION
+    match /conversations/{conversationId} {
+      // Users can read conversations they participate in
+      allow read: if isAuthenticated() && 
+        request.auth.uid in resource.data.participants;
+      
+      // Users can create conversations they participate in
+      allow create: if isAuthenticated() && 
+        request.auth.uid in request.resource.data.participants;
+      
+      // Users can update conversations they participate in
+      allow update: if isAuthenticated() && 
+        request.auth.uid in resource.data.participants;
+      
+      // Only conversation participants can delete
+      allow delete: if isAuthenticated() && 
+        request.auth.uid in resource.data.participants;
+
+      // MESSAGES SUBCOLLECTION
+      match /messages/{messageId} {
+        // Users can read messages in conversations they participate in
+        allow read: if isAuthenticated() && 
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+        
+        // Users can create messages in conversations they participate in
+        allow create: if isAuthenticated() && 
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants &&
+          request.auth.uid == request.resource.data.senderId;
+        
+        // Users can update their own messages or mark messages as read
+        allow update: if isAuthenticated() && 
+          (request.auth.uid == resource.data.senderId || 
+           request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants);
+        
+        // Users can delete their own messages
+        allow delete: if isAuthenticated() && 
+          request.auth.uid == resource.data.senderId;
+      }
+    }
+
+    // SERVERS COLLECTION
+    match /servers/{serverId} {
+      // All authenticated users can read public servers
+      allow read: if isAuthenticated();
+      
+      // Only server owners can create servers
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.ownerId;
+      
+      // Server owners and members can update
+      allow update: if isAuthenticated() && 
+        (request.auth.uid == resource.data.ownerId || 
+         request.auth.uid in resource.data.members);
+      
+      // Only server owners can delete
+      allow delete: if isAuthenticated() && 
+        request.auth.uid == resource.data.ownerId;
+
+      // SERVER MEMBERS SUBCOLLECTION
+      match /members/{memberId} {
+        // Server members can read member list
+        allow read: if isAuthenticated() && 
+          (isServerMember(serverId) || isServerOwner(get(/databases/$(database)/documents/servers/$(serverId)).data.ownerId));
+        
+        // Users can join servers (create their own membership)
+        allow create: if isAuthenticated() && 
+          request.auth.uid == memberId;
+        
+        // Server owners can manage members, members can update their own data
+        allow update: if isAuthenticated() && 
+          (request.auth.uid == memberId || 
+           isServerOwner(get(/databases/$(database)/documents/servers/$(serverId)).data.ownerId));
+        
+        // Members can leave, owners can remove members
+        allow delete: if isAuthenticated() && 
+          (request.auth.uid == memberId || 
+           isServerOwner(get(/databases/$(database)/documents/servers/$(serverId)).data.ownerId));
+      }
+
+      // SERVER CHANNELS SUBCOLLECTION
+      match /channels/{channelId} {
+        // Server members can read channels
+        allow read: if isAuthenticated() && isServerMember(serverId);
+        
+        // Server owners and admins can create channels
+        allow create: if isAuthenticated() && 
+          isServerOwner(get(/databases/$(database)/documents/servers/$(serverId)).data.ownerId);
+        
+        // Server owners and admins can update channels
+        allow update: if isAuthenticated() && 
+          isServerOwner(get(/databases/$(database)/documents/servers/$(serverId)).data.ownerId);
+        
+        // Server owners can delete channels
+        allow delete: if isAuthenticated() && 
+          isServerOwner(get(/databases/$(database)/documents/servers/$(serverId)).data.ownerId);
+      }
+    }
+
+    // GROUPS COLLECTION
+    match /groups/{groupId} {
+      // Group members can read
+      allow read: if isAuthenticated() && 
+        request.auth.uid in resource.data.members;
+      
+      // Users can create groups they own
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.ownerId;
+      
+      // Group owners and members can update
+      allow update: if isAuthenticated() && 
+        (request.auth.uid == resource.data.ownerId || 
+         request.auth.uid in resource.data.members);
+      
+      // Only group owners can delete
+      allow delete: if isAuthenticated() && 
+        request.auth.uid == resource.data.ownerId;
+    }
+
+    // USER STATISTICS COLLECTION
+    match /userStats/{userId} {
+      // Users can read their own stats, others can read for leaderboard
+      allow read: if isAuthenticated();
+      
+      // Users can only write their own stats
+      allow write: if isOwner(userId);
+    }
+
+    // DAILY ACTIVITY COLLECTION
+    match /dailyActivity/{activityId} {
+      // Users can read their own activity
+      allow read: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      // Users can create their own activity
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.userId;
+      
+      // Users can update their own activity
+      allow update: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      // Users can delete their own activity
+      allow delete: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+    }
+
+    // MESSAGE STATISTICS COLLECTION
+    match /messageStats/{statsId} {
+      // Users can read their own message stats
+      allow read: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      // Users can create their own message stats
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.userId;
+      
+      // Users can update their own message stats
+      allow update: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+    }
+
+    // XP LOGS COLLECTION
+    match /xpLogs/{logId} {
+      // Users can read their own XP logs
+      allow read: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      // System can create XP logs for users
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.userId;
+      
+      // Users cannot modify XP logs (integrity)
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ACHIEVEMENT PROGRESS COLLECTION
+    match /achievementProgress/{progressId} {
+      // Users can read their own achievement progress
+      allow read: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      // Users can create their own achievement progress
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.userId;
+      
+      // Users can update their own achievement progress
+      allow update: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+    }
+
+    // LEADERBOARD COLLECTION
+    match /leaderboard/{document=**} {
+      // All authenticated users can read leaderboard
+      allow read: if isAuthenticated();
+      
+      // Only system/admin can write to leaderboard
+      allow write: if false; // System-managed
+    }
+
+    // SERVER INVITES COLLECTION
+    match /serverInvites/{inviteId} {
+      // All authenticated users can read invites
+      allow read: if isAuthenticated();
+      
+      // Server owners can create invites
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.createdBy;
+      
+      // Invite creators can update their invites
+      allow update: if isAuthenticated() && 
+        request.auth.uid == resource.data.createdBy;
+      
+      // Invite creators can delete their invites
+      allow delete: if isAuthenticated() && 
+        request.auth.uid == resource.data.createdBy;
+    }
+
+    // NOTIFICATIONS COLLECTION
+    match /notifications/{userId}/userNotifications/{notificationId} {
+      // Users can only access their own notifications
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+    }
+
+    // VOICE CHANNELS COLLECTION (if used)
+    match /voiceChannels/{channelId} {
+      // All authenticated users can read voice channels
+      allow read: if isAuthenticated();
+      
+      // Server members can join/leave voice channels
+      allow write: if isAuthenticated();
+    }
+
+    // USER PRESENCE COLLECTION (for online status)
+    match /presence/{userId} {
+      // All authenticated users can read presence
+      allow read: if isAuthenticated();
+      
+      // Users can only update their own presence
+      allow write: if isOwner(userId);
+    }
+
+    // REPORT SYSTEM (if implemented)
+    match /reports/{reportId} {
+      // Users can read their own reports
+      allow read: if isAuthenticated() && 
+        request.auth.uid == resource.data.reporterId;
+      
+      // Users can create reports
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.reporterId;
+      
+      // Reports cannot be modified once created
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // BLOCK LIST COLLECTION
+    match /blockedUsers/{userId}/blocks/{blockedUserId} {
+      // Users can manage their own block list
+      allow read, write: if isOwner(userId);
+    }
+
+    // SYSTEM LOGS (Admin only)
+    match /systemLogs/{logId} {
+      // Only system can read/write logs
+      allow read, write: if false;
+    }
+
+    // Default: Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
