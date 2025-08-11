@@ -283,7 +283,15 @@ export default function Chat() {
               <div className="flex items-center space-x-3">
                 <div className="relative">
                   <div className="w-12 h-12 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center">
-                    <MessageSquare className="w-6 h-6 text-white" />
+                    {chat.avatar ? (
+                      <img
+                        src={chat.avatar}
+                        alt={chat.name}
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <MessageSquare className="w-6 h-6 text-white" />
+                    )}
                   </div>
                   {chat.isOnline && (
                     <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-neon-green rounded-full border-2 border-gaming-surface"></div>
