@@ -66,6 +66,19 @@ export default function Chat() {
 
   // Mock friend chat data
   const friendChats: FriendChat[] = [
+    // Add current user for testing avatar display
+    ...(user ? [{
+      id: user.uid,
+      name: user.displayName || 'Kullanıcı',
+      username: user.username || 'currentuser',
+      avatar: user.photoURL,
+      isOnline: true,
+      lastMessage: 'Test - Avatar görünüyor mu?',
+      lastMessageTime: 'Şimdi',
+      unreadCount: 0,
+      isVerified: false,
+      isFavorite: true
+    }] : []),
     {
       id: 'progamer123',
       name: 'ProGamer123',
