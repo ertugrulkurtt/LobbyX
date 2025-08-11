@@ -162,10 +162,8 @@ window.addEventListener('unhandledrejection', (event) => {
       // Prevent the error from being logged as unhandled
       event.preventDefault();
 
-      // For Target ID errors, try to force reconnect
-      if (error.message?.includes('Target ID already exists')) {
-        setTimeout(() => forceFirebaseReconnect(), 1000);
-      }
+      // For Target ID errors, just prevent the error from being unhandled
+      // Don't attempt reconnection as it causes state corruption
     }
   }
 });

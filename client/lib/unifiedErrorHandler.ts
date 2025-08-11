@@ -132,12 +132,9 @@ class UnifiedErrorHandler {
    * Handle Firebase specific errors
    */
   private async handleFirebaseError(error: any) {
-    try {
-      console.log('🔄 Attempting Firebase error recovery...');
-      await forceFirebaseReconnect();
-    } catch (recoveryError) {
-      console.error('❌ Firebase recovery failed:', recoveryError);
-    }
+    // Disable automatic Firebase recovery to prevent state corruption
+    // Just log the error without attempting reconnection
+    console.warn('Firebase error detected (no recovery attempted):', error.message);
   }
 
   /**
