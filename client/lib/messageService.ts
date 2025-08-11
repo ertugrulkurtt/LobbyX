@@ -173,24 +173,24 @@ export const getConversationMessages = async (
   conversationId: string,
   limitCount: number = 50
 ): Promise<Message[]> => {
-  try {
+  return withRetry(async () => {
     const messagesRef = collection(db, 'conversations', conversationId, 'messages');
     const q = query(
       messagesRef,
       orderBy('timestamp', 'desc'),
       limit(limitCount)
     );
-    
+
     const snapshot = await getDocs(q);
-    
+
     const messages = await Promise.all(
       snapshot.docs.map(async (messageDoc) => {
         const messageData = messageDoc.data();
-        
+
         // Get sender details
         const senderDoc = await getDoc(doc(db, 'users', messageData.senderId));
         const sender = { uid: senderDoc.id, ...senderDoc.data() } as RealUser;
-        
+
         return {
           id: messageDoc.id,
           ...messageData,
@@ -198,12 +198,9 @@ export const getConversationMessages = async (
         } as Message;
       })
     );
-    
+
     return messages.reverse(); // Return in chronological order
-  } catch (error) {
-    console.error('Error fetching messages:', error);
-    throw error;
-  }
+  }, 'getConversationMessages');
 };
 
 /**
