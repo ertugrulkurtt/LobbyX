@@ -373,11 +373,11 @@ export const markMessagesAsRead = async (
     // Reset unread count for this user
     const conversationRef = doc(db, 'conversations', conversationId);
     const conversationDoc = await getDoc(conversationRef);
-    
+
     if (conversationDoc.exists()) {
       const conversationData = conversationDoc.data();
       const currentUnreadCounts = conversationData.unreadCounts || {};
-      
+
       await updateDoc(conversationRef, {
         unreadCounts: {
           ...currentUnreadCounts,
@@ -385,7 +385,7 @@ export const markMessagesAsRead = async (
         }
       });
     }
-    
+
     // Mark individual messages as read
     const messagesRef = collection(db, 'conversations', conversationId, 'messages');
     // Remove compound where clause to avoid index requirement
@@ -417,11 +417,47 @@ export const markMessagesAsRead = async (
           });
         }
       });
-    
+
     await Promise.all(updatePromises);
+
+    // Mark related message notifications as read
+    await markMessageNotificationsAsRead(conversationId, userId);
   } catch (error) {
     console.error('Error marking messages as read:', error);
     throw error;
+  }
+};
+
+/**
+ * Mark message notifications as read for a specific conversation
+ */
+const markMessageNotificationsAsRead = async (
+  conversationId: string,
+  userId: string
+): Promise<void> => {
+  try {
+    const notificationsRef = collection(db, 'notifications');
+    const notificationQuery = query(
+      notificationsRef,
+      where('userId', '==', userId),
+      where('type', '==', 'message'),
+      where('conversationId', '==', conversationId),
+      where('isRead', '==', false)
+    );
+
+    const notificationSnapshot = await getDocs(notificationQuery);
+
+    const updatePromises = notificationSnapshot.docs.map(notificationDoc =>
+      updateDoc(notificationDoc.ref, {
+        isRead: true,
+        updatedAt: new Date().toISOString()
+      })
+    );
+
+    await Promise.all(updatePromises);
+  } catch (error) {
+    console.error('Error marking message notifications as read:', error);
+    // Don't throw error as this is secondary functionality
   }
 };
 
