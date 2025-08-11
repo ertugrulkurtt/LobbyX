@@ -27,7 +27,6 @@ export const rtdb = getDatabase(app);
 let networkEnabled = true;
 
 export const handleFirebaseNetworkError = async (error: any) => {
-  console.warn('Firebase network error detected:', error);
 
   // Check if it's actually a network error
   const isNetworkError =
