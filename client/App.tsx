@@ -95,6 +95,7 @@ function AppRouter() {
     initFileCleanupService();
     initializeConnectionMonitoring();
     initializeGlobalErrorHandler();
+    initializeGlobalFirebaseErrorHandling();
   }, []);
 
   if (isLoading) {
@@ -179,7 +180,7 @@ function AppRouter() {
 }
 
 const App = () => {
-  console.log('🚀 LobbyX App starting...');
+  console.log('���� LobbyX App starting...');
 
   return (
     <QueryClientProvider client={queryClient}>
