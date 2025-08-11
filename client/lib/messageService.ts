@@ -69,10 +69,10 @@ export interface Conversation {
 export const getUserConversations = async (userId: string): Promise<Conversation[]> => {
   try {
     const conversationsRef = collection(db, 'conversations');
+    // Remove orderBy to avoid composite index requirement
     const q = query(
       conversationsRef,
-      where('participants', 'array-contains', userId),
-      orderBy('updatedAt', 'desc')
+      where('participants', 'array-contains', userId)
     );
     
     const snapshot = await getDocs(q);
