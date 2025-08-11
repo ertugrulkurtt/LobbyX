@@ -117,26 +117,8 @@ export const safeFetch = async (input: RequestInfo | URL, init?: RequestInit): P
   }
 };
 
-// Override global fetch to add error handling
-const originalFetch = window.fetch;
-window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-  try {
-    return await originalFetch(input, init);
-  } catch (error) {
-    if (isNetworkError(error)) {
-      handleNetworkError(error);
-
-      // For Firebase operations, let Firebase handle the retry logic
-      const url = typeof input === 'string' ? input : input.url;
-      if (url && (url.includes('firestore.googleapis.com') || url.includes('firebase'))) {
-        console.warn('Firebase network error - letting Firebase handle retry');
-        // Re-throw the error so Firebase can handle it properly
-        throw error;
-      }
-    }
-    throw error;
-  }
-};
+// Don't override fetch - let other libraries (FullStory, etc.) handle it
+// Instead, rely on unhandled rejection handling
 
 export default {
   handleNetworkError,

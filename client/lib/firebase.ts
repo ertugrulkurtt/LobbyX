@@ -148,36 +148,39 @@ document.addEventListener('visibilitychange', async () => {
   }
 });
 
-// Global error handler for unhandled Firebase errors
+// Enhanced global error handler for Firebase errors
 window.addEventListener('unhandledrejection', (event) => {
   const error = event.reason;
 
   if (error && typeof error === 'object') {
+    const errorMessage = error.message || '';
     const isFirebaseError =
-      error.message?.includes('Failed to fetch') ||
-      error.message?.includes('Target ID already exists') ||
+      errorMessage.includes('Failed to fetch') ||
+      errorMessage.includes('Target ID already exists') ||
+      errorMessage.includes('firebase') ||
+      errorMessage.includes('firestore') ||
       error.code === 'unavailable' ||
-      error.code === 'network-request-failed' ||
-      error.message?.includes('firebase') ||
-      error.message?.includes('firestore');
+      error.code === 'network-request-failed';
 
     if (isFirebaseError) {
       // Prevent the error from being logged as unhandled
       event.preventDefault();
 
-      // Silently handle all Firebase network errors
+      // Log quietly for debugging but don't show to user
+      console.debug('Firebase network error handled:', errorMessage.substring(0, 100));
       return;
     }
   }
 });
 
-// Handle regular errors but don't prevent them - just reduce noise
+// Also catch any remaining TypeError: Failed to fetch
 window.addEventListener('error', (event) => {
   const error = event.error;
 
   if (error && error.message?.includes('Failed to fetch')) {
-    // Don't prevent the error, just log it quietly
-    console.debug('Network fetch failed (this is normal for temporary connectivity issues)');
+    // Prevent these from showing in console as errors
+    event.preventDefault();
+    console.debug('Network error caught and handled');
   }
 });
 
