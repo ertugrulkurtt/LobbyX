@@ -780,7 +780,7 @@ export default function Servers() {
                           <span className="text-xs font-bold text-gaming-muted uppercase tracking-wider">
                             {category.name}
                           </span>
-                          {category.permissions?.adminOnly && (
+                          {Array.isArray(category.permissions) ? false : category.permissions?.adminOnly && (
                             <Shield className="w-3 h-3 text-neon-orange" />
                           )}
                         </div>
