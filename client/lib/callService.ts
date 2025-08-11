@@ -19,7 +19,7 @@ import {
   orderBy
 } from 'firebase/firestore';
 import { rtdb, db } from './firebase';
-import { withFirebaseErrorHandling } from './globalFirebaseErrorHandler';
+import { wrapOperation } from './unifiedErrorHandler';
 import { RealUser } from './userService';
 
 export interface CallData {
