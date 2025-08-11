@@ -171,7 +171,7 @@ export default function ChatReal() {
         setCanSendMessage(false);
         setFriendshipStatus(error.message);
       } else if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
-        alert('Bağlantı hatası. İnternet bağlantınızı kontrol edin ve tekrar deneyin.');
+        alert('Bağlantı hatası. İnternet bağlant��nızı kontrol edin ve tekrar deneyin.');
       } else {
         alert('Mesaj gönderilemedi. Lütfen tekrar deneyin.');
       }
@@ -223,6 +223,45 @@ export default function ChatReal() {
         alert(error.message);
       } else {
         alert('Sohbet başlatılamadı.');
+      }
+    }
+  };
+
+  const handleAddFriendFromProfile = async (targetUserId: string) => {
+    if (!user?.uid) return;
+
+    try {
+      await sendFriendRequest(user.uid, targetUserId);
+      alert('Arkadaşlık isteği gönderildi!');
+    } catch (error: any) {
+      console.error('Error sending friend request from profile:', error);
+      if (error.message.includes('already sent')) {
+        alert('Bu kullanıcıya zaten arkadaşlık isteği gönderilmiş.');
+      } else if (error.message.includes('already friends')) {
+        alert('Bu kullanıcı zaten arkadaşınız.');
+      } else if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
+        alert('Bağlantı hatası. İnternet bağlantınızı kontrol edin ve tekrar deneyin.');
+      } else {
+        alert(error.message || 'Arkadaşlık isteği gönderilemedi.');
+      }
+    }
+  };
+
+  const handleRemoveFriendFromProfile = async (targetUserId: string) => {
+    if (!user?.uid) return;
+
+    const confirmRemove = window.confirm('Bu kişiyi arkadaşlıktan çıkarmak istediğinizden emin misiniz?');
+    if (!confirmRemove) return;
+
+    try {
+      await removeFriend(user.uid, targetUserId);
+      alert('Arkadaşlıktan çıkarıldı.');
+    } catch (error: any) {
+      console.error('Error removing friend from profile:', error);
+      if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
+        alert('Bağlantı hatası. İnternet bağlantınızı kontrol edin ve tekrar deneyin.');
+      } else {
+        alert('Arkadaşlıktan çıkarılamadı. Lütfen tekrar deneyin.');
       }
     }
   };
