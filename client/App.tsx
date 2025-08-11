@@ -113,8 +113,25 @@ function AppRouter() {
     setTimeout(() => {
       systemHealthCheck.runHealthCheck().then(() => {
         systemHealthCheck.createHealthIndicator();
+      }).catch((error) => {
+        if (error.message?.includes('permission') || error.code === 'permission-denied') {
+          setShowFirebaseError(true);
+        }
       });
     }, 2000);
+
+    // Listen for global Firebase permission errors
+    const handleGlobalError = (event: any) => {
+      const error = event.detail || event.reason;
+      if (error && (error.message?.includes('permission') || error.code === 'permission-denied')) {
+        setShowFirebaseError(true);
+      }
+    };
+
+    window.addEventListener('firebase-permission-error', handleGlobalError);
+    return () => {
+      window.removeEventListener('firebase-permission-error', handleGlobalError);
+    };
   }, []);
 
   if (isLoading) {
