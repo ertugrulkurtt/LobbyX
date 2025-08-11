@@ -25,7 +25,7 @@ import { initializeAuthAwareFirebaseTest } from "./lib/authAwareFirebaseTest";
 import { initializeRulesCheck } from "./lib/firebaseRulesChecker";
 import { cleanupAllSubscriptions } from "./lib/subscriptionManager";
 import "./lib/firebaseRecovery"; // Initialize Firebase assertion failure handler
-import "./lib/simpleErrorHandler"; // Initialize simple error handling
+import "./lib/minimalErrorHandler"; // Initialize minimal error handling without fetch interference
 
 
 // Layout
