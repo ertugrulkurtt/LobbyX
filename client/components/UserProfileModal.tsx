@@ -15,7 +15,7 @@ import {
   Settings
 } from 'lucide-react';
 import { RealUser } from '../lib/userService';
-import { getUserStats } from '../lib/userStats';
+import { getUserStats, UserStats as UserStatsType } from '../lib/userStats';
 
 interface UserProfileModalProps {
   user: RealUser | null;
