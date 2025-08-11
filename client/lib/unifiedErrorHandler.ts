@@ -154,7 +154,7 @@ class UnifiedErrorHandler {
    * Check if recovery should be triggered
    */
   private shouldTriggerRecovery(): boolean {
-    return this.errorStats.count >= this.config.maxErrors;
+    return false; // Disable auto-recovery to prevent page reload
   }
 
   /**

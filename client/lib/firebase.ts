@@ -158,17 +158,9 @@ window.addEventListener('unhandledrejection', (event) => {
       error.message?.includes('firestore');
 
     if (isFirebaseError) {
-
-      // Try to handle it
-      handleFirebaseNetworkError(error).catch(console.error);
-
       // Prevent the error from being logged as unhandled
       event.preventDefault();
-
-      // Show user-friendly message
-      if (document.body) {
-        showFirebaseErrorNotification();
-      }
+      // Don't show notification or reload page
     }
   }
 });
