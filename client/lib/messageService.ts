@@ -13,9 +13,8 @@ import {
   deleteDoc,
   serverTimestamp
 } from 'firebase/firestore';
-import { db, handleFirebaseNetworkError, withExponentialBackoff } from './firebase';
-import { robustFirebaseOperation, quickFirebaseOp } from './firebaseOperationWrapper';
-import { reportFirebaseError } from './criticalErrorRecovery';
+import { db, withExponentialBackoff } from './firebase';
+import { wrapOperation, reportError } from './unifiedErrorHandler';
 import { RealUser, areFriends } from './userService';
 import { createMessageNotification } from './notificationService';
 import { handleNetworkError } from './firebaseConnectionMonitor';
