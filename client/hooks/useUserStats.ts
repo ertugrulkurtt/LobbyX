@@ -46,27 +46,53 @@ export const useUserStats = (): UseUserStatsReturn => {
         setLoading(true);
         setError(null);
 
-        // Track daily login when component mounts
-        await trackDailyLogin(user.uid);
+        console.log('Initializing user stats for:', user.uid);
+
+        // Track daily login when component mounts (non-blocking)
+        trackDailyLogin(user.uid).catch(err => {
+          console.warn('Daily login tracking failed:', err);
+        });
 
         // Get initial stats
         const initialStats = await getUserStats(user.uid);
-        
-        // Calculate and update rank
-        const rank = await calculateUserRank(user.uid);
-        const statsWithRank = { ...initialStats, rank };
-        setStats(statsWithRank);
+        console.log('User stats loaded:', initialStats);
+
+        // Calculate and update rank (non-blocking for better UX)
+        calculateUserRank(user.uid)
+          .then(rank => {
+            setStats(prevStats => prevStats ? { ...prevStats, rank } : null);
+          })
+          .catch(err => {
+            console.warn('Rank calculation failed:', err);
+          });
+
+        setStats(initialStats);
 
         // Set up real-time subscription
         unsubscribe = subscribeToUserStats(user.uid, async (updatedStats) => {
-          // Recalculate rank when stats update
-          const newRank = await calculateUserRank(user.uid);
-          setStats({ ...updatedStats, rank: newRank });
+          console.log('Stats updated:', updatedStats);
+          setStats(updatedStats);
+
+          // Recalculate rank (non-blocking)
+          calculateUserRank(user.uid)
+            .then(newRank => {
+              setStats(prevStats => prevStats ? { ...prevStats, rank: newRank } : null);
+            })
+            .catch(err => {
+              console.warn('Rank recalculation failed:', err);
+            });
         });
 
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error initializing user stats:', err);
-        setError('İstatistikler yüklenemedi');
+
+        if (err.message?.includes('izin')) {
+          setError('İstatistiklere erişim izni yok. Firebase kurallarını kontrol edin.');
+        } else if (err.message?.includes('giriş')) {
+          setError('Kullanıcı girişi gerekli. Lütfen tekrar giriş yapın.');
+        } else {
+          setError(err.message || 'İstatistikler yüklenemedi');
+        }
       } finally {
         setLoading(false);
       }
