@@ -449,8 +449,25 @@ export default function Chat() {
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.senderId === user?.uid ? 'justify-end' : 'justify-start'}`}
+                  className={`flex items-start space-x-3 ${message.senderId === user?.uid ? 'justify-end' : 'justify-start'}`}
                 >
+                  {/* Avatar for received messages */}
+                  {message.senderId !== user?.uid && (
+                    <div className="w-8 h-8 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center flex-shrink-0">
+                      {message.senderAvatar ? (
+                        <img
+                          src={message.senderAvatar}
+                          alt={message.senderName}
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      ) : (
+                        <span className="text-xs font-medium text-white">
+                          {message.senderName.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   <div className={`max-w-xs lg:max-w-md ${
                     message.senderId === user?.uid ? 'order-2' : 'order-1'
                   }`}>
