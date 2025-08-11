@@ -58,8 +58,27 @@ export default function UserProfileModal({
   useEffect(() => {
     if (user && isOpen) {
       loadUserStats();
+      checkFriendshipStatus();
     }
-  }, [user, isOpen]);
+  }, [user, isOpen, currentUserId]);
+
+  const checkFriendshipStatus = async () => {
+    if (!user || !currentUserId || user.uid === currentUserId) {
+      setActualFriendshipStatus(false);
+      return;
+    }
+
+    setCheckingFriendship(true);
+    try {
+      const friendshipStatus = await areFriends(currentUserId, user.uid);
+      setActualFriendshipStatus(friendshipStatus);
+    } catch (error) {
+      console.error('Error checking friendship status:', error);
+      setActualFriendshipStatus(false);
+    } finally {
+      setCheckingFriendship(false);
+    }
+  };
 
   const loadUserStats = async () => {
     if (!user) return;
