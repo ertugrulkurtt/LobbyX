@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Users,
   UserPlus,
@@ -11,16 +11,17 @@ import {
   MoreVertical,
   Shield,
   Clock,
-  User
+  User,
+  Loader2
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserStats } from '../hooks/useUserStats';
-import {
-  getUserFriends,
-  getFriendRequests,
-  sendFriendRequest,
-  acceptFriendRequest,
-  rejectFriendRequest,
+import { 
+  getUserFriends, 
+  getFriendRequests, 
+  sendFriendRequest, 
+  acceptFriendRequest, 
+  rejectFriendRequest, 
   removeFriend as removeUserFriend,
   searchUsers,
   subscribeToUserFriends,
@@ -29,36 +30,13 @@ import {
   FriendRequest
 } from '../lib/userService';
 
-interface Friend {
-  id: string;
-  username: string;
-  displayName: string;
-  isOnline: boolean;
-  lastSeen?: string;
-  avatar?: string;
-  status?: string;
-  game?: string;
-  isVerified?: boolean;
-  isSpecial?: boolean;
-}
-
-interface FriendRequest {
-  id: string;
-  username: string;
-  displayName: string;
-  avatar?: string;
-  type: 'incoming' | 'outgoing';
-  sentAt: string;
-  isSpecial?: boolean;
-}
-
-export default function Friends() {
+export default function FriendsReal() {
   const { user } = useAuth();
   const { addFriend, removeFriend } = useUserStats();
   const [activeTab, setActiveTab] = useState<'online' | 'all' | 'pending' | 'add'>('online');
   const [searchQuery, setSearchQuery] = useState('');
   const [newFriendUsername, setNewFriendUsername] = useState('');
-
+  
   // Real Firebase data states
   const [friends, setFriends] = useState<RealUser[]>([]);
   const [friendRequests, setFriendRequests] = useState<{ incoming: FriendRequest[]; outgoing: FriendRequest[] }>({
@@ -69,167 +47,147 @@ export default function Friends() {
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
 
-  // Mock friends data - including current user for testing avatar display
-  const friends: Friend[] = [
-    // Add current user as a friend for testing avatar display
-    ...(user ? [{
-      id: user.uid,
-      username: user.username || 'CurrentUser',
-      displayName: user.displayName || 'Kullanıcı',
-      isOnline: true,
-      status: user.status || 'Online',
-      avatar: user.photoURL,
-      isVerified: false,
-      isSpecial: false
-    }] : []),
-    {
-      id: 'lobbyx-admin',
-      username: 'LobbyXAdmin',
-      displayName: 'LobbyX Admin',
-      isOnline: true,
-      status: 'Yönetici - Her zaman burada',
-      game: 'LobbyX Yönetimi',
-      isVerified: true,
-      isSpecial: true
-    },
-    {
-      id: 'progamer123',
-      username: 'ProGamer123',
-      displayName: 'Pro Gamer',
-      isOnline: true,
-      status: 'Ranked climbing 💪',
-      game: 'Valorant'
-    },
-    {
-      id: 'gamemaster',
-      username: 'GameMaster',
-      displayName: 'Game Master',
-      isOnline: false,
-      lastSeen: '2 saat önce',
-      status: 'Tournament organizating',
-      game: 'CS2'
-    },
-    {
-      id: 'speedrunner',
-      username: 'SpeedRunner',
-      displayName: 'Speed Runner',
-      isOnline: true,
-      status: 'WR attempt...',
-      game: 'Celeste'
-    },
-    {
-      id: 'strategist',
-      username: 'Strategist',
-      displayName: 'Master Strategist',
-      isOnline: false,
-      lastSeen: '1 gün önce',
-      status: 'Planning next move',
-      game: 'Chess.com'
+  // Real-time data subscriptions
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    setLoading(true);
+
+    // Subscribe to friends list
+    const unsubscribeFriends = subscribeToUserFriends(user.uid, (realFriends) => {
+      setFriends(realFriends);
+      setLoading(false);
+    });
+
+    // Subscribe to friend requests
+    const unsubscribeRequests = subscribeToFriendRequests(user.uid, (requests) => {
+      setFriendRequests(requests);
+    });
+
+    return () => {
+      unsubscribeFriends();
+      unsubscribeRequests();
+    };
+  }, [user?.uid]);
+
+  // Search functionality
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
     }
-  ];
 
-  // Mock friend requests
-  const friendRequests: FriendRequest[] = [
-    // Add current user's photo to test avatar display
-    ...(user ? [{
-      id: 'req-user',
-      username: user.username || 'CurrentUser',
-      displayName: user.displayName || 'Kullanıcı',
-      avatar: user.photoURL,
-      type: 'incoming' as const,
-      sentAt: 'Test - Avatar'
-    }] : []),
-    {
-      id: 'req1',
-      username: 'NewPlayer2024',
-      displayName: 'New Player',
-      type: 'incoming',
-      sentAt: '5 dk önce'
-    },
-    {
-      id: 'req2',
-      username: 'GamingLegend',
-      displayName: 'Gaming Legend',
-      type: 'incoming',
-      sentAt: '1 saat önce'
-    },
-    {
-      id: 'req3',
-      username: 'CompetitivePlr',
-      displayName: 'Competitive Player',
-      type: 'outgoing',
-      sentAt: '2 gün önce'
-    }
-  ];
+    const searchTimeout = setTimeout(async () => {
+      if (searchQuery.trim().length >= 2) {
+        setSearchLoading(true);
+        try {
+          const results = await searchUsers(searchQuery);
+          // Filter out current user and existing friends
+          const filteredResults = results.filter(u => 
+            u.uid !== user?.uid && 
+            !friends.some(f => f.uid === u.uid)
+          );
+          setSearchResults(filteredResults);
+        } catch (error) {
+          console.error('Search error:', error);
+          setSearchResults([]);
+        } finally {
+          setSearchLoading(false);
+        }
+      }
+    }, 500);
 
-  const onlineFriends = friends.filter(friend => friend.isOnline);
-  const offlineFriends = friends.filter(friend => !friend.isOnline);
-  const incomingRequests = friendRequests.filter(req => req.type === 'incoming');
-  const outgoingRequests = friendRequests.filter(req => req.type === 'outgoing');
+    return () => clearTimeout(searchTimeout);
+  }, [searchQuery, friends, user?.uid]);
 
+  // Filter friends based on search
   const filteredFriends = friends.filter(friend =>
-    friend.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    friend.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+    friend.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    friend.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSendFriendRequest = async () => {
-    if (!newFriendUsername.trim()) return;
+  const onlineFriends = filteredFriends.filter(friend => friend.isOnline);
+  const offlineFriends = filteredFriends.filter(friend => !friend.isOnline);
 
-    try {
-      // In real app, this would send to Firebase
-      console.log('Sending friend request to:', newFriendUsername);
-
-      // Note: We don't increment friend count here since request is just sent
-      // Friend count will be incremented when the request is accepted
-
-      setNewFriendUsername('');
-    } catch (error) {
-      console.error('Error sending friend request:', error);
-    }
-  };
-
+  // Event handlers
   const handleAcceptRequest = async (requestId: string) => {
     try {
-      console.log('Accepting friend request:', requestId);
-      // Update friend count statistics
+      await acceptFriendRequest(requestId);
       await addFriend();
     } catch (error) {
       console.error('Error accepting friend request:', error);
+      alert('Arkadaşlık isteği kabul edilemedi.');
     }
   };
 
-  const handleRejectRequest = (requestId: string) => {
-    console.log('Rejecting friend request:', requestId);
+  const handleRejectRequest = async (requestId: string) => {
+    try {
+      await rejectFriendRequest(requestId);
+    } catch (error) {
+      console.error('Error rejecting friend request:', error);
+      alert('Arkadaşlık isteği reddedilemedi.');
+    }
   };
 
   const handleRemoveFriend = async (friendId: string) => {
     try {
-      console.log('Removing friend:', friendId);
-      // Update friend count statistics
+      if (!user?.uid) return;
+      await removeUserFriend(user.uid, friendId);
       await removeFriend();
     } catch (error) {
       console.error('Error removing friend:', error);
+      alert('Arkadaş çıkarılamadı.');
     }
   };
 
-  const renderFriendCard = (friend: Friend) => (
+  const handleSendFriendRequest = async () => {
+    if (!newFriendUsername.trim() || !user?.uid) return;
+    
+    try {
+      // Find user by username
+      const searchResults = await searchUsers(newFriendUsername);
+      const targetUser = searchResults.find(u => 
+        u.username?.toLowerCase() === newFriendUsername.toLowerCase()
+      );
+      
+      if (!targetUser) {
+        alert('Kullanıcı bulunamadı.');
+        return;
+      }
+      
+      await sendFriendRequest(user.uid, targetUser.uid);
+      setNewFriendUsername('');
+      alert('Arkadaşlık isteği gönderildi!');
+    } catch (error: any) {
+      console.error('Error sending friend request:', error);
+      alert(error.message || 'Arkadaşlık isteği gönderilemedi.');
+    }
+  };
+
+  const handleSendRequestToUser = async (targetUserId: string) => {
+    if (!user?.uid) return;
+    
+    try {
+      await sendFriendRequest(user.uid, targetUserId);
+      alert('Arkadaşlık isteği gönderildi!');
+    } catch (error: any) {
+      console.error('Error sending friend request:', error);
+      alert(error.message || 'Arkadaşlık isteği gönderilemedi.');
+    }
+  };
+
+  const renderFriendCard = (friend: RealUser) => (
     <div
-      key={friend.id}
-      className={`group card-glass hover:shadow-glow transition-all duration-300 ${
-        friend.isSpecial ? 'border-neon-cyan/50 bg-gradient-to-br from-neon-cyan/5 to-transparent' : ''
-      }`}
+      key={friend.uid}
+      className="group card-glass hover:shadow-glow transition-all duration-300"
     >
       <div className="flex items-center space-x-4">
         <div className="relative">
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-            friend.isSpecial
-              ? 'bg-gradient-to-br from-neon-cyan to-neon-blue'
-              : 'bg-gradient-to-br from-neon-purple to-neon-cyan'
-          }`}>
-            {friend.avatar ? (
-              <img
-                src={friend.avatar}
-                alt={friend.displayName}
+          <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-neon-purple to-neon-cyan">
+            {friend.photoURL ? (
+              <img 
+                src={friend.photoURL} 
+                alt={friend.displayName || friend.username} 
                 className="w-full h-full object-cover rounded-full"
               />
             ) : (
@@ -243,56 +201,28 @@ export default function Friends() {
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2">
-            <h3 className={`font-medium truncate ${
-              friend.isSpecial ? 'text-neon-cyan' : 'text-gaming-text'
-            }`}>
-              {friend.displayName}
-            </h3>
-            <span className="text-sm text-gaming-muted">@{friend.username}</span>
+            <h3 className="font-medium text-gaming-text">{friend.displayName || friend.username}</h3>
             {friend.isVerified && (
               <div className="flex items-center justify-center w-4 h-4 bg-neon-cyan rounded-full">
                 <Check className="w-3 h-3 text-white" />
               </div>
             )}
-            {friend.isSpecial && (
-              <Shield className="w-4 h-4 text-neon-cyan" />
-            )}
           </div>
-          
+          <p className="text-sm text-gaming-muted">@{friend.username}</p>
           {friend.status && (
-            <p className="text-sm text-gaming-muted truncate">{friend.status}</p>
-          )}
-          
-          {friend.game && (
-            <p className="text-xs text-neon-purple font-medium">Oynuyor: {friend.game}</p>
-          )}
-          
-          {!friend.isOnline && friend.lastSeen && (
-            <p className="text-xs text-gaming-muted flex items-center space-x-1">
-              <Clock className="w-3 h-3" />
-              <span>Son görülme: {friend.lastSeen}</span>
-            </p>
+            <p className="text-xs text-neon-cyan">{friend.status}</p>
           )}
         </div>
         
-        <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            className="p-2 rounded-lg hover:bg-neon-cyan/20 transition-colors"
-            title="Mesaj Gönder"
-          >
+        <div className="flex items-center space-x-2">
+          <button className="p-2 rounded-lg hover:bg-neon-cyan/20 transition-colors">
             <MessageSquare className="w-4 h-4 text-neon-cyan" />
           </button>
-          {!friend.isSpecial && (
-            <button
-              onClick={() => handleRemoveFriend(friend.id)}
-              className="p-2 rounded-lg hover:bg-red-500/20 transition-colors"
-              title="Arkadaşlıktan Çıkar"
-            >
-              <UserMinus className="w-4 h-4 text-red-400" />
-            </button>
-          )}
-          <button className="p-2 rounded-lg hover:bg-gaming-surface transition-colors">
-            <MoreVertical className="w-4 h-4 text-gaming-muted" />
+          <button
+            onClick={() => handleRemoveFriend(friend.uid)}
+            className="p-2 rounded-lg hover:bg-red-500/20 transition-colors"
+          >
+            <UserMinus className="w-4 h-4 text-red-400" />
           </button>
         </div>
       </div>
@@ -303,10 +233,10 @@ export default function Friends() {
     <div key={request.id} className="card-glass hover:shadow-glow transition-all duration-300">
       <div className="flex items-center space-x-4">
         <div className="w-12 h-12 bg-gradient-to-br from-neon-orange to-neon-pink rounded-full flex items-center justify-center">
-          {request.avatar ? (
-            <img
-              src={request.avatar}
-              alt={request.displayName}
+          {request.fromUser.photoURL ? (
+            <img 
+              src={request.fromUser.photoURL} 
+              alt={request.fromUser.displayName || request.fromUser.username} 
               className="w-full h-full object-cover rounded-full"
             />
           ) : (
@@ -315,104 +245,104 @@ export default function Friends() {
         </div>
         
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gaming-text">{request.displayName}</h3>
-          <p className="text-sm text-gaming-muted">@{request.username}</p>
+          <h3 className="font-medium text-gaming-text">{request.fromUser.displayName || request.fromUser.username}</h3>
+          <p className="text-sm text-gaming-muted">@{request.fromUser.username}</p>
           <p className="text-xs text-gaming-muted">{request.sentAt}</p>
         </div>
         
         <div className="flex items-center space-x-2">
-          {request.type === 'incoming' ? (
-            <>
-              <button
-                onClick={() => handleAcceptRequest(request.id)}
-                className="p-2 rounded-lg bg-neon-green/20 hover:bg-neon-green/30 transition-colors"
-                title="Kabul Et"
-              >
-                <Check className="w-4 h-4 text-neon-green" />
-              </button>
-              <button
-                onClick={() => handleRejectRequest(request.id)}
-                className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 transition-colors"
-                title="Reddet"
-              >
-                <X className="w-4 h-4 text-red-400" />
-              </button>
-            </>
-          ) : (
-            <span className="text-xs text-gaming-muted px-3 py-1 bg-gaming-surface rounded-full">
-              Bekliyor...
-            </span>
-          )}
+          <button
+            onClick={() => handleAcceptRequest(request.id)}
+            className="p-2 rounded-lg bg-neon-green/20 hover:bg-neon-green/30 transition-colors"
+          >
+            <Check className="w-4 h-4 text-neon-green" />
+          </button>
+          <button
+            onClick={() => handleRejectRequest(request.id)}
+            className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 transition-colors"
+          >
+            <X className="w-4 h-4 text-red-400" />
+          </button>
         </div>
       </div>
     </div>
   );
 
+  const tabs = [
+    { id: 'online', label: `Çevrimiçi (${onlineFriends.length})`, icon: Users },
+    { id: 'all', label: `Tümü (${friends.length})`, icon: Users },
+    { id: 'pending', label: `Bekleyen (${friendRequests.incoming.length + friendRequests.outgoing.length})`, icon: Clock },
+    { id: 'add', label: 'Arkadaş Ekle', icon: UserPlus }
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <Loader2 className="w-8 h-8 animate-spin text-neon-purple" />
+        <span className="ml-2 text-gaming-text">Arkadaşlar yükleniyor...</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-8 animate-fade-in-up">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gaming-text flex items-center space-x-2">
-          <Users className="w-8 h-8 text-neon-cyan" />
-          <span>Arkadaşlar</span>
-        </h1>
-        <div className="text-gaming-muted">
-          Toplam: {friends.length} arkadaş
+      <section>
+        <h1 className="text-3xl font-bold text-gaming-text mb-2">Arkadaşlar</h1>
+        <p className="text-gaming-muted">Arkadaşlarınızla bağlantıda kalın ve yeni kişilerle tanışın.</p>
+      </section>
+
+      {/* Search and Tabs */}
+      <section>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 mb-6">
+          <div className="flex space-x-1 bg-gaming-surface/50 rounded-xl p-1">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+                    activeTab === tab.id
+                      ? 'bg-neon-purple text-white shadow-glow'
+                      : 'text-gaming-muted hover:text-gaming-text hover:bg-gaming-surface'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="text-sm font-medium">{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gaming-muted" />
+            <input
+              type="text"
+              placeholder="Arkadaş ara..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 bg-gaming-surface border border-gaming-border rounded-lg focus:outline-none focus:ring-2 focus:ring-neon-purple/50 text-gaming-text w-full md:w-64"
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="flex space-x-2 bg-gaming-surface/30 rounded-xl p-1">
-        {[
-          { id: 'online', label: `Çevrimiçi (${onlineFriends.length})`, icon: Users },
-          { id: 'all', label: `Tümü (${friends.length})`, icon: Users },
-          { id: 'pending', label: `Bekleyen (${friendRequests.length})`, icon: Clock },
-          { id: 'add', label: 'Arkadaş Ekle', icon: UserPlus }
-        ].map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                activeTab === tab.id
-                  ? 'bg-neon-purple text-white shadow-glow'
-                  : 'text-gaming-muted hover:text-gaming-text hover:bg-gaming-surface/50'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span className="text-sm font-medium">{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Search Bar (for friends tabs) */}
-      {(activeTab === 'online' || activeTab === 'all') && (
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gaming-muted" />
-          <input
-            type="text"
-            placeholder="Arkadaş ara..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-gaming-surface rounded-xl border border-gaming-border focus:outline-none focus:ring-2 focus:ring-neon-purple/50 text-gaming-text"
-          />
-        </div>
-      )}
-
-      {/* Content */}
-      <div className="space-y-4">
+        {/* Content based on active tab */}
         {activeTab === 'online' && (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gaming-text">Çevrimiçi Arkadaşlar</h2>
-            {onlineFriends.filter(friend =>
-              friend.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              friend.displayName.toLowerCase().includes(searchQuery.toLowerCase())
-            ).map(renderFriendCard)}
-            {onlineFriends.length === 0 && (
+            <h2 className="text-xl font-semibold text-gaming-text flex items-center space-x-2">
+              <Users className="w-5 h-5 text-neon-green" />
+              <span>Çevrimiçi Arkadaşlar ({onlineFriends.length})</span>
+            </h2>
+            
+            {onlineFriends.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {onlineFriends.map(renderFriendCard)}
+              </div>
+            ) : (
               <div className="text-center py-8 text-gaming-muted">
-                Şu anda çevrimiçi arkadaş bulunmuyor.
+                <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>Çevrimiçi arkadaşınız yok</p>
               </div>
             )}
           </div>
@@ -420,45 +350,35 @@ export default function Friends() {
 
         {activeTab === 'all' && (
           <div className="space-y-6">
-            {onlineFriends.filter(friend =>
-              friend.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              friend.displayName.toLowerCase().includes(searchQuery.toLowerCase())
-            ).length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gaming-text text-neon-green">
-                  Çevrimiçi — {onlineFriends.filter(friend =>
-                    friend.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    friend.displayName.toLowerCase().includes(searchQuery.toLowerCase())
-                  ).length}
-                </h2>
-                {onlineFriends.filter(friend =>
-                  friend.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  friend.displayName.toLowerCase().includes(searchQuery.toLowerCase())
-                ).map(renderFriendCard)}
+            {onlineFriends.length > 0 && (
+              <div>
+                <h3 className="text-lg font-medium text-gaming-text mb-4 flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-neon-green rounded-full"></div>
+                  <span>Çevrimiçi ({onlineFriends.length})</span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {onlineFriends.map(renderFriendCard)}
+                </div>
               </div>
             )}
 
-            {offlineFriends.filter(friend =>
-              friend.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              friend.displayName.toLowerCase().includes(searchQuery.toLowerCase())
-            ).length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gaming-text text-gaming-muted">
-                  Çevrimdışı — {offlineFriends.filter(friend =>
-                    friend.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    friend.displayName.toLowerCase().includes(searchQuery.toLowerCase())
-                  ).length}
-                </h2>
-                {offlineFriends.filter(friend =>
-                  friend.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  friend.displayName.toLowerCase().includes(searchQuery.toLowerCase())
-                ).map(renderFriendCard)}
+            {offlineFriends.length > 0 && (
+              <div>
+                <h3 className="text-lg font-medium text-gaming-text mb-4 flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                  <span>Çevrimdışı ({offlineFriends.length})</span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {offlineFriends.map(renderFriendCard)}
+                </div>
               </div>
             )}
 
-            {filteredFriends.length === 0 && (
+            {friends.length === 0 && (
               <div className="text-center py-8 text-gaming-muted">
-                Arama kriterinize uygun arkadaş bulunamadı.
+                <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>Henüz arkadaşınız yok</p>
+                <p className="text-sm">Yeni arkadaşlar eklemek için "Arkadaş Ekle" sekmesini kullanın</p>
               </div>
             )}
           </div>
@@ -466,73 +386,136 @@ export default function Friends() {
 
         {activeTab === 'pending' && (
           <div className="space-y-6">
-            {incomingRequests.length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gaming-text text-neon-orange">
-                  Gelen İstekler — {incomingRequests.length}
+            {friendRequests.incoming.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold text-gaming-text mb-4 flex items-center space-x-2">
+                  <UserPlus className="w-5 h-5 text-neon-green" />
+                  <span>Gelen İstekler ({friendRequests.incoming.length})</span>
                 </h2>
-                {incomingRequests.map(renderRequestCard)}
+                <div className="space-y-3">
+                  {friendRequests.incoming.map(renderRequestCard)}
+                </div>
               </div>
             )}
 
-            {outgoingRequests.length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gaming-text text-gaming-muted">
-                  Gönderilen İstekler — {outgoingRequests.length}
+            {friendRequests.outgoing.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold text-gaming-text mb-4 flex items-center space-x-2">
+                  <Send className="w-5 h-5 text-neon-orange" />
+                  <span>Giden İstekler ({friendRequests.outgoing.length})</span>
                 </h2>
-                {outgoingRequests.map(renderRequestCard)}
+                <div className="space-y-3">
+                  {friendRequests.outgoing.map((request) => (
+                    <div key={request.id} className="card-glass">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-10 h-10 bg-gradient-to-br from-neon-orange to-neon-pink rounded-full flex items-center justify-center">
+                            {request.toUser.photoURL ? (
+                              <img 
+                                src={request.toUser.photoURL} 
+                                alt={request.toUser.displayName || request.toUser.username} 
+                                className="w-full h-full object-cover rounded-full"
+                              />
+                            ) : (
+                              <User className="w-5 h-5 text-white" />
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gaming-text">{request.toUser.displayName || request.toUser.username}</h4>
+                            <p className="text-sm text-gaming-muted">{request.sentAt}</p>
+                          </div>
+                        </div>
+                        <span className="text-sm text-neon-orange">Bekliyor</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
-            {friendRequests.length === 0 && (
+            {friendRequests.incoming.length === 0 && friendRequests.outgoing.length === 0 && (
               <div className="text-center py-8 text-gaming-muted">
-                Bekleyen arkadaşlık isteği bulunmuyor.
+                <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>Bekleyen arkadaşlık isteğiniz yok</p>
               </div>
             )}
           </div>
         )}
 
         {activeTab === 'add' && (
-          <div className="max-w-md mx-auto">
+          <div className="space-y-6">
             <div className="card-glass">
-              <h2 className="text-xl font-semibold text-gaming-text mb-6 text-center">
-                Arkadaş Ekle
-              </h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gaming-text mb-2">
-                    Kullanıcı Adı
-                  </label>
-                  <div className="flex space-x-2">
-                    <input
-                      type="text"
-                      placeholder="örnek: ProGamer123"
-                      value={newFriendUsername}
-                      onChange={(e) => setNewFriendUsername(e.target.value)}
-                      className="flex-1 px-4 py-3 bg-gaming-surface rounded-xl border border-gaming-border focus:outline-none focus:ring-2 focus:ring-neon-purple/50 text-gaming-text"
-                    />
-                    <button
-                      onClick={handleSendFriendRequest}
-                      disabled={!newFriendUsername.trim()}
-                      className="px-6 py-3 bg-neon-purple text-white rounded-xl hover:bg-neon-purple/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                    >
-                      <Send className="w-4 h-4" />
-                      <span>Gönder</span>
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="text-sm text-gaming-muted">
-                  <p>• Kullanıcı adını tam olarak yazın</p>
-                  <p>• Büyük/küçük harf duyarlıdır</p>
-                  <p>• İstek gönderildikten sonra onaylanmasını bekleyin</p>
-                </div>
+              <h2 className="text-xl font-semibold text-gaming-text mb-4">Arkadaş Ekle</h2>
+              <div className="flex space-x-3">
+                <input
+                  type="text"
+                  placeholder="Kullanıcı adı girin..."
+                  value={newFriendUsername}
+                  onChange={(e) => setNewFriendUsername(e.target.value)}
+                  className="flex-1 px-4 py-2 bg-gaming-surface border border-gaming-border rounded-lg focus:outline-none focus:ring-2 focus:ring-neon-purple/50 text-gaming-text"
+                />
+                <button
+                  onClick={handleSendFriendRequest}
+                  disabled={!newFriendUsername.trim()}
+                  className="px-6 py-2 bg-neon-purple text-white rounded-lg hover:bg-neon-purple/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Gönder
+                </button>
               </div>
             </div>
+
+            {/* Search Results */}
+            {searchQuery && (
+              <div>
+                <h3 className="text-lg font-medium text-gaming-text mb-4 flex items-center space-x-2">
+                  <Search className="w-5 h-5" />
+                  <span>Arama Sonuçları</span>
+                  {searchLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                </h3>
+                
+                {searchResults.length > 0 ? (
+                  <div className="space-y-3">
+                    {searchResults.map((user) => (
+                      <div key={user.uid} className="card-glass">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-10 h-10 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center">
+                              {user.photoURL ? (
+                                <img 
+                                  src={user.photoURL} 
+                                  alt={user.displayName || user.username} 
+                                  className="w-full h-full object-cover rounded-full"
+                                />
+                              ) : (
+                                <User className="w-5 h-5 text-white" />
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-gaming-text">{user.displayName || user.username}</h4>
+                              <p className="text-sm text-gaming-muted">@{user.username}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleSendRequestToUser(user.uid)}
+                            className="px-4 py-2 bg-neon-green/20 text-neon-green rounded-lg hover:bg-neon-green/30 transition-colors"
+                          >
+                            <UserPlus className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : searchQuery && !searchLoading && (
+                  <div className="text-center py-8 text-gaming-muted">
+                    <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>"{searchQuery}" için sonuç bulunamadı</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }
