@@ -43,23 +43,32 @@ service cloud.firestore {
     
     // XP logs - users can read their own XP logs, write is controlled
     match /xpLogs/{logId} {
-      allow read: if request.auth != null 
+      allow read: if request.auth != null
         && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null 
+      allow create: if request.auth != null
         && request.auth.uid == request.resource.data.userId;
     }
-    
+
     // Achievement progress - users can read/write their own achievements
     match /achievementProgress/{progressId} {
-      allow read, write: if request.auth != null 
+      allow read, write: if request.auth != null
         && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null 
+      allow create: if request.auth != null
         && request.auth.uid == request.resource.data.userId;
     }
-    
+
     // Public leaderboard data - all authenticated users can read
     match /leaderboard/{document=**} {
       allow read: if request.auth != null;
+    }
+
+    // User statistics with different structure
+    match /userStats/{statId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.userId;
+      allow read: if request.auth != null; // Allow reading for leaderboard
     }
     
     // Server-specific statistics (if needed)
