@@ -380,6 +380,14 @@ export function Layout({ children }: LayoutProps) {
               const Icon = item.icon;
               const isActive = currentPath === item.path;
 
+              // Get notification count for specific pages
+              let notificationCount = 0;
+              if (item.id === 'chat' && counts.messages > 0) {
+                notificationCount = counts.messages;
+              } else if (item.id === 'friends' && counts.friendRequests > 0) {
+                notificationCount = counts.friendRequests;
+              }
+
               return (
                 <Link
                   key={item.id}
@@ -392,17 +400,32 @@ export function Layout({ children }: LayoutProps) {
                   }`}
                   title={sidebarCollapsed ? item.label : ''}
                 >
-                  <Icon className={`${sidebarCollapsed ? 'w-5 h-5' : 'w-5 h-5'} ${isActive ? 'text-neon-purple' : 'text-gaming-muted'}`} />
+                  <div className="relative">
+                    <Icon className={`${sidebarCollapsed ? 'w-5 h-5' : 'w-5 h-5'} ${isActive ? 'text-neon-purple' : 'text-gaming-muted'}`} />
+                    {notificationCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-neon-red text-white text-xs rounded-full min-w-[16px] h-[16px] flex items-center justify-center font-medium">
+                        {notificationCount > 99 ? '99+' : notificationCount}
+                      </span>
+                    )}
+                  </div>
                   {!sidebarCollapsed && (
-                    <span className={`ml-3 font-medium ${isActive ? 'text-neon-purple' : 'text-gaming-text'}`}>
-                      {item.label}
-                    </span>
+                    <div className="flex items-center justify-between flex-1 ml-3">
+                      <span className={`font-medium ${isActive ? 'text-neon-purple' : 'text-gaming-text'}`}>
+                        {item.label}
+                      </span>
+                      {notificationCount > 0 && (
+                        <span className="bg-neon-red text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center font-medium">
+                          {notificationCount > 99 ? '99+' : notificationCount}
+                        </span>
+                      )}
+                    </div>
                   )}
 
                   {/* Tooltip for collapsed state */}
                   {sidebarCollapsed && (
                     <div className="absolute left-full ml-2 px-2 py-1 bg-gaming-surface border border-gaming-border rounded text-sm text-gaming-text opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                       {item.label}
+                      {notificationCount > 0 && ` (${notificationCount})`}
                     </div>
                   )}
                 </Link>
