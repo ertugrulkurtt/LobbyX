@@ -250,47 +250,69 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {recentConversations.map((conversation, index) => (
-            <Link
-              key={conversation.id}
-              to="/chat"
-              className={`group card-glass hover:shadow-glow transition-all duration-300 animate-fade-in-up ${
-                conversation.isSpecial ? 'border-neon-cyan/50 bg-gradient-to-br from-neon-cyan/5 to-transparent' : ''
-              }`}
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    conversation.isSpecial 
-                      ? 'bg-gradient-to-br from-neon-cyan to-neon-blue' 
-                      : 'bg-gradient-to-br from-neon-purple to-neon-cyan'
-                  }`}>
-                    <Users className="w-6 h-6 text-white" />
+          {conversationsLoading ? (
+            // Loading placeholders
+            [1, 2, 3].map((index) => (
+              <div key={index} className="card-glass animate-pulse">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gaming-surface rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-gaming-surface rounded mb-2"></div>
+                    <div className="h-3 bg-gaming-surface rounded w-3/4"></div>
                   </div>
-                  {conversation.isOnline && (
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-neon-green rounded-full border-2 border-gaming-surface"></div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2">
-                    <h4 className={`font-medium truncate ${
-                      conversation.isSpecial ? 'text-neon-cyan' : 'text-gaming-text'
-                    }`}>
-                      {conversation.name}
-                    </h4>
-                    {conversation.isVerified && (
-                      <div className="flex items-center justify-center w-4 h-4 bg-neon-cyan rounded-full">
-                        <Check className="w-3 h-3 text-white" />
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-sm text-gaming-muted truncate">{conversation.lastMessage}</p>
-                  <span className="text-xs text-gaming-muted">{conversation.time} önce</span>
                 </div>
               </div>
-            </Link>
-          ))}
+            ))
+          ) : recentConversations.length > 0 ? (
+            recentConversations.map((conversation, index) => (
+              <Link
+                key={conversation.id}
+                to="/chat"
+                className="group card-glass hover:shadow-glow transition-all duration-300 animate-fade-in-up"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-neon-purple to-neon-cyan">
+                      {conversation.avatar ? (
+                        <img
+                          src={conversation.avatar}
+                          alt={conversation.name}
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      ) : (
+                        <Users className="w-6 h-6 text-white" />
+                      )}
+                    </div>
+                    {conversation.isOnline && (
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-neon-green rounded-full border-2 border-gaming-surface"></div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2">
+                      <h4 className="font-medium truncate text-gaming-text">
+                        {conversation.name}
+                      </h4>
+                      {conversation.isVerified && (
+                        <div className="flex items-center justify-center w-4 h-4 bg-neon-cyan rounded-full">
+                          <Check className="w-3 h-3 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm text-gaming-muted truncate">{conversation.lastMessage}</p>
+                    <span className="text-xs text-gaming-muted">{conversation.time}</span>
+                  </div>
+                </div>
+              </Link>
+            ))
+          ) : (
+            // No conversations placeholder
+            <div className="col-span-full text-center py-8">
+              <Users className="w-12 h-12 text-gaming-muted mx-auto mb-4" />
+              <p className="text-gaming-muted">Henüz sohbet geçmişin yok</p>
+              <p className="text-sm text-gaming-muted">Arkadaşlarınla sohbet etmeye başla!</p>
+            </div>
+          )}
         </div>
       </section>
 
