@@ -75,16 +75,38 @@ class SystemHealthCheck {
    */
   private async checkFirebaseConnectivity(): Promise<void> {
     try {
-      // Test if Firebase is accessible by checking window.firebase debug utilities
+      // Check authentication status first
+      const { auth } = await import('../lib/firebase');
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        this.addResult('firebase_connectivity', 'warning', 'User not authenticated - Firebase tests skipped');
+        return;
+      }
+
+      // Test if Firebase is accessible by checking debug utilities
       const hasDebugUtils = !!(window as any).firebaseDebug;
-      
+
       if (hasDebugUtils) {
-        this.addResult('firebase_connectivity', 'healthy', 'Firebase debug utilities available');
+        // Try to run actual connectivity test
+        try {
+          const testResults = await (window as any).firebaseDebug.testFirestore();
+          if (testResults.success) {
+            this.addResult('firebase_connectivity', 'healthy',
+              `Firebase connected (${testResults.latency}ms)`);
+          } else {
+            this.addResult('firebase_connectivity', 'warning',
+              `Firebase issues detected: ${testResults.error}`);
+          }
+        } catch (testError: any) {
+          this.addResult('firebase_connectivity', 'warning',
+            'Firebase debug test failed', testError.message);
+        }
       } else {
         this.addResult('firebase_connectivity', 'warning', 'Firebase debug utilities not found');
       }
     } catch (error: any) {
-      this.addResult('firebase_connectivity', 'critical', 'Firebase connectivity issues', error.message);
+      this.addResult('firebase_connectivity', 'critical', 'Firebase connectivity check failed', error.message);
     }
   }
 
