@@ -391,22 +391,29 @@ class CallService {
       throw new Error('Geçerli bir gelen arama bulunamadı');
     }
 
+    // Store currentCall in local variable
+    const callData = this.currentCall;
+
+    if (!callData.callerId || !callData.receiverId) {
+      throw new Error('Invalid call data for answer');
+    }
+
     try {
       // Update call status in realtime database
-      await set(ref(rtdb, `calls/status/${this.currentCall.callerId}`), {
+      await set(ref(rtdb, `calls/status/${callData.callerId}`), {
         callId,
         status: 'answered',
         answeredAt: new Date().toISOString()
       });
 
-      await set(ref(rtdb, `calls/status/${this.currentCall.receiverId}`), {
+      await set(ref(rtdb, `calls/status/${callData.receiverId}`), {
         callId,
         status: 'answered',
         answeredAt: new Date().toISOString()
       });
 
       // Remove from incoming calls
-      await remove(ref(rtdb, `calls/incoming/${this.currentCall.receiverId}`));
+      await remove(ref(rtdb, `calls/incoming/${callData.receiverId}`));
 
       this.currentCall.status = 'answered';
       this.stopAllSounds();
