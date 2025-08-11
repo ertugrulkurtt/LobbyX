@@ -41,8 +41,8 @@ const navItems = [
   { id: 'dashboard', label: 'Anasayfa', path: '/dashboard', icon: Home },
   { id: 'servers', label: 'Sunucular', path: '/servers', icon: Server },
   { id: 'groups', label: 'Gruplar', path: '/groups', icon: UsersRound },
-  { id: 'chat', label: 'Sohbet', path: '/chat', icon: MessageSquare },
-  { id: 'friends', label: 'Arkadaşlar', path: '/friends', icon: Users },
+  { id: 'chat', label: 'Sohbet', path: '/chat', icon: MessageSquare, hasNotifications: true },
+  { id: 'friends', label: 'Arkadaşlar', path: '/friends', icon: Users, hasNotifications: true },
 ];
 
 export function Layout({ children }: LayoutProps) {
