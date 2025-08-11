@@ -215,55 +215,80 @@ class CallService {
   startListening(userId: string) {
     this.stopListening(); // Clean up any existing listeners
 
-    // Listen for incoming calls in real-time database
-    const incomingCallsRef = ref(rtdb, `calls/incoming/${userId}`);
-    
-    this.listeners.incomingCalls = onValue(incomingCallsRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const callData = snapshot.val() as CallData;
-        console.log('Incoming call detected:', callData);
-        
-        if (callData.status === 'ringing' && !this.currentCall) {
-          this.currentCall = callData;
-          this.playRingtone();
-          this.callbacks.onIncomingCall?.(callData);
-        }
-      }
-    });
+    try {
+      // Listen for incoming calls in real-time database
+      const incomingCallsRef = ref(rtdb, `calls/incoming/${userId}`);
 
-    // Listen for call status changes
-    const callStatusRef = ref(rtdb, `calls/status/${userId}`);
-    
-    this.listeners.callStatus = onValue(callStatusRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const statusData = snapshot.val();
-        console.log('Call status update:', statusData);
-        
-        if (this.currentCall && statusData.callId === this.currentCall.id) {
-          switch (statusData.status) {
-            case 'answered':
-              this.stopAllSounds();
-              this.callbacks.onCallAnswered?.(this.currentCall);
-              break;
-            case 'rejected':
-              this.stopAllSounds();
-              this.callbacks.onCallRejected?.(this.currentCall);
-              this.currentCall = null;
-              break;
-            case 'ended':
-              this.stopAllSounds();
-              this.callbacks.onCallEnded?.(this.currentCall);
-              this.currentCall = null;
-              break;
-            case 'missed':
-              this.stopAllSounds();
-              this.callbacks.onCallMissed?.(this.currentCall);
-              this.currentCall = null;
-              break;
+      const incomingCallsCallback = (snapshot: any) => {
+        try {
+          if (snapshot.exists()) {
+            const callData = snapshot.val() as CallData;
+            console.log('Incoming call detected:', callData);
+
+            if (callData.status === 'ringing' && !this.currentCall) {
+              this.currentCall = callData;
+              this.playRingtone();
+              this.callbacks.onIncomingCall?.(callData);
+            }
           }
+        } catch (error) {
+          console.error('Error processing incoming call:', error);
         }
-      }
-    });
+      };
+
+      const incomingUnsubscribe = onValue(incomingCallsRef, incomingCallsCallback, (error) => {
+        console.error('Error listening to incoming calls:', error);
+      });
+
+      this.listeners.incomingCalls = incomingUnsubscribe;
+
+      // Listen for call status changes
+      const callStatusRef = ref(rtdb, `calls/status/${userId}`);
+
+      const callStatusCallback = (snapshot: any) => {
+        try {
+          if (snapshot.exists()) {
+            const statusData = snapshot.val();
+            console.log('Call status update:', statusData);
+
+            if (this.currentCall && statusData.callId === this.currentCall.id) {
+              switch (statusData.status) {
+                case 'answered':
+                  this.stopAllSounds();
+                  this.callbacks.onCallAnswered?.(this.currentCall);
+                  break;
+                case 'rejected':
+                  this.stopAllSounds();
+                  this.callbacks.onCallRejected?.(this.currentCall);
+                  this.currentCall = null;
+                  break;
+                case 'ended':
+                  this.stopAllSounds();
+                  this.callbacks.onCallEnded?.(this.currentCall);
+                  this.currentCall = null;
+                  break;
+                case 'missed':
+                  this.stopAllSounds();
+                  this.callbacks.onCallMissed?.(this.currentCall);
+                  this.currentCall = null;
+                  break;
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error processing call status update:', error);
+        }
+      };
+
+      const statusUnsubscribe = onValue(callStatusRef, callStatusCallback, (error) => {
+        console.error('Error listening to call status:', error);
+      });
+
+      this.listeners.callStatus = statusUnsubscribe;
+    } catch (error) {
+      console.error('Error setting up call listeners:', error);
+      this.callbacks.onError?.('Arama dinleyicileri kurulamadı');
+    }
   }
 
   /**
