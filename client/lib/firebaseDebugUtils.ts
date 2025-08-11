@@ -1,6 +1,6 @@
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { ref, get } from 'firebase/database';
-import { db, rtdb } from './firebase';
+import { db, rtdb, auth } from './firebase';
 import { withFirebaseErrorHandling } from './globalFirebaseErrorHandler';
 
 export interface ConnectionTestResult {
