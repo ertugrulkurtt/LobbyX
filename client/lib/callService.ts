@@ -520,6 +520,19 @@ class CallService {
   }
 
   /**
+   * Debug current call state
+   */
+  debugCurrentCall(): void {
+    console.log('📞 Current call state:', {
+      hasCall: !!this.currentCall,
+      callId: this.currentCall?.id,
+      callerId: this.currentCall?.callerId,
+      receiverId: this.currentCall?.receiverId,
+      status: this.currentCall?.status
+    });
+  }
+
+  /**
    * Play call sound (for outgoing calls)
    */
   private playCallSound() {
