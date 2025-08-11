@@ -29,18 +29,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { uploadProfilePhoto } from '../lib/storage';
 import { useUserStats } from '../hooks/useUserStats';
 
-// Real user statistics
-const getUserStats = (userId: string) => {
-  // In real app, this would fetch from Firebase
-  return {
-    totalMessages: 2847,
-    friendCount: 47,
-    activeTime: '128 saat',
-    achievements: 23,
-    joinDate: '15 Ekim 2024',
-    lastActivity: '2 dakika önce'
-  };
-};
+// Note: User statistics are now handled by useUserStats hook
 
 // Session data
 const getSessionHistory = () => [
@@ -281,7 +270,7 @@ export default function Profile() {
       console.log('Password change:', passwordData);
       setShowPasswordModal(false);
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      alert('Şifre başarıyla değiştirildi!');
+      alert('��ifre başarıyla değiştirildi!');
     } catch (error) {
       alert('Şifre değiştirilemedi. Mevcut şifrenizi kontrol edin.');
     }
