@@ -253,25 +253,35 @@ class CallService {
             const statusData = snapshot.val();
             console.log('Call status update:', statusData);
 
-            if (this.currentCall && statusData.callId === this.currentCall.id) {
+            // Store current call in local variable to prevent race conditions
+            const currentCallData = this.currentCall;
+
+            if (currentCallData &&
+                statusData &&
+                statusData.callId === currentCallData.id &&
+                statusData.status) {
+
+              // Update call status safely
+              currentCallData.status = statusData.status;
+
               switch (statusData.status) {
                 case 'answered':
                   this.stopAllSounds();
-                  this.callbacks.onCallAnswered?.(this.currentCall);
+                  this.callbacks.onCallAnswered?.(currentCallData);
                   break;
                 case 'rejected':
                   this.stopAllSounds();
-                  this.callbacks.onCallRejected?.(this.currentCall);
+                  this.callbacks.onCallRejected?.(currentCallData);
                   this.currentCall = null;
                   break;
                 case 'ended':
                   this.stopAllSounds();
-                  this.callbacks.onCallEnded?.(this.currentCall);
+                  this.callbacks.onCallEnded?.(currentCallData);
                   this.currentCall = null;
                   break;
                 case 'missed':
                   this.stopAllSounds();
-                  this.callbacks.onCallMissed?.(this.currentCall);
+                  this.callbacks.onCallMissed?.(currentCallData);
                   this.currentCall = null;
                   break;
               }
