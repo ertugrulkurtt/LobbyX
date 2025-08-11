@@ -20,6 +20,7 @@ import {
 } from 'firebase/firestore';
 import { rtdb, db } from './firebase';
 import { wrapOperation } from './unifiedErrorHandler';
+import { withFirebaseErrorHandling } from './globalFirebaseErrorHandler';
 import { RealUser } from './userService';
 
 export interface CallData {
