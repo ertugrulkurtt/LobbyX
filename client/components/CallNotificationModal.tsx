@@ -42,6 +42,7 @@ export default function CallNotificationModal({
   onEndCall,
   onToggleMute,
   onToggleDeafen,
+  onForceClose,
   callDuration = 0
 }: CallNotificationModalProps) {
   const [isAnimating, setIsAnimating] = useState(false);
