@@ -94,9 +94,7 @@ function AppRouter() {
   useEffect(() => {
     initFileCleanupService();
     initializeConnectionMonitoring();
-    initializeGlobalErrorHandler();
-    initializeGlobalFirebaseErrorHandling();
-    initializeCriticalErrorRecovery();
+    initializeErrorHandler();
   }, []);
 
   if (isLoading) {
