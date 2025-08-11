@@ -23,6 +23,7 @@ import { systemHealthCheck } from "./lib/systemHealthCheck";
 import { initializePerformanceMonitoring } from "./lib/performanceOptimizations";
 import { initializeAuthAwareFirebaseTest } from "./lib/authAwareFirebaseTest";
 import { initializeRulesCheck } from "./lib/firebaseRulesChecker";
+import { cleanupAllSubscriptions } from "./lib/subscriptionManager";
 
 
 // Layout
@@ -137,6 +138,8 @@ function AppRouter() {
     window.addEventListener('firebase-permission-error', handleGlobalError);
     return () => {
       window.removeEventListener('firebase-permission-error', handleGlobalError);
+      // Clean up all Firebase subscriptions on app unmount
+      cleanupAllSubscriptions();
     };
   }, []);
 
