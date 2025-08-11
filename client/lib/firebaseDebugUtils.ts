@@ -15,13 +15,26 @@ export interface ConnectionTestResult {
  */
 export const testFirestoreConnection = async (): Promise<ConnectionTestResult> => {
   const startTime = Date.now();
-  
+
   try {
+    // Check authentication first
+    const { auth } = await import('./firebase');
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      return {
+        service: 'Firestore',
+        success: false,
+        error: 'User not authenticated',
+        latency: Date.now() - startTime
+      };
+    }
+
     await withFirebaseErrorHandling(
       () => getDocs(collection(db, 'users')),
       { operation: 'test_firestore_connection', component: 'debugUtils' }
     );
-    
+
     return {
       service: 'Firestore',
       success: true,
