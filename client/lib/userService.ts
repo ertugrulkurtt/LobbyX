@@ -461,39 +461,57 @@ export const subscribeToFriendRequests = (
   let outgoing: FriendRequest[] = [];
   
   const incomingUnsubscribe = onSnapshot(incomingQuery, async (snapshot) => {
-    incoming = await Promise.all(
-      snapshot.docs.map(async (requestDoc) => {
-        const requestData = requestDoc.data();
-        const fromUserDoc = await getDoc(doc(db, 'users', requestData.fromUserId));
-        const toUserDoc = await getDoc(doc(db, 'users', requestData.toUserId));
-        
-        return {
-          id: requestDoc.id,
-          ...requestData,
-          fromUser: { uid: fromUserDoc.id, ...fromUserDoc.data() } as RealUser,
-          toUser: { uid: toUserDoc.id, ...toUserDoc.data() } as RealUser
-        } as FriendRequest;
-      })
-    );
-    callback({ incoming, outgoing });
+    try {
+      incoming = await Promise.all(
+        snapshot.docs.map(async (requestDoc) => {
+          const requestData = requestDoc.data();
+          const fromUserDoc = await getDoc(doc(db, 'users', requestData.fromUserId));
+          const toUserDoc = await getDoc(doc(db, 'users', requestData.toUserId));
+
+          return {
+            id: requestDoc.id,
+            ...requestData,
+            fromUser: { uid: fromUserDoc.id, ...fromUserDoc.data() } as RealUser,
+            toUser: { uid: toUserDoc.id, ...toUserDoc.data() } as RealUser
+          } as FriendRequest;
+        })
+      );
+      callback({ incoming, outgoing });
+    } catch (error) {
+      console.error('Error in incoming requests subscription:', error);
+    }
+  }, (error) => {
+    console.error('Incoming friend requests subscription error:', error);
+    if (error.code === 'permission-denied') {
+      console.error('Permission denied: Please update Firestore rules');
+    }
   });
-  
+
   const outgoingUnsubscribe = onSnapshot(outgoingQuery, async (snapshot) => {
-    outgoing = await Promise.all(
-      snapshot.docs.map(async (requestDoc) => {
-        const requestData = requestDoc.data();
-        const fromUserDoc = await getDoc(doc(db, 'users', requestData.fromUserId));
-        const toUserDoc = await getDoc(doc(db, 'users', requestData.toUserId));
-        
-        return {
-          id: requestDoc.id,
-          ...requestData,
-          fromUser: { uid: fromUserDoc.id, ...fromUserDoc.data() } as RealUser,
-          toUser: { uid: toUserDoc.id, ...toUserDoc.data() } as RealUser
-        } as FriendRequest;
-      })
-    );
-    callback({ incoming, outgoing });
+    try {
+      outgoing = await Promise.all(
+        snapshot.docs.map(async (requestDoc) => {
+          const requestData = requestDoc.data();
+          const fromUserDoc = await getDoc(doc(db, 'users', requestData.fromUserId));
+          const toUserDoc = await getDoc(doc(db, 'users', requestData.toUserId));
+
+          return {
+            id: requestDoc.id,
+            ...requestData,
+            fromUser: { uid: fromUserDoc.id, ...fromUserDoc.data() } as RealUser,
+            toUser: { uid: toUserDoc.id, ...toUserDoc.data() } as RealUser
+          } as FriendRequest;
+        })
+      );
+      callback({ incoming, outgoing });
+    } catch (error) {
+      console.error('Error in outgoing requests subscription:', error);
+    }
+  }, (error) => {
+    console.error('Outgoing friend requests subscription error:', error);
+    if (error.code === 'permission-denied') {
+      console.error('Permission denied: Please update Firestore rules');
+    }
   });
   
   return () => {
