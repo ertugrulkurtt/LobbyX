@@ -520,14 +520,21 @@ export const subscribeToConversations = (
           );
 
           return {
-            id: conversationDoc.id,
-            ...conversationData,
-            participantDetails
-          } as Conversation;
-        })
-      );
+          id: conversationDoc.id,
+          ...conversationData,
+          participantDetails
+        } as Conversation;
+      })
+    );
 
-      callback(conversations);
+    // Sort conversations by updatedAt on client side to avoid index requirement
+    const sortedConversations = conversations.sort((a, b) => {
+      const aTime = new Date(a.updatedAt).getTime();
+      const bTime = new Date(b.updatedAt).getTime();
+      return bTime - aTime; // Descending order (newest first)
+    });
+
+    callback(sortedConversations);
     } catch (error) {
       console.error('Error in conversations subscription:', error);
       callback([]);
