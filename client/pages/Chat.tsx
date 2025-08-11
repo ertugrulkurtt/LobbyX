@@ -56,14 +56,43 @@ export default function ChatReal() {
       setConversations(realTimeConversations);
       setLoading(false);
 
-      // Auto-select first conversation if none selected
-      if (!selectedChat && realTimeConversations.length > 0) {
+      // Check if there's a conversation ID in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const conversationFromUrl = urlParams.get('conversation');
+
+      if (conversationFromUrl && realTimeConversations.some(c => c.id === conversationFromUrl)) {
+        setSelectedChat(conversationFromUrl);
+      } else if (!selectedChat && realTimeConversations.length > 0) {
+        // Auto-select first conversation if none selected and no URL param
         setSelectedChat(realTimeConversations[0].id);
       }
     });
 
     return () => unsubscribe();
   }, [user?.uid]);
+
+  // Check for URL parameters on mount and when URL changes
+  useEffect(() => {
+    const checkUrlParams = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const conversationFromUrl = urlParams.get('conversation');
+
+      if (conversationFromUrl && conversationFromUrl !== selectedChat) {
+        setSelectedChat(conversationFromUrl);
+      }
+    };
+
+    // Check on mount
+    checkUrlParams();
+
+    // Listen for hash changes (if using hash routing)
+    const handleHashChange = () => {
+      checkUrlParams();
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [selectedChat]);
 
   // Subscribe to messages for selected conversation
   useEffect(() => {
