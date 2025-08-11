@@ -394,37 +394,45 @@ export const searchUsers = async (searchTerm: string): Promise<RealUser[]> => {
  */
 export const subscribeToUserFriends = (userId: string, callback: (friends: RealUser[]) => void) => {
   const userRef = doc(db, 'users', userId);
-  
+
   return onSnapshot(userRef, async (userDoc) => {
     if (userDoc.exists()) {
       const userData = userDoc.data();
       const friendIds = userData.friends || [];
-      
+
       if (friendIds.length === 0) {
         callback([]);
         return;
       }
-      
+
       try {
-        const friendsPromises = friendIds.map((friendId: string) => 
+        const friendsPromises = friendIds.map((friendId: string) =>
           getDoc(doc(db, 'users', friendId))
         );
-        
+
         const friendsDocs = await Promise.all(friendsPromises);
-        
+
         const friends = friendsDocs
           .filter(doc => doc.exists())
           .map(doc => ({
             uid: doc.id,
             ...doc.data()
           })) as RealUser[];
-          
+
         callback(friends);
       } catch (error) {
         console.error('Error in friends subscription:', error);
         callback([]);
       }
+    } else {
+      callback([]);
     }
+  }, (error) => {
+    console.error('User friends subscription error:', error);
+    if (error.code === 'permission-denied') {
+      console.error('Permission denied: Please update Firestore rules');
+    }
+    callback([]);
   });
 };
 
