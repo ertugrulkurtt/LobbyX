@@ -30,7 +30,7 @@ import {
   Conversation,
   Message
 } from '../lib/messageService';
-import { areFriends, RealUser } from '../lib/userService';
+import { areFriends, RealUser, sendFriendRequest, removeFriend } from '../lib/userService';
 import UserProfileModal from '../components/UserProfileModal';
 
 export default function ChatReal() {
