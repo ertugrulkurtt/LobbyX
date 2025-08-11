@@ -18,13 +18,19 @@ import { useUserStats } from '../hooks/useUserStats';
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { stats, loading: statsLoading, formatActiveTime } = useUserStats();
 
-  // User statistics
-  const userStats = [
-    { label: 'Toplam Arkadaş', value: '47', icon: Users, color: 'text-neon-green' },
-    { label: 'Gönderilen Mesaj', value: '2,847', icon: MessageSquare, color: 'text-neon-cyan' },
-    { label: 'Aktif Sohbet', value: '12', icon: Trophy, color: 'text-neon-orange' },
-    { label: 'Oyun Süresi', value: '128 saat', icon: Clock, color: 'text-neon-pink' },
+  // User statistics based on real data
+  const userStats = stats ? [
+    { label: 'Toplam Arkadaş', value: stats.friendCount.toString(), icon: Users, color: 'text-neon-green' },
+    { label: 'Gönderilen Mesaj', value: stats.totalMessages.toLocaleString(), icon: MessageSquare, color: 'text-neon-cyan' },
+    { label: 'Seviye', value: stats.level.toString(), icon: Trophy, color: 'text-neon-orange' },
+    { label: 'Oyun Süresi', value: formatActiveTime(stats.activeHours), icon: Clock, color: 'text-neon-pink' },
+  ] : [
+    { label: 'Toplam Arkadaş', value: '0', icon: Users, color: 'text-neon-green' },
+    { label: 'Gönderilen Mesaj', value: '0', icon: MessageSquare, color: 'text-neon-cyan' },
+    { label: 'Seviye', value: '1', icon: Trophy, color: 'text-neon-orange' },
+    { label: 'Oyun Süresi', value: '0 dakika', icon: Clock, color: 'text-neon-pink' },
   ];
 
   // Recent conversations - last 3 people
