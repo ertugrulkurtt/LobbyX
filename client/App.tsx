@@ -15,17 +15,9 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 
 // Services
 import { initFileCleanupService } from "./lib/fileCleanupService";
-import { initializeConnectionMonitoring } from "./lib/firebaseConnectionMonitor";
-// import { initializeErrorHandler } from "./lib/unifiedErrorHandler"; // Temporarily disabled to prevent FullStory conflicts
-import "./lib/firebaseDebugUtils"; // Initialize debug utilities
-import "./lib/callSystemTest"; // Initialize call system tests
 import { systemHealthCheck } from "./lib/systemHealthCheck";
 import { initializePerformanceMonitoring } from "./lib/performanceOptimizations";
-import { initializeAuthAwareFirebaseTest } from "./lib/authAwareFirebaseTest";
-import { initializeRulesCheck } from "./lib/firebaseRulesChecker";
 import { cleanupAllSubscriptions } from "./lib/subscriptionManager";
-import "./lib/firebaseRecovery"; // Initialize Firebase assertion failure handler
-import "./lib/minimalErrorHandler"; // Initialize minimal error handling without fetch interference
 
 
 // Layout
@@ -107,16 +99,6 @@ function AppRouter() {
 
     // Initialize core services
     initFileCleanupService();
-    initializeConnectionMonitoring();
-    // initializeErrorHandler(); // Temporarily disabled
-
-    // Initialize authentication-aware Firebase testing
-    initializeAuthAwareFirebaseTest();
-
-    // Check Firebase rules deployment
-    setTimeout(() => {
-      initializeRulesCheck();
-    }, 3000);
 
     // Run health check after services are initialized
     setTimeout(() => {
