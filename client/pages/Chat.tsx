@@ -362,6 +362,13 @@ export default function ChatReal() {
                 </div>
 
                 <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handleManualRefresh}
+                    className="p-2 rounded-lg hover:bg-gaming-surface transition-colors bg-red-500/20"
+                    title="Debug: Refresh Messages"
+                  >
+                    <Search className="w-5 h-5 text-red-400" />
+                  </button>
                   <button className="p-2 rounded-lg hover:bg-gaming-surface transition-colors">
                     <Phone className="w-5 h-5 text-gaming-muted" />
                   </button>
