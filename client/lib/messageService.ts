@@ -498,10 +498,11 @@ export const subscribeToConversations = (
   callback: (conversations: Conversation[]) => void
 ) => {
   const conversationsRef = collection(db, 'conversations');
+  // Remove orderBy to avoid composite index requirement
+  // We'll sort on the client side instead
   const q = query(
     conversationsRef,
-    where('participants', 'array-contains', userId),
-    orderBy('updatedAt', 'desc')
+    where('participants', 'array-contains', userId)
   );
 
   return onSnapshot(q, async (snapshot) => {
