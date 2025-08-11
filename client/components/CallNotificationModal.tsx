@@ -220,7 +220,14 @@ export default function CallNotificationModal({
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={onEndCall}
+                  onClick={() => {
+                    console.log('📞 End call button clicked in modal', { onEndCall: !!onEndCall });
+                    if (onEndCall) {
+                      onEndCall();
+                    } else {
+                      console.error('📞 No onEndCall handler provided');
+                    }
+                  }}
                   className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-glow"
                 >
                   <PhoneOff className="w-8 h-8 text-white" />
