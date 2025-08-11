@@ -81,22 +81,28 @@ export const LEVEL_REQUIREMENTS = [
  */
 export const getUserStats = async (userId: string): Promise<UserStats> => {
   try {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+
     const userStatsRef = doc(db, 'userStats', userId);
     const userStatsDoc = await getDoc(userStatsRef);
-    
+
     if (userStatsDoc.exists()) {
       const data = userStatsDoc.data() as UserStats;
-      
+
       // Calculate current level and XP to next level
       const level = calculateLevel(data.totalXP);
       const xpToNextLevel = calculateXPToNextLevel(data.totalXP);
-      
+
       return {
         ...data,
         level,
         xpToNextLevel
       };
     } else {
+      console.log('Creating initial user stats for:', userId);
+
       // Initialize stats for new user
       const initialStats: UserStats = {
         userId,
@@ -122,13 +128,21 @@ export const getUserStats = async (userId: string): Promise<UserStats> => {
         serversJoined: 0,
         eventsParticipated: 0
       };
-      
+
       await setDoc(userStatsRef, initialStats);
+      console.log('Initial user stats created successfully');
       return initialStats;
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching user stats:', error);
-    throw error;
+
+    if (error?.code === 'permission-denied') {
+      throw new Error('İstatistiklere erişim izni yok. Firestore kurallarını kontrol edin.');
+    } else if (error?.code === 'unauthenticated') {
+      throw new Error('Kullanıcı giriş yapmamış. Lütfen tekrar giriş yapın.');
+    } else {
+      throw new Error(`İstatistikler yüklenemedi: ${error.message || 'Bilinmeyen hata'}`);
+    }
   }
 };
 
