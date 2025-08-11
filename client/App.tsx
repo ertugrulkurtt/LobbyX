@@ -22,6 +22,7 @@ import "./lib/callSystemTest"; // Initialize call system tests
 import { systemHealthCheck } from "./lib/systemHealthCheck";
 import { initializePerformanceMonitoring } from "./lib/performanceOptimizations";
 import { initializeAuthAwareFirebaseTest } from "./lib/authAwareFirebaseTest";
+import { initializeRulesCheck } from "./lib/firebaseRulesChecker";
 
 
 // Layout
