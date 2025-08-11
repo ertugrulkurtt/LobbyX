@@ -61,20 +61,20 @@ export default function UserProfileModal({
 
   const loadUserStats = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       const stats = await getUserStats(user.uid);
       setUserStats({
         level: stats?.level || 1,
         totalXP: stats?.totalXP || 0,
-        messagesCount: stats?.messagesCount || 0,
-        voiceMinutes: stats?.voiceMinutes || 0,
-        joinDate: user.joinDate || new Date().toISOString(),
-        lastSeen: user.lastSeen || new Date().toISOString(),
-        serversCount: 0, // You can implement this
-        friendsCount: 0, // You can implement this
-        achievements: stats?.achievements || []
+        messagesCount: stats?.totalMessages || 0,
+        voiceMinutes: stats?.voiceChannelTime || 0,
+        joinDate: user.joinDate || stats?.joinDate || new Date().toISOString(),
+        lastSeen: user.lastSeen || stats?.lastActivity || new Date().toISOString(),
+        serversCount: stats?.serversJoined || 0,
+        friendsCount: stats?.friendCount || 0,
+        achievements: stats?.achievements || 0
       });
     } catch (error) {
       console.error('Error loading user stats:', error);
