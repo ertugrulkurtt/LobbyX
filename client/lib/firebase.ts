@@ -7,6 +7,7 @@ import { getDatabase } from 'firebase/database';
 const firebaseConfig = {
   apiKey: "AIzaSyBJgWwIpQtZh_ecvK_5IDNoDWPi7ObIwhM",
   authDomain: "lobbyx-87c98.firebaseapp.com",
+  databaseURL: "https://lobbyx-87c98-default-rtdb.firebaseio.com/",
   projectId: "lobbyx-87c98",
   storageBucket: "lobbyx-87c98.firebasestorage.app",
   messagingSenderId: "889985293267",
