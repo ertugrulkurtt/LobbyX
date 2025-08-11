@@ -1,13 +1,13 @@
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
-  onSnapshot, 
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  limit,
+  onSnapshot,
   updateDoc,
   addDoc,
   deleteDoc,
@@ -15,6 +15,43 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { RealUser } from './userService';
+
+// Utility function to handle Firebase errors and retry
+const withRetry = async <T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<T> => {
+  let lastError: Error;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      lastError = error;
+
+      // Don't retry permission errors or invalid argument errors
+      if (error.code === 'permission-denied' ||
+          error.code === 'invalid-argument' ||
+          error.code === 'not-found') {
+        throw error;
+      }
+
+      // Log the error
+      console.warn(`Firebase message operation failed (attempt ${attempt}/${maxRetries}):`, error.message);
+
+      // If this was the last attempt, throw the error
+      if (attempt === maxRetries) {
+        throw error;
+      }
+
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, delay * attempt));
+    }
+  }
+
+  throw lastError!;
+};
 
 export interface Message {
   id: string;
