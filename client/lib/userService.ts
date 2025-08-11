@@ -479,8 +479,14 @@ export const getUserConversations = async (userId: string): Promise<Conversation
 
     // Sort on client side by updatedAt descending
     return conversations.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching conversations:', error);
+
+    if (error?.code === 'permission-denied') {
+      console.warn('🔒 Conversations disabled - Firestore rules need deployment');
+      return []; // Return empty array instead of throwing
+    }
+
     throw error;
   }
 };
