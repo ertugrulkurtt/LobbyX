@@ -380,7 +380,11 @@ class CallService {
 
       // Auto-timeout after 30 seconds
       setTimeout(() => {
-        if (this.currentCall?.id === callId && this.currentCall?.status === 'initiating') {
+        const currentCallData = this.currentCall;
+        if (currentCallData &&
+            currentCallData.id === callId &&
+            (currentCallData.status === 'initiating' || currentCallData.status === 'ringing')) {
+          console.log('📞 Call timeout, ending call:', callId);
           this.endCall(callId, 'missed');
         }
       }, 30000);
