@@ -315,6 +315,24 @@ export const acceptFriendRequest = async (requestId: string): Promise<void> => {
       status: 'accepted',
       acceptedAt: new Date().toISOString()
     });
+
+    // Create notification for the person who sent the request
+    try {
+      const toUserDoc = await getDoc(doc(db, 'users', toUserId));
+      const toUserData = toUserDoc.exists() ? toUserDoc.data() : null;
+      const toUserName = toUserData?.displayName || toUserData?.username || 'Unknown User';
+      const toUserAvatar = toUserData?.photoURL || '';
+
+      await createFriendAcceptedNotification(
+        fromUserId,
+        toUserId,
+        toUserName,
+        toUserAvatar
+      );
+    } catch (notificationError) {
+      console.error('Error creating friend accepted notification:', notificationError);
+      // Don't fail the accept if notification creation fails
+    }
   } catch (error) {
     console.error('Error accepting friend request:', error);
     throw error;
