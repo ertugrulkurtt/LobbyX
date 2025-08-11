@@ -41,6 +41,7 @@ interface FriendRequest {
 
 export default function Friends() {
   const { user } = useAuth();
+  const { addFriend, removeFriend } = useUserStats();
   const [activeTab, setActiveTab] = useState<'online' | 'all' | 'pending' | 'add'>('online');
   const [searchQuery, setSearchQuery] = useState('');
   const [newFriendUsername, setNewFriendUsername] = useState('');
