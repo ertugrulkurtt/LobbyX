@@ -361,28 +361,28 @@ class CallService {
       };
 
       // Store call data in Firestore for persistence
-      await withFirebaseErrorHandling(
+      await wrapOperation(
         () => addDoc(collection(db, 'calls'), callData),
-        { operation: 'store_call_data', component: 'callService' }
+        'store_call_data'
       );
 
       // Set call data in realtime database for immediate notification
-      await withFirebaseErrorHandling(
+      await wrapOperation(
         () => set(ref(rtdb, `calls/incoming/${receiverId}`), {
           ...callData,
           status: 'ringing'
         }),
-        { operation: 'set_incoming_call', component: 'callService' }
+        'set_incoming_call'
       );
 
       // Set outgoing call status for caller
-      await withFirebaseErrorHandling(
+      await wrapOperation(
         () => set(ref(rtdb, `calls/outgoing/${callerId}`), {
           callId,
           status: 'ringing',
           startedAt: callData.startedAt
         }),
-        { operation: 'set_outgoing_call', component: 'callService' }
+        'set_outgoing_call'
       );
 
       // Update current call state
