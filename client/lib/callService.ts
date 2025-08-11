@@ -458,7 +458,7 @@ class CallService {
       this.stopAllSounds();
     } catch (error) {
       console.error('Error answering call:', error);
-      this.callbacks.onError?.('Arama cevaplanamadı');
+      this.callbacks.onError?.('Arama cevaplanamad��');
       throw error;
     }
   }
@@ -484,7 +484,13 @@ class CallService {
    * End a call
    */
   async endCall(callId: string, reason: 'ended' | 'rejected' | 'missed' = 'ended'): Promise<void> {
-    console.log(`📞 Attempting to end call: ${callId} with reason: ${reason}`);
+    console.log(`📞 CallService.endCall called with:`, {
+      callId,
+      reason,
+      hasCurrentCall: !!this.currentCall,
+      currentCallId: this.currentCall?.id,
+      currentCallStatus: this.currentCall?.status
+    });
 
     if (!callId) {
       console.error('No callId provided to endCall');
