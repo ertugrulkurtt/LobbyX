@@ -16,12 +16,12 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserStats } from '../hooks/useUserStats';
-import { 
-  getUserFriends, 
-  getFriendRequests, 
-  sendFriendRequest, 
-  acceptFriendRequest, 
-  rejectFriendRequest, 
+import {
+  getUserFriends,
+  getFriendRequests,
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
   removeFriend as removeUserFriend,
   searchUsers,
   subscribeToUserFriends,
@@ -29,6 +29,7 @@ import {
   RealUser,
   FriendRequest
 } from '../lib/userService';
+import { getOrCreateDirectConversation } from '../lib/messageService';
 
 export default function FriendsReal() {
   const { user } = useAuth();
