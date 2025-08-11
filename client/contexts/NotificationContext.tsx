@@ -49,21 +49,30 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setLoading(true);
 
-    // Subscribe to notifications
-    const unsubscribeNotifications = subscribeToNotifications(user.uid, (realTimeNotifications) => {
-      setNotifications(realTimeNotifications);
+    try {
+      // Subscribe to notifications
+      const unsubscribeNotifications = subscribeToNotifications(user.uid, (realTimeNotifications) => {
+        setNotifications(realTimeNotifications);
+        setLoading(false);
+      });
+
+      // Subscribe to notification counts
+      const unsubscribeCounts = subscribeToNotificationCounts(user.uid, (realTimeCounts) => {
+        setCounts(realTimeCounts);
+      });
+
+      return () => {
+        try {
+          unsubscribeNotifications();
+          unsubscribeCounts();
+        } catch (error) {
+          console.warn('Error unsubscribing from notifications:', error);
+        }
+      };
+    } catch (error) {
+      console.error('Error setting up notification subscriptions:', error);
       setLoading(false);
-    });
-
-    // Subscribe to notification counts
-    const unsubscribeCounts = subscribeToNotificationCounts(user.uid, (realTimeCounts) => {
-      setCounts(realTimeCounts);
-    });
-
-    return () => {
-      unsubscribeNotifications();
-      unsubscribeCounts();
-    };
+    }
   }, [user?.uid]);
 
   const markAsRead = async (notificationId: string) => {
