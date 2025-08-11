@@ -221,9 +221,13 @@ export const addXP = async (userId: string, xpAmount: number, source: string) =>
       date: today
     });
     
-  } catch (error) {
-    console.error('Error adding XP:', error);
-    throw error;
+  } catch (error: any) {
+    if (error?.code === 'permission-denied') {
+      console.warn('🔒 XP tracking disabled - Firestore rules need deployment');
+      return; // Don't throw, just warn
+    }
+    console.warn('Error adding XP (non-critical):', error.message);
+    // Don't throw to prevent blocking other functionality
   }
 };
 
