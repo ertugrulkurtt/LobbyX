@@ -110,6 +110,11 @@ function AppRouter() {
     // Initialize authentication-aware Firebase testing
     initializeAuthAwareFirebaseTest();
 
+    // Check Firebase rules deployment
+    setTimeout(() => {
+      initializeRulesCheck();
+    }, 3000);
+
     // Run health check after services are initialized
     setTimeout(() => {
       systemHealthCheck.runHealthCheck().then(() => {
