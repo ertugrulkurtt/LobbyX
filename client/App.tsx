@@ -139,7 +139,11 @@ function AppRouter() {
   }
 
   return (
-    <Routes>
+    <>
+      {showFirebaseError && (
+        <FirebaseErrorNotification onClose={() => setShowFirebaseError(false)} />
+      )}
+      <Routes>
       {/* Public routes - only accessible when NOT logged in */}
       <Route path="/" element={
         <PublicRoute>
@@ -211,7 +215,8 @@ function AppRouter() {
           <Navigate to="/" replace />
         )
       } />
-    </Routes>
+      </Routes>
+    </>
   );
 }
 
