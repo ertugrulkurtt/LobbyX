@@ -223,12 +223,20 @@ export default function Chat() {
     return matchesSearch;
   });
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!messageText.trim()) return;
-    
-    // In real app, this would send to Firebase
-    console.log('Sending message:', messageText);
-    setMessageText('');
+
+    try {
+      // In real app, this would send to Firebase
+      console.log('Sending message:', messageText);
+
+      // Update user statistics for message sent
+      await incrementMessages(selectedChat || undefined);
+
+      setMessageText('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
