@@ -25,6 +25,28 @@ import { useAuth } from '../contexts/AuthContext';
 import { useUserStats } from '../hooks/useUserStats';
 import BadgeSystem, { Badge } from './BadgeSystem';
 
+// Helper functions for level system
+const getLevelTitle = (level: number): string => {
+  if (level >= 50) return 'Efsane';
+  if (level >= 40) return 'Usta';
+  if (level >= 30) return 'Uzman';
+  if (level >= 20) return 'Deneyimli';
+  if (level >= 10) return 'Gelişen';
+  if (level >= 5) return 'Acemi';
+  return 'Yeni Başlayan';
+};
+
+const getLevelPerks = (level: number): string[] => {
+  const perks = [];
+  if (level >= 5) perks.push('Mesaj pinleme');
+  if (level >= 10) perks.push('Özel emoji kullanımı');
+  if (level >= 15) perks.push('Nickname değiştirme');
+  if (level >= 20) perks.push('Özel kanal erişimi');
+  if (level >= 25) perks.push('Voice channel yönetimi');
+  if (level >= 30) perks.push('Moderatör yetkisi');
+  return perks;
+};
+
 export interface UserLevel {
   userId: string;
   level: number;
@@ -159,7 +181,7 @@ const levelRewards: LevelReward[] = [
     unlocks: ['All features'],
     specialReward: {
       type: 'role',
-      name: 'Efsane ��ye',
+      name: 'Efsane Üye',
       description: 'En üst düzey sunucu üyesi rolü'
     }
   }
