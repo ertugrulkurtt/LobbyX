@@ -20,6 +20,7 @@ import { initializeErrorHandler } from "./lib/unifiedErrorHandler";
 import "./lib/firebaseDebugUtils"; // Initialize debug utilities
 import "./lib/callSystemTest"; // Initialize call system tests
 import { systemHealthCheck } from "./lib/systemHealthCheck";
+import { initializePerformanceMonitoring } from "./lib/performanceOptimizations";
 
 
 // Layout
