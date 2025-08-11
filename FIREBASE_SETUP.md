@@ -124,10 +124,23 @@ service cloud.firestore {
 
 ## Test Etme:
 
+### Profil Fotoğrafı Testi:
 1. Uygulamaya giriş yap
 2. Profil sayfasına git
 3. Kamera ikonuna tıkla
 4. Bir resim dosyası seç
 5. Yükleme işlemini bekle
 
-Eğer hala sorun yaşıyorsan, tarayıcı konsolunu kontrol et ve hata mesajlarını incele.
+### İstatistik Sistemi Testi:
+1. Uygulamaya giriş yap
+2. Dashboard'da istatistiklerin yüklendiğini kontrol et
+3. Bir mesaj gönder (Chat sayfasında)
+4. Profil sayfasında mesaj sayısının arttığını kontrol et
+5. Arkadaş ekle/çıkar ve arkadaş sayısının değiştiğini kontrol et
+
+### Hata Giderme:
+Eğer hala sorun yaşıyorsan:
+1. Tarayıcı konsolunu kontrol et
+2. Firebase Console'da "Authentication" > "Users" bölümünde kullanıcının var olduğunu kontrol et
+3. Firestore Database'de "userStats" koleksiyonuna erişimin olduğunu kontrol et
+4. Hata mesajlarını incele ve buradan bildirin
