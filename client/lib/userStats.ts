@@ -85,6 +85,16 @@ export const getUserStats = async (userId: string): Promise<UserStats> => {
       throw new Error('User ID is required');
     }
 
+    // Wait for authentication to be ready
+    if (!auth.currentUser) {
+      await new Promise((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          unsubscribe();
+          resolve(!!user);
+        });
+      });
+    }
+
     const userStatsRef = doc(db, 'userStats', userId);
     const userStatsDoc = await getDoc(userStatsRef);
 
