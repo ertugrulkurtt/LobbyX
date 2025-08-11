@@ -506,28 +506,45 @@ export default function ChatReal() {
 
             {/* Message Input */}
             <div className="p-4 bg-gaming-surface/30 backdrop-blur-xl border-t border-gaming-border">
+              {/* Friendship Status Warning */}
+              {!canSendMessage && friendshipStatus && (
+                <div className="mb-3 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+                  <p className="text-red-400 text-sm flex items-center">
+                    <User className="w-4 h-4 mr-2" />
+                    {friendshipStatus}
+                  </p>
+                </div>
+              )}
+
               <div className="flex items-center space-x-3">
-                <button className="p-2 rounded-lg hover:bg-gaming-surface transition-colors">
+                <button
+                  className="p-2 rounded-lg hover:bg-gaming-surface transition-colors disabled:opacity-50"
+                  disabled={!canSendMessage}
+                >
                   <Paperclip className="w-5 h-5 text-gaming-muted" />
                 </button>
-                
+
                 <div className="flex-1 relative">
                   <input
                     type="text"
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="Mesaj yazın..."
-                    className="w-full px-4 py-3 bg-gaming-surface border border-gaming-border rounded-xl focus:outline-none focus:ring-2 focus:ring-neon-purple/50 text-gaming-text pr-12"
+                    placeholder={canSendMessage ? "Mesaj yazın..." : "Mesaj gönderemezsiniz"}
+                    disabled={!canSendMessage}
+                    className="w-full px-4 py-3 bg-gaming-surface border border-gaming-border rounded-xl focus:outline-none focus:ring-2 focus:ring-neon-purple/50 text-gaming-text pr-12 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
-                  <button className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-lg hover:bg-gaming-surface transition-colors">
+                  <button
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-lg hover:bg-gaming-surface transition-colors disabled:opacity-50"
+                    disabled={!canSendMessage}
+                  >
                     <Smile className="w-5 h-5 text-gaming-muted" />
                   </button>
                 </div>
-                
+
                 <button
                   onClick={handleSendMessage}
-                  disabled={!messageText.trim()}
+                  disabled={!messageText.trim() || !canSendMessage}
                   className="p-3 bg-neon-purple text-white rounded-xl hover:bg-neon-purple/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="w-5 h-5" />
