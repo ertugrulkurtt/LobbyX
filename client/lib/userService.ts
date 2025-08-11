@@ -462,13 +462,19 @@ export const subscribeToFriendRequests = (
   userId: string,
   callback: (requests: { incoming: FriendRequest[]; outgoing: FriendRequest[] }) => void
 ) => {
-  // Refresh function that fetches all data
+  // Refresh function that fetches all data with retry
   const refreshData = async () => {
     try {
-      const requests = await getFriendRequests(userId);
+      const requests = await withRetry(() => getFriendRequests(userId));
       callback(requests);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error refreshing friend requests:', error);
+
+      // Show user-friendly error message for network issues
+      if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
+        console.warn('Network connection issue - retrying in background');
+      }
+
       callback({ incoming: [], outgoing: [] });
     }
   };
@@ -484,8 +490,15 @@ export const subscribeToFriendRequests = (
     refreshData();
   }, (error) => {
     console.error('Friend requests subscription error:', error);
+
     if (error.code === 'permission-denied') {
       console.error('Permission denied: Please update Firestore rules');
+    } else if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
+      console.warn('Network connection issue with subscription - will retry automatically');
+      // Try to reconnect after a delay
+      setTimeout(() => {
+        refreshData();
+      }, 5000);
     }
   });
 
