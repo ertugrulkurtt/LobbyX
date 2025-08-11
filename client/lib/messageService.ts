@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { RealUser, areFriends } from './userService';
+import { createMessageNotification } from './notificationService';
 
 // Utility function to handle Firebase errors and retry
 const withRetry = async <T>(
