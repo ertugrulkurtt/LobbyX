@@ -453,6 +453,11 @@ export const subscribeToFriendRequests = (
   
   const incomingUnsubscribe = onSnapshot(incomingQuery, async (snapshot) => {
     try {
+      console.log('Incoming snapshot received:', snapshot.docs.length, 'documents');
+      snapshot.docs.forEach(doc => {
+        console.log('Incoming request doc:', doc.id, doc.data());
+      });
+
       incoming = await Promise.all(
         snapshot.docs.map(async (requestDoc) => {
           const requestData = requestDoc.data();
@@ -467,6 +472,7 @@ export const subscribeToFriendRequests = (
           } as FriendRequest;
         })
       );
+      console.log('Processed incoming requests:', incoming);
       callback({ incoming, outgoing });
     } catch (error) {
       console.error('Error in incoming requests subscription:', error);
