@@ -311,12 +311,13 @@ export const sendMessage = async (
     console.log('Updating conversation:', conversationUpdate);
     await updateDoc(conversationRef, conversationUpdate);
 
-    // Update unread counts for other participants (reuse existing conversationDoc)
-    // We already have conversationDoc from the friendship check above
-    if (conversationDoc.exists()) {
-      const conversationData = conversationDoc.data();
-      const participants = conversationData.participants || [];
-      const currentUnreadCounts = conversationData.unreadCounts || {};
+    // Update unread counts for other participants
+    // Get fresh conversation data after the last message update
+    const updatedConversationDoc = await getDoc(conversationRef);
+    if (updatedConversationDoc.exists()) {
+      const updatedConversationData = updatedConversationDoc.data();
+      const participants = updatedConversationData.participants || [];
+      const currentUnreadCounts = updatedConversationData.unreadCounts || {};
 
       const newUnreadCounts = { ...currentUnreadCounts };
       participants.forEach((participantId: string) => {
