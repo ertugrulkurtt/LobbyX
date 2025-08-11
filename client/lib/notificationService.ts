@@ -69,23 +69,31 @@ export const createNotification = async (notification: Omit<NotificationData, 'i
  * Get notifications for a user
  */
 export const getUserNotifications = async (
-  userId: string, 
+  userId: string,
   limitCount: number = 50
 ): Promise<NotificationData[]> => {
   try {
     const notificationsRef = collection(db, 'notifications');
     const q = query(
       notificationsRef,
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc'),
-      limit(limitCount)
+      where('userId', '==', userId)
     );
-    
+
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
+    const notifications = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as NotificationData[];
+
+    // Sort on client side to avoid composite index requirement
+    const sortedNotifications = notifications.sort((a, b) => {
+      const aTime = new Date(a.createdAt).getTime();
+      const bTime = new Date(b.createdAt).getTime();
+      return bTime - aTime; // Descending order (newest first)
+    });
+
+    // Apply limit on client side
+    return sortedNotifications.slice(0, limitCount);
   } catch (error) {
     console.error('Error fetching notifications:', error);
     throw error;
