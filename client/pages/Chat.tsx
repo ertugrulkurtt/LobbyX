@@ -127,6 +127,20 @@ export default function ChatReal() {
     }
   };
 
+  // Manual refresh for debugging
+  const handleManualRefresh = async () => {
+    if (!selectedChat) return;
+
+    try {
+      console.log('Manual refresh triggered for conversation:', selectedChat);
+      const messages = await getConversationMessages(selectedChat);
+      console.log('Manual refresh got', messages.length, 'messages');
+      setMessages(messages);
+    } catch (error) {
+      console.error('Manual refresh error:', error);
+    }
+  };
+
   // Get conversation details
   const selectedChatData = conversations.find(c => c.id === selectedChat);
 
