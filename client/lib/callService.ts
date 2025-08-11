@@ -457,8 +457,12 @@ class CallService {
       }
 
       // Clean up realtime database
-      await remove(ref(rtdb, `calls/incoming/${this.currentCall.receiverId}`));
-      await remove(ref(rtdb, `calls/outgoing/${this.currentCall.callerId}`));
+      if (this.currentCall.receiverId) {
+        await remove(ref(rtdb, `calls/incoming/${this.currentCall.receiverId}`));
+      }
+      if (this.currentCall.callerId) {
+        await remove(ref(rtdb, `calls/outgoing/${this.currentCall.callerId}`));
+      }
 
       // Update Firestore record
       const callQuery = query(
