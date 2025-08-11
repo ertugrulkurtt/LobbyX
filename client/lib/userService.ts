@@ -431,33 +431,36 @@ export const subscribeToUserFriends = (userId: string, callback: (friends: RealU
  * Subscribe to real-time friend requests
  */
 export const subscribeToFriendRequests = (
-  userId: string, 
+  userId: string,
   callback: (requests: { incoming: FriendRequest[]; outgoing: FriendRequest[] }) => void
 ) => {
   const requestsRef = collection(db, 'friendRequests');
-  
+
   const incomingQuery = query(
     requestsRef,
     where('toUserId', '==', userId),
     where('status', '==', 'pending')
   );
-  
+
   const outgoingQuery = query(
     requestsRef,
     where('fromUserId', '==', userId),
     where('status', '==', 'pending')
   );
-  
+
   let incoming: FriendRequest[] = [];
   let outgoing: FriendRequest[] = [];
-  
+  let incomingReady = false;
+  let outgoingReady = false;
+
+  const checkAndCallback = () => {
+    if (incomingReady && outgoingReady) {
+      callback({ incoming, outgoing });
+    }
+  };
+
   const incomingUnsubscribe = onSnapshot(incomingQuery, async (snapshot) => {
     try {
-      console.log('Incoming snapshot received:', snapshot.docs.length, 'documents');
-      snapshot.docs.forEach(doc => {
-        console.log('Incoming request doc:', doc.id, doc.data());
-      });
-
       incoming = await Promise.all(
         snapshot.docs.map(async (requestDoc) => {
           const requestData = requestDoc.data();
@@ -472,16 +475,20 @@ export const subscribeToFriendRequests = (
           } as FriendRequest;
         })
       );
-      console.log('Processed incoming requests:', incoming);
-      callback({ incoming, outgoing });
+      incomingReady = true;
+      checkAndCallback();
     } catch (error) {
       console.error('Error in incoming requests subscription:', error);
+      incomingReady = true;
+      checkAndCallback();
     }
   }, (error) => {
     console.error('Incoming friend requests subscription error:', error);
     if (error.code === 'permission-denied') {
       console.error('Permission denied: Please update Firestore rules');
     }
+    incomingReady = true;
+    checkAndCallback();
   });
 
   const outgoingUnsubscribe = onSnapshot(outgoingQuery, async (snapshot) => {
@@ -500,17 +507,22 @@ export const subscribeToFriendRequests = (
           } as FriendRequest;
         })
       );
-      callback({ incoming, outgoing });
+      outgoingReady = true;
+      checkAndCallback();
     } catch (error) {
       console.error('Error in outgoing requests subscription:', error);
+      outgoingReady = true;
+      checkAndCallback();
     }
   }, (error) => {
     console.error('Outgoing friend requests subscription error:', error);
     if (error.code === 'permission-denied') {
       console.error('Permission denied: Please update Firestore rules');
     }
+    outgoingReady = true;
+    checkAndCallback();
   });
-  
+
   return () => {
     incomingUnsubscribe();
     outgoingUnsubscribe();
