@@ -136,6 +136,22 @@ export default function CallNotificationModal({
             )}
           </div>
 
+          {/* Emergency Close Button */}
+          <button
+            onClick={() => {
+              console.log('📞 Emergency close button clicked');
+              if (onForceClose) {
+                onForceClose();
+              } else if (onEndCall) {
+                onEndCall();
+              }
+            }}
+            className="absolute top-2 left-2 w-8 h-8 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400 hover:bg-red-500/30 hover:text-red-300 transition-colors"
+            title="Aramayı kapat"
+          >
+            ✕
+          </button>
+
           {/* User Avatar and Info */}
           <div className="text-center mb-8">
             <div className="relative mx-auto mb-4">
