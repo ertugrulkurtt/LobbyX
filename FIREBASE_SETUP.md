@@ -108,11 +108,19 @@ service cloud.firestore {
 
 ## Güvenlik Kuralları Açıklaması:
 
+### Storage Kuralları:
 - **users/{userId}/profile-photo/**: Kullanıcılar sadece kendi klasörlerine yükleme yapabilir
 - **public/profile-photos/**: Herkese açık profil fotoğrafları
 - **Root level**: Geçici çözüm olarak root seviyede yüklemeye izin verir
 - **Dosya boyutu limiti**: 5MB
 - **Dosya türü kontrolü**: Sadece resim dosyaları
+
+### Firestore Kuralları:
+- **users/{userId}**: Kullanıcılar sadece kendi profil verilerini düzenleyebilir
+- **userStats/{userId}**: Kullanıcılar kendi istatistiklerini okuyup yazabilir
+- **dailyActivity**: Günlük aktivite takibi için kullanıcıya özel erişim
+- **messageStats**: Mesaj istatistikleri için kullanıcıya özel erişim
+- **xpLogs**: XP kazanım geçmişi için kullanıcıya özel okuma/yazma
 
 ## Test Etme:
 
