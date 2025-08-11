@@ -46,8 +46,6 @@ export const useUserStats = (): UseUserStatsReturn => {
         setLoading(true);
         setError(null);
 
-        console.log('Initializing user stats for:', user.uid);
-
         // Track daily login when component mounts (non-blocking)
         trackDailyLogin(user.uid).catch(err => {
           console.warn('Daily login tracking failed:', err);
@@ -55,7 +53,6 @@ export const useUserStats = (): UseUserStatsReturn => {
 
         // Get initial stats
         const initialStats = await getUserStats(user.uid);
-        console.log('User stats loaded:', initialStats);
 
         // Calculate and update rank (non-blocking for better UX)
         calculateUserRank(user.uid)
