@@ -76,7 +76,7 @@ class SystemHealthCheck {
   private async checkFirebaseConnectivity(): Promise<void> {
     try {
       // Check authentication status first
-      const { auth } = await import('../lib/firebase');
+      const { auth } = await import('./firebase');
       const currentUser = auth.currentUser;
 
       if (!currentUser) {
