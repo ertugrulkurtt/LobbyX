@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserStats } from '../hooks/useUserStats';
+import { getUserConversations } from '../lib/messageService';
+import { useState, useEffect } from 'react';
 
 export default function Dashboard() {
   const { user } = useAuth();
