@@ -141,21 +141,8 @@ service cloud.firestore {
         && request.auth.uid == request.resource.data.createdBy;
     }
 
-    // Notifications - users can only access their own notifications
-    match /notifications/{notificationId} {
-      // Allow reading if user is authenticated and it's their notification
-      allow read: if request.auth != null
-        && (resource == null || request.auth.uid == resource.data.userId);
-
-      // Allow creating if user is authenticated and creating for themselves
-      allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.userId;
-
-      // Allow updating/deleting if user is authenticated and it's their notification
-      allow update, delete: if request.auth != null
-        && request.auth.uid == resource.data.userId;
-
-      // Temporary broad access for debugging
+    // Notifications - temporary broad access for debugging permission issues
+    match /notifications/{document=**} {
       allow read, write: if request.auth != null;
     }
 
