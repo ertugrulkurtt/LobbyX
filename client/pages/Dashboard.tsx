@@ -35,37 +35,80 @@ export default function Dashboard() {
     { label: 'Oyun Süresi', value: '0 dakika', icon: Clock, color: 'text-neon-pink' },
   ];
 
-  // Recent conversations - last 3 people
-  const recentConversations = [
-    {
-      id: 1,
-      name: 'LobbyXAdmin',
-      isVerified: true,
-      isOnline: true,
-      avatar: '/api/placeholder/40/40',
-      lastMessage: 'Sunucuya hoş geldiniz!',
-      time: '2 dk',
-      isSpecial: true
-    },
-    {
-      id: 2,
-      name: 'ProGamer123',
-      isVerified: false,
-      isOnline: true,
-      avatar: '/api/placeholder/40/40',
-      lastMessage: 'Valorant oynayalım mı?',
-      time: '15 dk'
-    },
-    {
-      id: 3,
-      name: 'GameMaster',
-      isVerified: false,
-      isOnline: false,
-      avatar: '/api/placeholder/40/40',
-      lastMessage: 'Bu akşam CS2 turnuvası var',
-      time: '1 saat'
+  // Real conversation data from Firebase
+  const [recentConversations, setRecentConversations] = useState<any[]>([]);
+  const [conversationsLoading, setConversationsLoading] = useState(true);
+
+  // Load real conversations
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const loadConversations = async () => {
+      try {
+        setConversationsLoading(true);
+        const conversations = await getUserConversations(user.uid);
+
+        // Format conversations for display (limit to 3 most recent)
+        const formattedConversations = conversations.slice(0, 3).map(conv => {
+          // For direct conversations, show the other participant
+          if (conv.type === 'direct') {
+            const otherParticipant = conv.participantDetails.find(p => p.uid !== user.uid);
+            return {
+              id: conv.id,
+              name: otherParticipant?.displayName || otherParticipant?.username || 'Kullanıcı',
+              isVerified: otherParticipant?.isVerified || false,
+              isOnline: otherParticipant?.isOnline || false,
+              avatar: otherParticipant?.photoURL,
+              lastMessage: conv.lastMessage?.content || 'Mesaj yok',
+              time: formatTime(conv.lastMessage?.timestamp || conv.updatedAt),
+              isSpecial: false
+            };
+          } else {
+            // Group conversation
+            return {
+              id: conv.id,
+              name: conv.name || 'Grup Sohbeti',
+              isVerified: false,
+              isOnline: true,
+              avatar: conv.icon,
+              lastMessage: conv.lastMessage?.content || 'Mesaj yok',
+              time: formatTime(conv.lastMessage?.timestamp || conv.updatedAt),
+              isSpecial: false
+            };
+          }
+        });
+
+        setRecentConversations(formattedConversations);
+      } catch (error) {
+        console.error('Error loading conversations:', error);
+        setRecentConversations([]);
+      } finally {
+        setConversationsLoading(false);
+      }
+    };
+
+    loadConversations();
+  }, [user?.uid]);
+
+  // Helper function to format time
+  const formatTime = (isoDate: string): string => {
+    try {
+      const date = new Date(isoDate);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffMinutes < 1) return 'Şimdi';
+      if (diffMinutes < 60) return `${diffMinutes} dk`;
+      if (diffHours < 24) return `${diffHours} saat`;
+      if (diffDays < 7) return `${diffDays} gün`;
+      return date.toLocaleDateString('tr-TR');
+    } catch {
+      return 'Bilinmiyor';
     }
-  ];
+  };
 
   // Quick access actions
   const quickActions = [
