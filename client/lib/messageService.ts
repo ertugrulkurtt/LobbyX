@@ -96,8 +96,13 @@ export const getUserConversations = async (userId: string): Promise<Conversation
         } as Conversation;
       })
     );
-    
-    return conversations;
+
+    // Sort conversations by updatedAt on client side
+    return conversations.sort((a, b) => {
+      const aTime = new Date(a.updatedAt).getTime();
+      const bTime = new Date(b.updatedAt).getTime();
+      return bTime - aTime; // Descending order (newest first)
+    });
   } catch (error) {
     console.error('Error fetching conversations:', error);
     throw error;
