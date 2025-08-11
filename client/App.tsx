@@ -16,7 +16,7 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 // Services
 import { initFileCleanupService } from "./lib/fileCleanupService";
 import { initializeConnectionMonitoring } from "./lib/firebaseConnectionMonitor";
-import { initializeErrorHandler } from "./lib/unifiedErrorHandler";
+// import { initializeErrorHandler } from "./lib/unifiedErrorHandler"; // Temporarily disabled to prevent FullStory conflicts
 import "./lib/firebaseDebugUtils"; // Initialize debug utilities
 import "./lib/callSystemTest"; // Initialize call system tests
 import { systemHealthCheck } from "./lib/systemHealthCheck";
@@ -108,7 +108,7 @@ function AppRouter() {
     // Initialize core services
     initFileCleanupService();
     initializeConnectionMonitoring();
-    initializeErrorHandler();
+    // initializeErrorHandler(); // Temporarily disabled
 
     // Initialize authentication-aware Firebase testing
     initializeAuthAwareFirebaseTest();
