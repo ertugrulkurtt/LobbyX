@@ -104,6 +104,7 @@ export function Layout({ children }: LayoutProps) {
         { id: 'user3', name: 'GameMaster', isMuted: true, isDeafened: false }
       ]
     });
+    setVoiceStartTime(new Date());
     console.log('Ses kanalına katıldı:', channelName);
   };
 
