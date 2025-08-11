@@ -19,41 +19,12 @@ import { db } from './firebase';
 import { wrapOperation } from './unifiedErrorHandler';
 import { createFriendRequestNotification, createFriendAcceptedNotification } from './notificationService';
 
-// Utility function to handle Firebase errors and retry
-const withRetry = async <T>(
+// Use unified error handler for all operations
+const withRetry = <T>(
   operation: () => Promise<T>,
-  maxRetries: number = 3,
-  delay: number = 1000
+  operationName: string = 'user_service_operation'
 ): Promise<T> => {
-  let lastError: Error;
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      return await operation();
-    } catch (error: any) {
-      lastError = error;
-
-      // Don't retry permission errors or invalid argument errors
-      if (error.code === 'permission-denied' ||
-          error.code === 'invalid-argument' ||
-          error.code === 'not-found') {
-        throw error;
-      }
-
-      // Log the error
-      console.warn(`Firebase operation failed (attempt ${attempt}/${maxRetries}):`, error.message);
-
-      // If this was the last attempt, throw the error
-      if (attempt === maxRetries) {
-        throw error;
-      }
-
-      // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, delay * attempt));
-    }
-  }
-
-  throw lastError!;
+  return wrapOperation(operation, operationName);
 };
 
 export interface RealUser {
