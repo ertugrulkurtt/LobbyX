@@ -61,9 +61,6 @@ export default function FriendsReal() {
 
     // Subscribe to friend requests
     const unsubscribeRequests = subscribeToFriendRequests(user.uid, (requests) => {
-      console.log('Friend requests updated:', requests);
-      console.log('Incoming requests:', requests.incoming);
-      console.log('Outgoing requests:', requests.outgoing);
       setFriendRequests(requests);
     });
 
