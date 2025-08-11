@@ -19,19 +19,12 @@ import { RealUser, areFriends } from './userService';
 import { createMessageNotification } from './notificationService';
 import { handleNetworkError } from './firebaseConnectionMonitor';
 
-// Enhanced retry function with error reporting
-const withRetry = async <T>(
+// Use unified error handler for all operations
+const withRetry = <T>(
   operation: () => Promise<T>,
-  maxRetries: number = 3,
-  delay: number = 1000
+  operationName: string = 'firebase_operation'
 ): Promise<T> => {
-  try {
-    return await withExponentialBackoff(operation, maxRetries, delay);
-  } catch (error: any) {
-    // Report Firebase errors for critical recovery tracking
-    reportFirebaseError(error);
-    throw error;
-  }
+  return wrapOperation(operation, operationName);
 };
 
 export interface Message {
