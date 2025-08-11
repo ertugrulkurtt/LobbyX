@@ -76,12 +76,15 @@ export function FirebaseStatus() {
       {showDetails && (
         <div className="mt-2 text-xs text-gaming-muted">
           <p className="mb-2">
-            Firestore kuralları güncellenmeli. Şu anda varsayılan veriler gösteriliyor.
+            Firebase bağlantı sorunu tespit edildi. Bu durum şu sebeplerden olabilir:
           </p>
-          <div className="bg-gaming-surface rounded p-2 font-mono text-xs">
-            1. Firebase Console'a gidin<br/>
-            2. Firestore Database → Rules<br/>
-            3. Kuralları güncelleyin ve yayınlayın
+          <div className="bg-gaming-surface rounded p-2 text-xs space-y-1">
+            <div>🔐 <strong>Firestore Rules:</strong> Kurallar deploy edilmemiş olabilir</div>
+            <div>🌐 <strong>Network:</strong> İnternet bağlantısı sorunu</div>
+            <div>👤 <strong>Authentication:</strong> Oturum açma sorunu</div>
+          </div>
+          <div className="mt-2 text-xs">
+            <strong>Çözüm:</strong> FIREBASE_QUICK_FIX.md dosyasına bakın
           </div>
         </div>
       )}
