@@ -84,6 +84,48 @@ export default function ChatReal() {
     return () => unsubscribe();
   }, [user?.uid, location.search, selectedChat]);
 
+  // Check friendship status for selected conversation
+  useEffect(() => {
+    const checkFriendship = async () => {
+      if (!selectedChat || !user?.uid) {
+        setCanSendMessage(true);
+        setFriendshipStatus('');
+        return;
+      }
+
+      // Find the selected conversation
+      const selectedConversation = conversations.find(c => c.id === selectedChat);
+
+      if (selectedConversation && selectedConversation.type === 'direct') {
+        // Get the other participant
+        const otherParticipant = selectedConversation.participantDetails.find(p => p.uid !== user.uid);
+
+        if (otherParticipant) {
+          try {
+            const friendshipStatus = await areFriends(user.uid, otherParticipant.uid);
+            setCanSendMessage(friendshipStatus);
+
+            if (!friendshipStatus) {
+              setFriendshipStatus(`${otherParticipant.displayName || otherParticipant.username} ile artık arkadaş değilsiniz. Mesaj gönderemezsiniz.`);
+            } else {
+              setFriendshipStatus('');
+            }
+          } catch (error) {
+            console.error('Error checking friendship:', error);
+            setCanSendMessage(true);
+            setFriendshipStatus('');
+          }
+        }
+      } else {
+        // Group conversation or server channel - always allow
+        setCanSendMessage(true);
+        setFriendshipStatus('');
+      }
+    };
+
+    checkFriendship();
+  }, [selectedChat, user?.uid, conversations]);
+
   // Subscribe to messages for selected conversation
   useEffect(() => {
     if (!selectedChat) {
@@ -96,7 +138,7 @@ export default function ChatReal() {
     const unsubscribe = subscribeToMessages(selectedChat, (realTimeMessages) => {
       setMessages(realTimeMessages);
       setMessagesLoading(false);
-      
+
       // Mark messages as read
       if (user?.uid) {
         markMessagesAsRead(selectedChat, user.uid).catch(console.error);
