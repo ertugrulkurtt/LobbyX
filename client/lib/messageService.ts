@@ -325,7 +325,7 @@ export const sendMessage = async (
 
     console.log('Message sent successfully');
     return messageRef.id;
-  });
+  }, 'sendMessage');
 };
 
 /**
