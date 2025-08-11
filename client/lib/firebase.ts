@@ -218,15 +218,28 @@ export const testFirebaseConnection = async (): Promise<boolean> => {
       return false;
     }
 
+    // Wait for authentication to be ready
+    await new Promise((resolve) => {
+      if (auth.currentUser) {
+        resolve(true);
+      } else {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          unsubscribe();
+          resolve(!!user);
+        });
+      }
+    });
+
     // Test Firebase connectivity with a simple authenticated operation
     const testRef = collection(db, 'users');
     await getDocs(testRef);
     return true;
   } catch (error: any) {
     if (error.code === 'permission-denied') {
-      console.warn('🔒 Firebase connection test failed - Firestore rules need deployment');
+      // For permission denied, we might need to deploy rules or wait for auth
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+      return false;
     } else {
-
       // Only attempt reconnection for network errors
       if (error.message?.includes('Failed to fetch') ||
           error.message?.includes('network-request-failed')) {
