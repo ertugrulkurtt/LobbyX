@@ -1,6 +1,6 @@
 # Firebase Kurulumu
 
-LobbyX uygulamasının tüm özelliklerinin çal��şması için hem Firebase Storage hem de Firestore Database kurallarının güncellenmesi gerekiyor.
+LobbyX uygulamasının tüm özelliklerinin çalışması için hem Firebase Storage hem de Firestore Database kurallarının güncellenmesi gerekiyor.
 
 ## Firebase Console'da Yapılması Gerekenler:
 
@@ -38,6 +38,73 @@ service firebase.storage {
 ```
 
 6. **"Publish" butonuna tıkla**
+
+## 2. Firestore Database Kuralları
+
+**İstatistik sistemi ve kullanıcı verilerinin çalışması için gereklidir!**
+
+1. **Firebase Console'da "Firestore Database" seçeneğine tıkla**
+2. **"Rules" sekmesine git**
+3. **Aşağıdaki kuralları yapıştır:**
+
+```javascript
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users collection - users can read/write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // User statistics - users can read/write their own stats
+    match /userStats/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null; // Allow reading for leaderboard
+    }
+
+    // Daily activity tracking - users can read/write their own activity
+    match /dailyActivity/{activityId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.userId;
+    }
+
+    // Message statistics - users can read/write their own message stats
+    match /messageStats/{messageStatsId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.userId;
+    }
+
+    // XP logs - users can read their own XP logs, write is controlled
+    match /xpLogs/{logId} {
+      allow read: if request.auth != null
+        && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.userId;
+    }
+
+    // Achievement progress - users can read/write their own achievements
+    match /achievementProgress/{progressId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.userId;
+    }
+
+    // Default deny rule for any other documents
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+```
+
+4. **"Publish" butonuna tıkla**
 
 ## Güvenlik Kuralları Açıklaması:
 
