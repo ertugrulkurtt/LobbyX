@@ -165,19 +165,68 @@ document.addEventListener('visibilitychange', async () => {
 window.addEventListener('unhandledrejection', (event) => {
   const error = event.reason;
 
-  if (error && typeof error === 'object' &&
-      (error.message?.includes('Failed to fetch') ||
-       error.code === 'unavailable' ||
-       error.code === 'network-request-failed')) {
+  if (error && typeof error === 'object') {
+    const isFirebaseError =
+      error.message?.includes('Failed to fetch') ||
+      error.code === 'unavailable' ||
+      error.code === 'network-request-failed' ||
+      error.message?.includes('firebase') ||
+      error.message?.includes('firestore');
 
-    console.warn('Caught unhandled Firebase network error:', error.message);
+    if (isFirebaseError) {
+      console.warn('🚨 Caught unhandled Firebase error:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack?.substring(0, 200)
+      });
 
-    // Try to handle it
-    handleFirebaseNetworkError(error).catch(console.error);
+      // Try to handle it
+      handleFirebaseNetworkError(error).catch(console.error);
 
-    // Prevent the error from being logged as unhandled
-    event.preventDefault();
+      // Prevent the error from being logged as unhandled
+      event.preventDefault();
+
+      // Show user-friendly message
+      if (document.body) {
+        showFirebaseErrorNotification();
+      }
+    }
   }
 });
+
+// Show user-friendly error notification
+let errorNotificationShown = false;
+const showFirebaseErrorNotification = () => {
+  if (errorNotificationShown) return;
+  errorNotificationShown = true;
+
+  const notification = document.createElement('div');
+  notification.innerHTML = `
+    <div style="
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #ef4444;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10000;
+      max-width: 300px;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+    ">
+      <div style="font-weight: 600; margin-bottom: 4px;">Bağlantı Sorunu</div>
+      <div>Firebase ile bağlantı sorunu yaşanıyor. Sayfa yenilenecek...</div>
+    </div>
+  `;
+
+  document.body.appendChild(notification);
+
+  // Auto-reload after 3 seconds
+  setTimeout(() => {
+    window.location.reload();
+  }, 3000);
+};
 
 export default app;
