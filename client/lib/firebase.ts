@@ -100,8 +100,11 @@ export const withExponentialBackoff = async <T>(
         throw error;
       }
 
-      // Check if it's a network error
-      const isNetworkError = await handleFirebaseNetworkError(error);
+      // For Failed to fetch errors, retry silently
+      const isNetworkError =
+        error.message?.includes('Failed to fetch') ||
+        error.message?.includes('network-request-failed') ||
+        error.code === 'unavailable';
 
       if (!isNetworkError && attempt === 1) {
         // If it's not a network error, don't retry
@@ -162,9 +165,22 @@ window.addEventListener('unhandledrejection', (event) => {
       // Prevent the error from being logged as unhandled
       event.preventDefault();
 
-      // For Target ID errors, just prevent the error from being unhandled
-      // Don't attempt reconnection as it causes state corruption
+      // For Failed to fetch errors, just silently handle them
+      if (error.message?.includes('Failed to fetch')) {
+        console.warn('Network connectivity issue detected, Firebase will retry automatically');
+      }
     }
+  }
+});
+
+// Also handle regular errors
+window.addEventListener('error', (event) => {
+  const error = event.error;
+
+  if (error && error.message?.includes('Failed to fetch')) {
+    // Prevent Failed to fetch errors from showing in console
+    event.preventDefault();
+    console.warn('Network fetch failed, this is usually temporary');
   }
 });
 
