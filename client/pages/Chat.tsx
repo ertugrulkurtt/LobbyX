@@ -534,6 +534,11 @@ export default function ChatReal() {
     callActions.endCall();
   };
 
+  const handleForceCloseCall = () => {
+    console.log('📞 Force close call triggered');
+    callActions.forceCloseCall();
+  };
+
   const handleToggleMute = () => {
     callActions.toggleMute();
   };
