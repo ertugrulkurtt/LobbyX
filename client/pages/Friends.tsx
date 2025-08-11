@@ -14,6 +14,7 @@ import {
   User
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useUserStats } from '../hooks/useUserStats';
 
 interface Friend {
   id: string;
