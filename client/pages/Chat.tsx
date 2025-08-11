@@ -60,6 +60,7 @@ interface FriendChat {
 
 export default function Chat() {
   const { user } = useAuth();
+  const { incrementMessages } = useUserStats();
   const [selectedChat, setSelectedChat] = useState<string | null>('progamer123');
   const [messageText, setMessageText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
