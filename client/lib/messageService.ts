@@ -294,29 +294,35 @@ export const markMessagesAsRead = async (
     
     // Mark individual messages as read
     const messagesRef = collection(db, 'conversations', conversationId, 'messages');
+    // Remove compound where clause to avoid index requirement
     const unreadQuery = query(
       messagesRef,
-      where('isRead', '==', false),
-      where('senderId', '!=', userId)
+      where('isRead', '==', false)
     );
-    
+
     const unreadSnapshot = await getDocs(unreadQuery);
-    
-    const updatePromises = unreadSnapshot.docs.map(async (messageDoc) => {
-      const messageData = messageDoc.data();
-      const readBy = messageData.readBy || [];
-      
-      // Add this user to readBy if not already there
-      if (!readBy.some((read: any) => read.userId === userId)) {
-        await updateDoc(messageDoc.ref, {
-          readBy: [
-            ...readBy,
-            { userId, readAt: new Date().toISOString() }
-          ],
-          isRead: true
-        });
-      }
-    });
+
+    // Filter on client side to avoid composite index requirement
+    const updatePromises = unreadSnapshot.docs
+      .filter(messageDoc => {
+        const messageData = messageDoc.data();
+        return messageData.senderId !== userId; // Filter out user's own messages
+      })
+      .map(async (messageDoc) => {
+        const messageData = messageDoc.data();
+        const readBy = messageData.readBy || [];
+
+        // Add this user to readBy if not already there
+        if (!readBy.some((read: any) => read.userId === userId)) {
+          await updateDoc(messageDoc.ref, {
+            readBy: [
+              ...readBy,
+              { userId, readAt: new Date().toISOString() }
+            ],
+            isRead: true
+          });
+        }
+      });
     
     await Promise.all(updatePromises);
   } catch (error) {
