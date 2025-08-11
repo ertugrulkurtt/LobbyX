@@ -92,6 +92,12 @@ export default function CallNotificationModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+          onClick={() => {
+            console.log('📞 Backdrop clicked - force closing modal for debugging');
+            if (onEndCall) {
+              onEndCall();
+            }
+          }}
         />
 
         {/* Call Modal */}
