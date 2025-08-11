@@ -1,6 +1,6 @@
-# Firebase Storage Kurulumu
+# Firebase Kurulumu
 
-Profil fotoğrafı yükleme özelliğinin çalışması için Firebase Storage kurallarının güncellenmesi gerekiyor.
+LobbyX uygulamasının tüm özelliklerinin çal��şması için hem Firebase Storage hem de Firestore Database kurallarının güncellenmesi gerekiyor.
 
 ## Firebase Console'da Yapılması Gerekenler:
 
