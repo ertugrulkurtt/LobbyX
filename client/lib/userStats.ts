@@ -1,5 +1,5 @@
 import { doc, getDoc, setDoc, updateDoc, increment, collection, query, where, getDocs, orderBy, limit, onSnapshot, addDoc } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import { withAuthCheck } from './authStateManager';
 
 // User statistics interface
