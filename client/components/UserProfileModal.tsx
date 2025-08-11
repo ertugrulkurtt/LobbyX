@@ -62,7 +62,7 @@ export default function UserProfileModal({
     }
   }, [user, isOpen, currentUserId]);
 
-  const checkFriendshipStatus = async () => {
+  const checkFriendshipStatus = async (retryCount = 0) => {
     if (!user || !currentUserId || user.uid === currentUserId) {
       setActualFriendshipStatus(false);
       return;
@@ -72,11 +72,24 @@ export default function UserProfileModal({
     try {
       const friendshipStatus = await areFriends(currentUserId, user.uid);
       setActualFriendshipStatus(friendshipStatus);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error checking friendship status:', error);
+
+      // Retry on network errors
+      if ((error.message?.includes('Failed to fetch') || error.code === 'unavailable') && retryCount < 2) {
+        console.log(`Retrying friendship check... (attempt ${retryCount + 1})`);
+        setTimeout(() => {
+          checkFriendshipStatus(retryCount + 1);
+        }, 1000 * (retryCount + 1));
+        return;
+      }
+
+      // On final failure, assume not friends (safer default)
       setActualFriendshipStatus(false);
     } finally {
-      setCheckingFriendship(false);
+      if (retryCount === 0) { // Only set loading false on first attempt
+        setCheckingFriendship(false);
+      }
     }
   };
 
