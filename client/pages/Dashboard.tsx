@@ -14,6 +14,7 @@ import {
   Check
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useUserStats } from '../hooks/useUserStats';
 
 export default function Dashboard() {
   const { user } = useAuth();
