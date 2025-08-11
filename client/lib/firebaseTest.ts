@@ -1,19 +1,25 @@
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import { collection, getDocs } from 'firebase/firestore';
 
 export const testFirebaseConnection = async (): Promise<boolean> => {
   try {
     console.log('Testing Firebase connection...');
-    
-    // Try to read a simple collection
-    const testCollection = collection(db, 'test');
+
+    // Check if user is authenticated first
+    if (!auth.currentUser) {
+      console.log('Firebase connection test skipped - user not authenticated');
+      return true; // Return true to not block app loading
+    }
+
+    // Try to read a simple collection (only if authenticated)
+    const testCollection = collection(db, 'users');
     const snapshot = await getDocs(testCollection);
-    
-    console.log('Firebase connection test successful');
+
+    console.log('Firebase connection test successful - found', snapshot.size, 'users');
     return true;
   } catch (error: any) {
     console.error('Firebase connection test failed:', error);
-    
+
     // Check for specific error types
     if (error.code === 'unavailable') {
       console.error('Firebase service is unavailable - network issue');
@@ -22,7 +28,8 @@ export const testFirebaseConnection = async (): Promise<boolean> => {
     } else if (error.message.includes('Failed to fetch')) {
       console.error('Network fetch failed - possible network or CORS issue');
     }
-    
+
+    // Don't block app loading for Firebase test failures
     return false;
   }
 };
