@@ -213,6 +213,8 @@ export default function FriendsReal() {
 
       if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
         alert('Bağlantı hatası. İnternet bağlantınızı kontrol edin ve tekrar deneyin.');
+      } else if (error.message.includes('arkadaş')) {
+        alert(error.message); // Friendship specific error
       } else {
         alert('Sohbet başlatılamadı. Lütfen tekrar deneyin.');
       }
