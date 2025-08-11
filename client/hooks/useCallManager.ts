@@ -276,8 +276,12 @@ export function useCallManager(): [CallState, CallActions] {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      callService.cleanup();
-      clearTimer();
+      try {
+        callService.cleanup();
+        clearTimer();
+      } catch (error) {
+        console.warn('Error during final cleanup:', error);
+      }
     };
   }, [clearTimer]);
 
