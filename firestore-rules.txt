@@ -2,11 +2,10 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // TEMPORARY: Allow all authenticated users full access to fix all permission errors
-    // This will solve all Firebase permission issues at once
+    // Allow all authenticated users to read and write all documents
+    // This fixes all permission issues
     match /{document=**} {
-      allow read, write, create, update, delete: if request.auth != null;
+      allow read, write: if request.auth != null;
     }
   }
 }
