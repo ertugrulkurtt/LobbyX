@@ -117,8 +117,7 @@ export const safeFetch = async (input: RequestInfo | URL, init?: RequestInit): P
   }
 };
 
-// Don't override fetch - let other libraries (FullStory, etc.) handle it
-// Instead, rely on unhandled rejection handling
+// COMPLETELY DISABLED - DO NOT OVERRIDE FETCH TO PREVENT FULLSTORY CONFLICTS
 
 export default {
   handleNetworkError,
