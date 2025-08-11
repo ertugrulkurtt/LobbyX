@@ -154,7 +154,7 @@ export default function ChatReal() {
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!messageText.trim() || !selectedChat || !user?.uid) return;
+    if (!messageText.trim() || !selectedChat || !user?.uid || !canSendMessage) return;
 
     try {
       await sendMessage(selectedChat, user.uid, messageText.trim());
@@ -164,7 +164,9 @@ export default function ChatReal() {
       console.error('Error sending message:', error);
 
       if (error.message.includes('arkadaş')) {
-        alert(error.message); // Friendship specific error
+        // This shouldn't happen anymore since we check friendship status in UI
+        setCanSendMessage(false);
+        setFriendshipStatus(error.message);
       } else if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
         alert('Bağlantı hatası. İnternet bağlantınızı kontrol edin ve tekrar deneyin.');
       } else {
