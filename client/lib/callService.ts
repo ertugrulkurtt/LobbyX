@@ -596,4 +596,10 @@ class CallService {
 
 // Create and export singleton instance
 export const callService = new CallService();
+
+// Add debug function to global window for development
+if (import.meta.env.DEV) {
+  (window as any).debugCallService = () => callService.debugCurrentCall();
+}
+
 export default callService;
