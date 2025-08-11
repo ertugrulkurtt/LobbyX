@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db, handleFirebaseNetworkError, withExponentialBackoff } from './firebase';
 import { robustFirebaseOperation, quickFirebaseOp } from './firebaseOperationWrapper';
+import { reportFirebaseError } from './criticalErrorRecovery';
 import { RealUser, areFriends } from './userService';
 import { createMessageNotification } from './notificationService';
 import { handleNetworkError } from './firebaseConnectionMonitor';
