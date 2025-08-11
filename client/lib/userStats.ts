@@ -181,7 +181,11 @@ export const updateUserStats = async (userId: string, updates: Partial<UserStats
       ...updates,
       lastActivity: new Date().toISOString()
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.code === 'permission-denied') {
+      console.warn('🔒 User stats update disabled - Firestore rules need deployment');
+      return; // Don't throw, just warn
+    }
     console.error('Error updating user stats:', error);
     throw error;
   }
