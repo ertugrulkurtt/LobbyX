@@ -73,46 +73,51 @@ export interface Conversation {
  * Get conversations for a user
  */
 export const getUserConversations = async (userId: string): Promise<Conversation[]> => {
-  try {
-    const conversationsRef = collection(db, 'conversations');
-    // Remove orderBy to avoid composite index requirement
-    const q = query(
-      conversationsRef,
-      where('participants', 'array-contains', userId)
-    );
-    
-    const snapshot = await getDocs(q);
-    
-    const conversations = await Promise.all(
-      snapshot.docs.map(async (conversationDoc) => {
-        const conversationData = conversationDoc.data();
-        
-        // Get participant details
-        const participantDetails = await Promise.all(
-          conversationData.participants.map(async (participantId: string) => {
-            const userDoc = await getDoc(doc(db, 'users', participantId));
-            return { uid: userDoc.id, ...userDoc.data() } as RealUser;
-          })
-        );
-        
-        return {
-          id: conversationDoc.id,
-          ...conversationData,
-          participantDetails
-        } as Conversation;
-      })
-    );
+  return robustFirebaseOperation(async () => {
+    try {
+      const conversationsRef = collection(db, 'conversations');
+      // Remove orderBy to avoid composite index requirement
+      const q = query(
+        conversationsRef,
+        where('participants', 'array-contains', userId)
+      );
 
-    // Sort conversations by updatedAt on client side
-    return conversations.sort((a, b) => {
-      const aTime = new Date(a.updatedAt).getTime();
-      const bTime = new Date(b.updatedAt).getTime();
-      return bTime - aTime; // Descending order (newest first)
-    });
-  } catch (error) {
-    console.error('Error fetching conversations:', error);
-    throw error;
-  }
+      const snapshot = await getDocs(q);
+
+      const conversations = await Promise.all(
+        snapshot.docs.map(async (conversationDoc) => {
+          const conversationData = conversationDoc.data();
+
+          // Get participant details
+          const participantDetails = await Promise.all(
+            conversationData.participants.map(async (participantId: string) => {
+              const userDoc = await getDoc(doc(db, 'users', participantId));
+              return { uid: userDoc.id, ...userDoc.data() } as RealUser;
+            })
+          );
+
+          return {
+            id: conversationDoc.id,
+            ...conversationData,
+            participantDetails
+          } as Conversation;
+        })
+      );
+
+      // Sort conversations by updatedAt on client side
+      return conversations.sort((a, b) => {
+        const aTime = new Date(a.updatedAt).getTime();
+        const bTime = new Date(b.updatedAt).getTime();
+        return bTime - aTime; // Descending order (newest first)
+      });
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+      throw error;
+    }
+  }, 'getUserConversations', {
+    userErrorMessage: 'Sohbetler yüklenirken hata oluştu. Sayfa yenilenecek...',
+    fallbackValue: []
+  }) || [];
 };
 
 /**
