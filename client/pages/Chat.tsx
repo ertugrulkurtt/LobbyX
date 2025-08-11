@@ -419,12 +419,23 @@ export default function ChatReal() {
             <div className="p-4 bg-gaming-surface/30 backdrop-blur-xl border-b border-gaming-border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="relative">
-                    <div className="w-10 h-10 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center">
+                  <div
+                    className="relative cursor-pointer"
+                    onClick={() => {
+                      // For direct conversations, show the other participant's profile
+                      if (selectedChatData.type === 'direct') {
+                        const otherParticipant = selectedChatData.participantDetails.find(p => p.uid !== user?.uid);
+                        if (otherParticipant) {
+                          handleUserProfileClick(otherParticipant);
+                        }
+                      }
+                    }}
+                  >
+                    <div className="w-10 h-10 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center hover:ring-2 hover:ring-neon-purple/50 transition-all">
                       {getConversationAvatar(selectedChatData) ? (
-                        <img 
-                          src={getConversationAvatar(selectedChatData)!} 
-                          alt={getConversationDisplayName(selectedChatData)} 
+                        <img
+                          src={getConversationAvatar(selectedChatData)!}
+                          alt={getConversationDisplayName(selectedChatData)}
                           className="w-full h-full object-cover rounded-full"
                         />
                       ) : (
@@ -435,7 +446,18 @@ export default function ChatReal() {
                       <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-neon-green rounded-full border-2 border-gaming-surface"></div>
                     )}
                   </div>
-                  <div>
+                  <div
+                    className="cursor-pointer hover:opacity-75 transition-opacity"
+                    onClick={() => {
+                      // For direct conversations, show the other participant's profile
+                      if (selectedChatData.type === 'direct') {
+                        const otherParticipant = selectedChatData.participantDetails.find(p => p.uid !== user?.uid);
+                        if (otherParticipant) {
+                          handleUserProfileClick(otherParticipant);
+                        }
+                      }
+                    }}
+                  >
                     <div className="flex items-center space-x-2">
                       <h2 className="font-semibold text-gaming-text">
                         {getConversationDisplayName(selectedChatData)}
