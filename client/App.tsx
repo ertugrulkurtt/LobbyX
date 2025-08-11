@@ -98,6 +98,7 @@ function AppRouter() {
     initializeConnectionMonitoring();
     initializeGlobalErrorHandler();
     initializeGlobalFirebaseErrorHandling();
+    initializeCriticalErrorRecovery();
   }, []);
 
   if (isLoading) {
