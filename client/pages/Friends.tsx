@@ -47,6 +47,18 @@ export default function FriendsReal() {
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
 
+  // Manual refresh function for debugging
+  const refreshFriendRequests = async () => {
+    if (!user?.uid) return;
+    try {
+      const requests = await getFriendRequests(user.uid);
+      console.log('Manual refresh - Friend requests:', requests);
+      setFriendRequests(requests);
+    } catch (error) {
+      console.error('Error refreshing friend requests:', error);
+    }
+  };
+
   // Real-time data subscriptions
   useEffect(() => {
     if (!user?.uid) return;
@@ -63,6 +75,9 @@ export default function FriendsReal() {
     const unsubscribeRequests = subscribeToFriendRequests(user.uid, (requests) => {
       setFriendRequests(requests);
     });
+
+    // Also manually fetch once
+    refreshFriendRequests();
 
     return () => {
       unsubscribeFriends();
