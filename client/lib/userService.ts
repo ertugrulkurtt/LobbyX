@@ -265,6 +265,24 @@ export const sendFriendRequest = async (fromUserId: string, toUserId: string): P
       sentAt: new Date().toISOString(),
       status: 'pending'
     });
+
+    // Create notification for the recipient
+    try {
+      const fromUserDoc = await getDoc(doc(db, 'users', fromUserId));
+      const fromUserData = fromUserDoc.exists() ? fromUserDoc.data() : null;
+      const fromUserName = fromUserData?.displayName || fromUserData?.username || 'Unknown User';
+      const fromUserAvatar = fromUserData?.photoURL || '';
+
+      await createFriendRequestNotification(
+        toUserId,
+        fromUserId,
+        fromUserName,
+        fromUserAvatar
+      );
+    } catch (notificationError) {
+      console.error('Error creating friend request notification:', notificationError);
+      // Don't fail the friend request if notification creation fails
+    }
   });
 };
 
