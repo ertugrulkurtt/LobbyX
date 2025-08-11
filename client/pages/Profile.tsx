@@ -475,19 +475,32 @@ export default function Profile() {
         <h2 className="text-2xl font-bold text-gaming-text mb-6 flex items-center space-x-2">
           <Trophy className="w-6 h-6 text-neon-orange" />
           <span>İstatistiklerim</span>
+          {statsLoading && (
+            <div className="w-4 h-4 border border-neon-orange border-t-transparent rounded-full animate-spin"></div>
+          )}
         </h2>
-        
+
+        {statsError && (
+          <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4 mb-6">
+            <p className="text-red-400 text-center">{statsError}</p>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {profileStats.map((stat, index) => {
             const Icon = stat.icon;
             return (
               <div
                 key={stat.label}
-                className="card-glass text-center hover:shadow-glow transition-all duration-300 animate-scale-in"
+                className={`card-glass text-center hover:shadow-glow transition-all duration-300 animate-scale-in ${
+                  statsLoading ? 'opacity-50' : ''
+                }`}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <Icon className={`w-8 h-8 mx-auto mb-3 ${stat.color}`} />
-                <div className="text-2xl font-bold text-gaming-text mb-1">{stat.value}</div>
+                <div className="text-2xl font-bold text-gaming-text mb-1">
+                  {statsLoading ? '...' : stat.value}
+                </div>
                 <div className="text-sm text-gaming-muted">{stat.label}</div>
               </div>
             );
