@@ -49,6 +49,8 @@ export default function ChatReal() {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [canSendMessage, setCanSendMessage] = useState(true);
   const [friendshipStatus, setFriendshipStatus] = useState<string>('');
+  const [selectedUserProfile, setSelectedUserProfile] = useState<RealUser | null>(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
