@@ -201,12 +201,8 @@ export default function FriendsReal() {
       // Create or get conversation between current user and friend
       const conversationId = await getOrCreateDirectConversation(user.uid, friendId);
 
-      // Navigate to chat page with the conversation
-      // Since we don't have router, we'll update the URL manually and trigger navigation
-      window.location.hash = `#/chat?conversation=${conversationId}`;
-
-      // Alternative: If you have a way to change pages directly, use that instead
-      // For example: navigate('/chat', { state: { conversationId } });
+      // Navigate to chat page with the conversation ID as query parameter
+      navigate(`/chat?conversation=${conversationId}`);
     } catch (error) {
       console.error('Error starting conversation:', error);
       alert('Sohbet başlatılamadı.');
