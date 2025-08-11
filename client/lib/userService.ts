@@ -385,9 +385,9 @@ export const getUserConversations = async (userId: string): Promise<Conversation
  * Search users by username or display name
  */
 export const searchUsers = async (searchTerm: string): Promise<RealUser[]> => {
-  try {
-    if (!searchTerm.trim()) return [];
+  if (!searchTerm.trim()) return [];
 
+  return withRetry(async () => {
     const usersRef = collection(db, 'users');
 
     // Get all users and filter on client side to avoid permission issues
@@ -408,10 +408,7 @@ export const searchUsers = async (searchTerm: string): Promise<RealUser[]> => {
 
     // Return first 10 results
     return filteredUsers.slice(0, 10);
-  } catch (error) {
-    console.error('Error searching users:', error);
-    throw error;
-  }
+  });
 };
 
 /**
