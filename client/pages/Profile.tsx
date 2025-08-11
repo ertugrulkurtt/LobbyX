@@ -527,7 +527,7 @@ export default function Profile() {
               <div>
                 <label className="text-sm text-gaming-muted">Hesap Oluşturma</label>
                 <p className="text-gaming-text">
-                  {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR') : userStats.joinDate}
+                  {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR') : (stats ? formatJoinDate(stats.joinDate) : 'Bilinmiyor')}
                 </p>
               </div>
             </div>
