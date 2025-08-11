@@ -439,6 +439,40 @@ const markFriendRequestNotificationAsRead = async (
 };
 
 /**
+ * Mark all friend-related notifications as read for a user
+ */
+export const markAllFriendNotificationsAsRead = async (userId: string): Promise<void> => {
+  try {
+    const notificationsRef = collection(db, 'notifications');
+    const notificationQuery = query(
+      notificationsRef,
+      where('userId', '==', userId),
+      where('isRead', '==', false)
+    );
+
+    const notificationSnapshot = await getDocs(notificationQuery);
+
+    // Filter friend-related notifications and mark them as read
+    const updatePromises = notificationSnapshot.docs
+      .filter(doc => {
+        const data = doc.data();
+        return data.type === 'friend_request' || data.type === 'friend_accepted';
+      })
+      .map(notificationDoc =>
+        updateDoc(notificationDoc.ref, {
+          isRead: true,
+          updatedAt: new Date().toISOString()
+        })
+      );
+
+    await Promise.all(updatePromises);
+  } catch (error) {
+    console.error('Error marking all friend notifications as read:', error);
+    throw error;
+  }
+};
+
+/**
  * Get conversations for a user
  */
 export const getUserConversations = async (userId: string): Promise<Conversation[]> => {
