@@ -54,6 +54,7 @@ export default function UserProfileModal({
   const [loading, setLoading] = useState(false);
   const [actualFriendshipStatus, setActualFriendshipStatus] = useState<boolean>(false);
   const [checkingFriendship, setCheckingFriendship] = useState(false);
+  const [friendshipCheckError, setFriendshipCheckError] = useState<string>('');
 
   useEffect(() => {
     if (user && isOpen) {
