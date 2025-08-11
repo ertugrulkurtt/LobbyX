@@ -46,6 +46,8 @@ export default function ChatReal() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [canSendMessage, setCanSendMessage] = useState(true);
+  const [friendshipStatus, setFriendshipStatus] = useState<string>('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
