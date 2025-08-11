@@ -22,6 +22,7 @@ import { useUserStats } from '../hooks/useUserStats';
 import {
   getUserConversations,
   getOrCreateDirectConversation,
+  getConversationMessages,
   sendMessage,
   markMessagesAsRead,
   subscribeToConversations,
@@ -209,7 +210,7 @@ export default function ChatReal() {
     return (
       <div className="flex items-center justify-center min-h-96">
         <Loader2 className="w-8 h-8 animate-spin text-neon-purple" />
-        <span className="ml-2 text-gaming-text">Sohbetler yükleniyor...</span>
+        <span className="ml-2 text-gaming-text">Sohbetler y��kleniyor...</span>
       </div>
     );
   }
