@@ -318,6 +318,43 @@ service cloud.firestore {
     }
 
     // ================================================================
+    // USER STATISTICS - KULLANICI İSTATİSTİKLERİ
+    // ================================================================
+    match /userStats/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // ================================================================
+    // DAILY ACTIVITY - GÜNLÜK AKTİVİTE
+    // ================================================================
+    match /dailyActivity/{activityId} {
+      allow read, write: if isAuthenticated() &&
+                             activityId.matches('.*' + request.auth.uid + '.*');
+    }
+
+    // ================================================================
+    // XP LOGS - XP KAYITLARI
+    // ================================================================
+    match /xpLogs/{logId} {
+      allow read: if isAuthenticated() &&
+                     request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated() &&
+                       hasValidData(['userId', 'amount', 'source', 'timestamp', 'date']) &&
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.amount is number &&
+                       request.resource.data.source is string &&
+                       isValidTimestamp('timestamp');
+    }
+
+    // ================================================================
+    // MESSAGE STATISTICS - MESAJ İSTATİSTİKLERİ
+    // ================================================================
+    match /messageStats/{statsId} {
+      allow read, write: if isAuthenticated() &&
+                             statsId.matches('.*' + request.auth.uid + '.*');
+    }
+
+    // ================================================================
     // SECURITY LOGS - GÜVENLİK LOGLARI
     // ================================================================
     match /securityLogs/{logId} {
