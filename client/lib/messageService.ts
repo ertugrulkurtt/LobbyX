@@ -242,10 +242,10 @@ export const sendMessage = async (
   fileSize?: number,
   replyTo?: { messageId: string; content: string; senderId: string }
 ): Promise<string> => {
-  try {
+  return withRetry(async () => {
     const messagesRef = collection(db, 'conversations', conversationId, 'messages');
     const timestamp = new Date().toISOString();
-    
+
     const messageData = {
       conversationId,
       senderId,
@@ -261,9 +261,9 @@ export const sendMessage = async (
       replyTo,
       reactions: []
     };
-    
+
     const messageRef = await addDoc(messagesRef, messageData);
-    
+
     // Update conversation with last message
     const conversationRef = doc(db, 'conversations', conversationId);
     await updateDoc(conversationRef, {
@@ -275,31 +275,28 @@ export const sendMessage = async (
       },
       updatedAt: timestamp
     });
-    
+
     // Update unread counts for other participants
     const conversationDoc = await getDoc(conversationRef);
     if (conversationDoc.exists()) {
       const conversationData = conversationDoc.data();
       const participants = conversationData.participants || [];
       const currentUnreadCounts = conversationData.unreadCounts || {};
-      
+
       const newUnreadCounts = { ...currentUnreadCounts };
       participants.forEach((participantId: string) => {
         if (participantId !== senderId) {
           newUnreadCounts[participantId] = (newUnreadCounts[participantId] || 0) + 1;
         }
       });
-      
+
       await updateDoc(conversationRef, {
         unreadCounts: newUnreadCounts
       });
     }
-    
+
     return messageRef.id;
-  } catch (error) {
-    console.error('Error sending message:', error);
-    throw error;
-  }
+  });
 };
 
 /**
