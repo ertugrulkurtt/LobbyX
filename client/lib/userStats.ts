@@ -1,6 +1,6 @@
 import { doc, getDoc, setDoc, updateDoc, increment, collection, query, where, getDocs, orderBy, limit, onSnapshot, addDoc } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
-import { db, auth } from './firebase';
+import { db } from './firebase';
+import { withAuthCheck } from './authStateManager';
 
 // User statistics interface
 export interface UserStats {
@@ -556,7 +556,7 @@ export const trackDailyLogin = async (userId: string) => {
     if (error?.code === 'permission-denied') {
       console.warn('🔒 Daily login tracking disabled - Firestore rules need deployment');
     } else if (error?.code === 'unauthenticated') {
-      console.warn('🔐 User not authenticated for daily login tracking');
+      console.warn('��� User not authenticated for daily login tracking');
     }
 
     // Don't throw error for daily login tracking to prevent app crashes
