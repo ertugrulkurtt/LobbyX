@@ -327,13 +327,31 @@ export const removeFriend = async (userId: string, friendId: string): Promise<vo
     await updateDoc(doc(db, 'users', userId), {
       friends: arrayRemove(friendId)
     });
-    
+
     await updateDoc(doc(db, 'users', friendId), {
       friends: arrayRemove(userId)
     });
   } catch (error) {
     console.error('Error removing friend:', error);
     throw error;
+  }
+};
+
+/**
+ * Check if two users are friends
+ */
+export const areFriends = async (userId1: string, userId2: string): Promise<boolean> => {
+  try {
+    const user1Doc = await getDoc(doc(db, 'users', userId1));
+    if (!user1Doc.exists()) return false;
+
+    const user1Data = user1Doc.data();
+    const friends = user1Data.friends || [];
+
+    return friends.includes(userId2);
+  } catch (error) {
+    console.error('Error checking friendship:', error);
+    return false;
   }
 };
 
