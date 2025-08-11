@@ -193,11 +193,10 @@ export const subscribeToNotifications = (
   callback: (notifications: NotificationData[]) => void
 ) => {
   const notificationsRef = collection(db, 'notifications');
+  // Remove orderBy to avoid composite index requirement
   const q = query(
     notificationsRef,
-    where('userId', '==', userId),
-    orderBy('createdAt', 'desc'),
-    limit(50)
+    where('userId', '==', userId)
   );
 
   return onSnapshot(q, (snapshot) => {
@@ -206,8 +205,18 @@ export const subscribeToNotifications = (
         id: doc.id,
         ...doc.data()
       })) as NotificationData[];
-      
-      callback(notifications);
+
+      // Sort on client side
+      const sortedNotifications = notifications.sort((a, b) => {
+        const aTime = new Date(a.createdAt).getTime();
+        const bTime = new Date(b.createdAt).getTime();
+        return bTime - aTime; // Descending order (newest first)
+      });
+
+      // Limit to 50 most recent notifications
+      const limitedNotifications = sortedNotifications.slice(0, 50);
+
+      callback(limitedNotifications);
     } catch (error) {
       console.error('Error in notifications subscription:', error);
       callback([]);
