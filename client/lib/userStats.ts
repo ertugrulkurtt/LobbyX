@@ -498,12 +498,12 @@ export const trackDailyLogin = async (userId: string) => {
     }
 
   } catch (error: any) {
-    console.error('Error tracking daily login:', error);
+    console.warn('Error tracking daily login (non-critical):', error.message);
 
     if (error?.code === 'permission-denied') {
-      console.error('Permission denied for daily login tracking. Check Firestore rules.');
+      console.warn('🔒 Daily login tracking disabled - Firestore rules need deployment');
     } else if (error?.code === 'unauthenticated') {
-      console.error('User not authenticated for daily login tracking.');
+      console.warn('🔐 User not authenticated for daily login tracking');
     }
 
     // Don't throw error for daily login tracking to prevent app crashes
