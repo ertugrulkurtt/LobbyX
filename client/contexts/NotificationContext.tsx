@@ -28,7 +28,7 @@ export function useNotifications() {
   return context;
 }
 
-export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
   const [counts, setCounts] = useState<NotificationCounts>({
