@@ -552,8 +552,29 @@ class CallService {
       callId: this.currentCall?.id,
       callerId: this.currentCall?.callerId,
       receiverId: this.currentCall?.receiverId,
-      status: this.currentCall?.status
+      status: this.currentCall?.status,
+      listenersCount: Object.keys(this.listeners).length,
+      activeListeners: Object.keys(this.listeners)
     });
+  }
+
+  /**
+   * Safely update call status with null checks
+   */
+  private safelyUpdateCallStatus(status: string): boolean {
+    if (!this.currentCall) {
+      console.warn('Cannot update call status - no current call');
+      return false;
+    }
+
+    if (!status) {
+      console.warn('Cannot update call status - invalid status provided');
+      return false;
+    }
+
+    this.currentCall.status = status as any;
+    console.log(`📞 Call status updated to: ${status}`);
+    return true;
   }
 
   /**
