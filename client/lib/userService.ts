@@ -16,6 +16,7 @@ import {
   deleteDoc
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { createFriendRequestNotification, createFriendAcceptedNotification } from './notificationService';
 
 // Utility function to handle Firebase errors and retry
 const withRetry = async <T>(
