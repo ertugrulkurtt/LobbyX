@@ -271,8 +271,20 @@ class CallService {
    */
   stopListening() {
     Object.keys(this.listeners).forEach(key => {
-      if (this.listeners[key]) {
-        off(this.listeners[key]);
+      try {
+        if (this.listeners[key]) {
+          // For Firebase Realtime Database, we need to call off with the reference and callback
+          const listenerData = this.listeners[key];
+          if (listenerData && typeof listenerData === 'function') {
+            // This is an unsubscribe function, just call it
+            listenerData();
+          } else if (listenerData && listenerData.ref && listenerData.callback) {
+            // This is a ref/callback pair
+            off(listenerData.ref, 'value', listenerData.callback);
+          }
+        }
+      } catch (error) {
+        console.warn('Error removing listener:', key, error);
       }
     });
     this.listeners = {};
