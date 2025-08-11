@@ -165,22 +165,19 @@ window.addEventListener('unhandledrejection', (event) => {
       // Prevent the error from being logged as unhandled
       event.preventDefault();
 
-      // For Failed to fetch errors, just silently handle them
-      if (error.message?.includes('Failed to fetch')) {
-        console.warn('Network connectivity issue detected, Firebase will retry automatically');
-      }
+      // Silently handle all Firebase network errors
+      return;
     }
   }
 });
 
-// Also handle regular errors
+// Handle regular errors but don't prevent them - just reduce noise
 window.addEventListener('error', (event) => {
   const error = event.error;
 
   if (error && error.message?.includes('Failed to fetch')) {
-    // Prevent Failed to fetch errors from showing in console
-    event.preventDefault();
-    console.warn('Network fetch failed, this is usually temporary');
+    // Don't prevent the error, just log it quietly
+    console.debug('Network fetch failed (this is normal for temporary connectivity issues)');
   }
 });
 

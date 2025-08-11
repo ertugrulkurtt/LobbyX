@@ -12,17 +12,21 @@ const ERROR_RESET_TIME = 30000; // 30 seconds
  */
 export const handleNetworkError = (error: any) => {
   const now = Date.now();
-  
+
   // Reset counter if enough time has passed
   if (now - lastNetworkError > ERROR_RESET_TIME) {
     networkErrorCount = 0;
   }
-  
+
   networkErrorCount++;
   lastNetworkError = now;
-  
-  // If too many network errors, show user notification
-  if (networkErrorCount >= NETWORK_ERROR_THRESHOLD) {
+
+  // Only show notification for non-Firebase errors to avoid noise
+  const isFirebaseError = error.message?.includes('firestore') ||
+                         error.message?.includes('firebase');
+
+  // If too many network errors and not Firebase, show user notification
+  if (networkErrorCount >= NETWORK_ERROR_THRESHOLD && !isFirebaseError) {
     showNetworkErrorNotification();
     networkErrorCount = 0; // Reset to prevent spam
   }
@@ -121,11 +125,13 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Res
   } catch (error) {
     if (isNetworkError(error)) {
       handleNetworkError(error);
-      // Don't rethrow network errors for Firebase operations
-      if (typeof input === 'string' && input.includes('firestore.googleapis.com')) {
-        console.warn('Firebase network error handled gracefully');
-        // Return a dummy response to prevent crashes
-        return new Response(null, { status: 503, statusText: 'Service Temporarily Unavailable' });
+
+      // For Firebase operations, let Firebase handle the retry logic
+      const url = typeof input === 'string' ? input : input.url;
+      if (url && (url.includes('firestore.googleapis.com') || url.includes('firebase'))) {
+        console.warn('Firebase network error - letting Firebase handle retry');
+        // Re-throw the error so Firebase can handle it properly
+        throw error;
       }
     }
     throw error;
