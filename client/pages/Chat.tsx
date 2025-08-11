@@ -32,7 +32,6 @@ import {
   Conversation,
   Message
 } from '../lib/messageService';
-import { testFirebaseConnection } from '../lib/firebaseTest';
 import { areFriends, RealUser, sendFriendRequest, removeFriend } from '../lib/userService';
 import UserProfileModal from '../components/UserProfileModal';
 import { uploadFile, UploadProgress } from '../lib/fileService';
