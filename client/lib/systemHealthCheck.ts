@@ -6,6 +6,7 @@
 import { callSystemTest } from './callSystemTest';
 import { unifiedErrorHandler } from './unifiedErrorHandler';
 import { uiHealthCheck } from './uiHealthCheck';
+import { auth } from './firebase';
 
 interface HealthCheckResult {
   component: string;
