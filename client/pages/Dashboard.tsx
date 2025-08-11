@@ -216,6 +216,9 @@ export default function Dashboard() {
         </div>
       </section>
 
+      {/* Firebase Status */}
+      <FirebaseStatus />
+
       {/* Quick Actions */}
       <section>
         <h2 className="text-2xl font-bold text-gaming-text mb-6 flex items-center space-x-2">
