@@ -20,7 +20,7 @@ import { initializeGlobalErrorHandler } from "./lib/globalErrorHandler";
 
 // Debug - only in development
 if (import.meta.env.DEV) {
-  import("./lib/testNotifications");
+  import("./lib/testNotifications").catch(console.error);
 }
 
 // Layout
