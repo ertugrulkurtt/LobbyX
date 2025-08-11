@@ -3,6 +3,8 @@
  * Bundle size ve performance iyileştirmeleri için utility'ler
  */
 
+import React from 'react';
+
 // Lazy loading utility for heavy components
 export const lazyLoad = (importFunc: () => Promise<any>) => {
   return React.lazy(importFunc);
