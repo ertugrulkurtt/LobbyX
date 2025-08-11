@@ -443,7 +443,7 @@ const REALTIME_DATABASE_RULES = {
 // ====================================================================
 // STORAGE SECURITY RULES
 // ====================================================================
-const STORAGE_RULES = \`
+const STORAGE_RULES = `
 rules_version = '2';
 
 service firebase.storage {
@@ -469,7 +469,7 @@ service firebase.storage {
     function isValidFileName() {
       return resource.name.size() > 0 && 
              resource.name.size() <= 255 &&
-             !resource.name.matches('.*[<>:"/\\|?*].*'); // No invalid characters
+             !resource.name.matches('.*[<>:"/\\\\|?*].*'); // No invalid characters
     }
     
     function isSafeFileType() {
@@ -483,7 +483,7 @@ service firebase.storage {
     }
 
     // ================================================================
-    // PROFILE IMAGES - PROFİL RESİMLER��
+    // PROFILE IMAGES - PROFİL RESİMLERİ
     // ================================================================
     match /profileImages/{userId}/{fileName} {
       allow read: if isAuthenticated();
@@ -538,7 +538,7 @@ service firebase.storage {
     }
 
     // ================================================================
-    // TEMPORARY UPLOADS - GEÇİCİ YÜKLEMELER
+    // TEMPORARY UPLOADS - GEÇİCİ Y��KLEMELER
     // ================================================================
     match /temp/{userId}/{fileName} {
       allow read, write: if isOwner(userId) &&
@@ -604,7 +604,7 @@ service firebase.storage {
     }
   }
 }
-\`;
+`;
 
 // ====================================================================
 // EXPORT CONFIGURATION
