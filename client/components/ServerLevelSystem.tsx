@@ -159,7 +159,7 @@ const levelRewards: LevelReward[] = [
     unlocks: ['All features'],
     specialReward: {
       type: 'role',
-      name: 'Efsane Üye',
+      name: 'Efsane ��ye',
       description: 'En üst düzey sunucu üyesi rolü'
     }
   }
@@ -200,11 +200,29 @@ interface ServerLevelSystemProps {
 
 export default function ServerLevelSystem({ serverId, userId }: ServerLevelSystemProps) {
   const { user } = useAuth();
+  const { stats, loading: statsLoading } = useUserStats();
   const [activeTab, setActiveTab] = useState<'overview' | 'rewards' | 'leaderboard' | 'activities'>('overview');
   const [showBadgeModal, setShowBadgeModal] = useState(false);
-  
+
   const currentUser = userId || user?.uid || 'current';
-  const userLevel = mockUserLevel; // In real app, fetch from API
+
+  // Use real user stats or fallback to mock data
+  const userLevel = stats ? {
+    userId: stats.userId,
+    level: stats.level,
+    xp: stats.totalXP % (stats.totalXP >= 1000 ? 1000 : 100), // Current level XP
+    xpToNextLevel: stats.xpToNextLevel,
+    totalXP: stats.totalXP,
+    title: getLevelTitle(stats.level),
+    perks: getLevelPerks(stats.level),
+    badges: ['active-member', 'experienced'],
+    achievements: ['first-message', 'chatter', 'friend-maker'],
+    weeklyXP: stats.weeklyXP,
+    monthlyXP: stats.monthlyXP,
+    rank: stats.rank,
+    prestige: 0
+  } : mockUserLevel;
+
   const leaderboard = mockLeaderboard;
 
   const getProgressPercentage = () => {
