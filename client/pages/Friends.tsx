@@ -182,13 +182,32 @@ export default function FriendsReal() {
 
   const handleSendRequestToUser = async (targetUserId: string) => {
     if (!user?.uid) return;
-    
+
     try {
       await sendFriendRequest(user.uid, targetUserId);
       alert('Arkadaşlık isteği gönderildi!');
     } catch (error: any) {
       console.error('Error sending friend request:', error);
       alert(error.message || 'Arkadaşlık isteği gönderilemedi.');
+    }
+  };
+
+  const handleStartConversation = async (friendId: string) => {
+    if (!user?.uid) return;
+
+    try {
+      // Create or get conversation between current user and friend
+      const conversationId = await getOrCreateDirectConversation(user.uid, friendId);
+
+      // Navigate to chat page with the conversation
+      // Since we don't have router, we'll update the URL manually and trigger navigation
+      window.location.hash = `#/chat?conversation=${conversationId}`;
+
+      // Alternative: If you have a way to change pages directly, use that instead
+      // For example: navigate('/chat', { state: { conversationId } });
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      alert('Sohbet başlatılamadı.');
     }
   };
 
