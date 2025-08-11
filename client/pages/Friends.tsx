@@ -44,8 +44,19 @@ export default function Friends() {
   const [searchQuery, setSearchQuery] = useState('');
   const [newFriendUsername, setNewFriendUsername] = useState('');
 
-  // Mock friends data
+  // Mock friends data - including current user for testing avatar display
   const friends: Friend[] = [
+    // Add current user as a friend for testing avatar display
+    ...(user ? [{
+      id: user.uid,
+      username: user.username || 'CurrentUser',
+      displayName: user.displayName || 'Kullanıcı',
+      isOnline: true,
+      status: user.status || 'Online',
+      avatar: user.photoURL,
+      isVerified: false,
+      isSpecial: false
+    }] : []),
     {
       id: 'lobbyx-admin',
       username: 'LobbyXAdmin',
