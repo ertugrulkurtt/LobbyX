@@ -208,9 +208,14 @@ export default function FriendsReal() {
 
       // Navigate to chat page with the conversation ID as query parameter
       navigate(`/chat?conversation=${conversationId}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error starting conversation:', error);
-      alert('Sohbet başlatılamadı.');
+
+      if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
+        alert('Bağlantı hatası. İnternet bağlantınızı kontrol edin ve tekrar deneyin.');
+      } else {
+        alert('Sohbet başlatılamadı. Lütfen tekrar deneyin.');
+      }
     }
   };
 
