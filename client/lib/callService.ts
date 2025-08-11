@@ -462,10 +462,7 @@ class CallService {
    * End a call
    */
   async endCall(callId: string, reason: 'ended' | 'rejected' | 'missed' = 'ended'): Promise<void> {
-    if (!this.currentCall) {
-      console.warn('No current call to end');
-      return;
-    }
+    console.log(`📞 Attempting to end call: ${callId} with reason: ${reason}`);
 
     if (!callId) {
       console.error('No callId provided to endCall');
@@ -475,9 +472,16 @@ class CallService {
     // Store currentCall in local variable to prevent race conditions
     const callData = this.currentCall;
 
+    if (!callData) {
+      console.warn('No current call to end, but proceeding with cleanup');
+      // Still try to clean up any lingering data
+      this.stopAllSounds();
+      return;
+    }
+
     // Validate call data has required fields
-    if (!callData.callerId || !callData.receiverId) {
-      console.error('Invalid call data - missing callerId or receiverId:', callData);
+    if (!callData.callerId && !callData.receiverId) {
+      console.error('Invalid call data - missing both callerId and receiverId:', callData);
       this.currentCall = null;
       this.stopAllSounds();
       return;
@@ -485,53 +489,70 @@ class CallService {
 
     try {
       const endTime = new Date().toISOString();
-      const duration = Math.floor((new Date(endTime).getTime() - new Date(callData.startedAt).getTime()) / 1000);
+      const duration = callData.startedAt ?
+        Math.floor((new Date(endTime).getTime() - new Date(callData.startedAt).getTime()) / 1000) : 0;
+
+      console.log(`📞 Ending call with duration: ${duration}s`);
+
+      // Create status update object
+      const statusUpdate = {
+        callId,
+        status: reason,
+        endedAt: endTime,
+        duration
+      };
 
       // Update call status for caller if available
       if (callData.callerId) {
-        await set(ref(rtdb, `calls/status/${callData.callerId}`), {
-          callId,
-          status: reason,
-          endedAt: endTime,
-          duration
-        });
+        try {
+          await set(ref(rtdb, `calls/status/${callData.callerId}`), statusUpdate);
+          console.log(`📞 Status updated for caller: ${callData.callerId}`);
+        } catch (error) {
+          console.warn('Error updating caller status:', error);
+        }
       }
 
       // Update call status for receiver if available
       if (callData.receiverId) {
-        await set(ref(rtdb, `calls/status/${callData.receiverId}`), {
-          callId,
-          status: reason,
-          endedAt: endTime,
-          duration
-        });
+        try {
+          await set(ref(rtdb, `calls/status/${callData.receiverId}`), statusUpdate);
+          console.log(`📞 Status updated for receiver: ${callData.receiverId}`);
+        } catch (error) {
+          console.warn('Error updating receiver status:', error);
+        }
       }
 
       // Clean up realtime database
+      const cleanupPromises = [];
+
       if (callData.receiverId) {
-        await remove(ref(rtdb, `calls/incoming/${callData.receiverId}`));
+        cleanupPromises.push(
+          remove(ref(rtdb, `calls/incoming/${callData.receiverId}`))
+            .catch(error => console.warn('Error removing incoming call:', error))
+        );
       }
+
       if (callData.callerId) {
-        await remove(ref(rtdb, `calls/outgoing/${callData.callerId}`));
+        cleanupPromises.push(
+          remove(ref(rtdb, `calls/outgoing/${callData.callerId}`))
+            .catch(error => console.warn('Error removing outgoing call:', error))
+        );
       }
+
+      // Wait for cleanup operations
+      await Promise.allSettled(cleanupPromises);
 
       // Clear current call and stop sounds
       this.currentCall = null;
       this.stopAllSounds();
 
-      // Update Firestore record after clearing current call
-      try {
-        const callQuery = query(
-          collection(db, 'calls'),
-          where('id', '==', callId)
-        );
-        // Note: Firestore update would go here if needed
-        console.log('Call ended successfully:', callId);
-      } catch (firestoreError) {
-        console.warn('Could not update Firestore record:', firestoreError);
-      }
+      console.log('📞 Call ended successfully:', callId);
+
     } catch (error) {
       console.error('Error ending call:', error);
+      // Ensure cleanup even if there's an error
+      this.currentCall = null;
+      this.stopAllSounds();
       this.callbacks.onError?.('Arama sonlandırılamadı');
     }
   }
