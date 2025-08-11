@@ -176,7 +176,7 @@ export default function ChatReal() {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && canSendMessage) {
       e.preventDefault();
       handleSendMessage();
     }
