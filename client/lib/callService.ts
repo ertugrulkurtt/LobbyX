@@ -442,6 +442,14 @@ class CallService {
     // Store currentCall in local variable to prevent race conditions
     const callData = this.currentCall;
 
+    // Validate call data has required fields
+    if (!callData.callerId || !callData.receiverId) {
+      console.error('Invalid call data - missing callerId or receiverId:', callData);
+      this.currentCall = null;
+      this.stopAllSounds();
+      return;
+    }
+
     try {
       const endTime = new Date().toISOString();
       const duration = Math.floor((new Date(endTime).getTime() - new Date(callData.startedAt).getTime()) / 1000);
