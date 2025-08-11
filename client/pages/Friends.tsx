@@ -160,25 +160,30 @@ export default function FriendsReal() {
 
   const handleSendFriendRequest = async () => {
     if (!newFriendUsername.trim() || !user?.uid) return;
-    
+
     try {
       // Find user by username
       const searchResults = await searchUsers(newFriendUsername);
-      const targetUser = searchResults.find(u => 
+      const targetUser = searchResults.find(u =>
         u.username?.toLowerCase() === newFriendUsername.toLowerCase()
       );
-      
+
       if (!targetUser) {
         alert('Kullanıcı bulunamadı.');
         return;
       }
-      
+
       await sendFriendRequest(user.uid, targetUser.uid);
       setNewFriendUsername('');
       alert('Arkadaşlık isteği gönderildi!');
     } catch (error: any) {
       console.error('Error sending friend request:', error);
-      alert(error.message || 'Arkadaşlık isteği gönderilemedi.');
+
+      if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
+        alert('Bağlantı hatası. İnternet bağlantınızı kontrol edin ve tekrar deneyin.');
+      } else {
+        alert(error.message || 'Arkadaşlık isteği gönderilemedi.');
+      }
     }
   };
 
