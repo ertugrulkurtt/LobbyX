@@ -1,0 +1,440 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==============================================
+    // HELPER FUNCTIONS
+    // ==============================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if user is the owner of the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check if user is accessing their own document
+    function isOwnDocument() {
+      return isAuthenticated() && request.auth.uid == resource.id;
+    }
+    
+    // Check if user is accessing their own document (for creation)
+    function isCreatingOwnDocument() {
+      return isAuthenticated() && request.auth.uid == request.resource.id;
+    }
+    
+    // Check if users are friends
+    function areFriends(userId1, userId2) {
+      return exists(/databases/$(database)/documents/users/$(userId1)/friends/$(userId2)) &&
+             exists(/databases/$(database)/documents/users/$(userId2)/friends/$(userId1));
+    }
+    
+    // Check if user is participant in conversation
+    function isConversationParticipant(conversationId) {
+      return isAuthenticated() && 
+             request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+    }
+    
+    // Check if field exists and has valid value
+    function hasValidField(field, validValues) {
+      return field in request.resource.data && 
+             request.resource.data[field] in validValues;
+    }
+    
+    // ==============================================
+    // USERS COLLECTION
+    // ==============================================
+    
+    match /users/{userId} {
+      // Users can read their own profile and profiles of friends
+      allow read: if isOwnDocument() || 
+                     areFriends(request.auth.uid, userId) ||
+                     // Allow reading basic info for friend requests and search
+                     (isAuthenticated() && 
+                      request.auth.uid != userId);
+      
+      // Users can only create/update their own profile
+      allow create: if isCreatingOwnDocument() &&
+                       // Validate required fields
+                       'email' in request.resource.data &&
+                       'createdAt' in request.resource.data &&
+                       request.resource.data.createdAt is timestamp &&
+                       // Ensure user ID matches auth ID
+                       request.resource.id == request.auth.uid;
+      
+      allow update: if isOwnDocument() &&
+                       // Prevent changing critical fields
+                       (!('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid) &&
+                       (!('email' in request.resource.data) || request.resource.data.email == resource.data.email) &&
+                       (!('createdAt' in request.resource.data) || request.resource.data.createdAt == resource.data.createdAt);
+      
+      // Users cannot delete their own profile (data retention)
+      allow delete: if false;
+      
+      // ==============================================
+      // USER SUB-COLLECTIONS
+      // ==============================================
+      
+      // Friends sub-collection
+      match /friends/{friendId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Blocked users sub-collection
+      match /blocked/{blockedUserId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // User settings sub-collection
+      match /settings/{settingId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // User statistics sub-collection
+      match /stats/{statId} {
+        allow read: if isOwnDocument() || areFriends(request.auth.uid, userId);
+        allow write: if isOwner(userId);
+      }
+    }
+    
+    // ==============================================
+    // CONVERSATIONS COLLECTION
+    // ==============================================
+    
+    match /conversations/{conversationId} {
+      // Only participants can read conversation
+      allow read: if isAuthenticated() && 
+                     request.auth.uid in resource.data.participants;
+      
+      // Allow creating conversation if user is in participants
+      allow create: if isAuthenticated() &&
+                       'participants' in request.resource.data &&
+                       request.auth.uid in request.resource.data.participants &&
+                       // Validate conversation type
+                       hasValidField('type', ['direct', 'group', 'server']) &&
+                       // For direct conversations, ensure participants are friends
+                       (request.resource.data.type != 'direct' ||
+                        (request.resource.data.participants.size() == 2 &&
+                         areFriends(request.resource.data.participants[0], request.resource.data.participants[1]))) &&
+                       // Validate timestamps
+                       'createdAt' in request.resource.data &&
+                       request.resource.data.createdAt is timestamp;
+      
+      // Allow updating conversation if user is participant
+      allow update: if isAuthenticated() &&
+                       request.auth.uid in resource.data.participants &&
+                       // Prevent changing critical fields
+                       request.resource.data.participants == resource.data.participants &&
+                       request.resource.data.type == resource.data.type &&
+                       request.resource.data.createdAt == resource.data.createdAt;
+      
+      // Allow deleting conversation if user is participant (for group admin or direct conversation)
+      allow delete: if isAuthenticated() &&
+                       request.auth.uid in resource.data.participants;
+      
+      // ==============================================
+      // MESSAGES SUB-COLLECTION
+      // ==============================================
+      
+      match /messages/{messageId} {
+        // Only conversation participants can read messages
+        allow read: if isConversationParticipant(conversationId);
+        
+        // Only conversation participants can create messages
+        allow create: if isConversationParticipant(conversationId) &&
+                         // Validate required fields
+                         'senderId' in request.resource.data &&
+                         'content' in request.resource.data &&
+                         'timestamp' in request.resource.data &&
+                         'conversationId' in request.resource.data &&
+                         // Ensure sender is the authenticated user
+                         request.resource.data.senderId == request.auth.uid &&
+                         request.resource.data.conversationId == conversationId &&
+                         request.resource.data.timestamp is timestamp &&
+                         // Validate message type
+                         hasValidField('type', ['text', 'image', 'file', 'voice', 'system']);
+        
+        // Only message sender can update their own messages
+        allow update: if isConversationParticipant(conversationId) &&
+                         resource.data.senderId == request.auth.uid &&
+                         // Prevent changing critical fields
+                         request.resource.data.senderId == resource.data.senderId &&
+                         request.resource.data.conversationId == resource.data.conversationId &&
+                         request.resource.data.timestamp == resource.data.timestamp &&
+                         request.resource.data.type == resource.data.type;
+        
+        // Only message sender can delete their own messages
+        allow delete: if isConversationParticipant(conversationId) &&
+                         resource.data.senderId == request.auth.uid;
+      }
+    }
+    
+    // ==============================================
+    // FRIEND REQUESTS COLLECTION
+    // ==============================================
+    
+    match /friendRequests/{requestId} {
+      // Users can read friend requests sent to them or by them
+      allow read: if isAuthenticated() &&
+                     (resource.data.toUserId == request.auth.uid ||
+                      resource.data.fromUserId == request.auth.uid);
+      
+      // Users can create friend requests
+      allow create: if isAuthenticated() &&
+                       'fromUserId' in request.resource.data &&
+                       'toUserId' in request.resource.data &&
+                       'status' in request.resource.data &&
+                       'createdAt' in request.resource.data &&
+                       // Ensure sender is authenticated user
+                       request.resource.data.fromUserId == request.auth.uid &&
+                       // Ensure not sending to self
+                       request.resource.data.fromUserId != request.resource.data.toUserId &&
+                       // Validate status
+                       request.resource.data.status == 'pending' &&
+                       request.resource.data.createdAt is timestamp;
+      
+      // Users can update friend requests (accept/reject)
+      allow update: if isAuthenticated() &&
+                       // Only recipient can update
+                       resource.data.toUserId == request.auth.uid &&
+                       // Only status can be changed
+                       request.resource.data.fromUserId == resource.data.fromUserId &&
+                       request.resource.data.toUserId == resource.data.toUserId &&
+                       request.resource.data.createdAt == resource.data.createdAt &&
+                       // Validate new status
+                       hasValidField('status', ['accepted', 'rejected']);
+      
+      // Users can delete their own sent requests or received requests
+      allow delete: if isAuthenticated() &&
+                       (resource.data.fromUserId == request.auth.uid ||
+                        resource.data.toUserId == request.auth.uid);
+    }
+    
+    // ==============================================
+    // CALLS COLLECTION
+    // ==============================================
+    
+    match /calls/{callId} {
+      // Only call participants can read call data
+      allow read: if isAuthenticated() &&
+                     (resource.data.callerId == request.auth.uid ||
+                      resource.data.receiverId == request.auth.uid);
+      
+      // Users can create calls
+      allow create: if isAuthenticated() &&
+                       'callerId' in request.resource.data &&
+                       'receiverId' in request.resource.data &&
+                       'status' in request.resource.data &&
+                       'type' in request.resource.data &&
+                       'startedAt' in request.resource.data &&
+                       // Ensure caller is authenticated user
+                       request.resource.data.callerId == request.auth.uid &&
+                       // Ensure not calling self
+                       request.resource.data.callerId != request.resource.data.receiverId &&
+                       // Validate call type and status
+                       hasValidField('type', ['voice', 'video']) &&
+                       hasValidField('status', ['initiating', 'ringing']) &&
+                       request.resource.data.startedAt is timestamp;
+      
+      // Call participants can update call status
+      allow update: if isAuthenticated() &&
+                       (resource.data.callerId == request.auth.uid ||
+                        resource.data.receiverId == request.auth.uid) &&
+                       // Prevent changing critical fields
+                       request.resource.data.callerId == resource.data.callerId &&
+                       request.resource.data.receiverId == resource.data.receiverId &&
+                       request.resource.data.startedAt == resource.data.startedAt &&
+                       request.resource.data.type == resource.data.type;
+      
+      // Call participants can delete call records
+      allow delete: if isAuthenticated() &&
+                       (resource.data.callerId == request.auth.uid ||
+                        resource.data.receiverId == request.auth.uid);
+    }
+    
+    // ==============================================
+    // NOTIFICATIONS COLLECTION
+    // ==============================================
+    
+    match /notifications/{notificationId} {
+      // Users can only read their own notifications
+      allow read: if isAuthenticated() &&
+                     resource.data.recipientId == request.auth.uid;
+      
+      // System can create notifications (or users for certain types)
+      allow create: if isAuthenticated() &&
+                       'recipientId' in request.resource.data &&
+                       'type' in request.resource.data &&
+                       'title' in request.resource.data &&
+                       'message' in request.resource.data &&
+                       'createdAt' in request.resource.data &&
+                       'isRead' in request.resource.data &&
+                       request.resource.data.createdAt is timestamp &&
+                       request.resource.data.isRead is bool &&
+                       // Validate notification types
+                       hasValidField('type', ['friend_request', 'friend_accepted', 'message', 'call', 'system', 'game']);
+      
+      // Users can update their own notifications (mark as read)
+      allow update: if isAuthenticated() &&
+                       resource.data.recipientId == request.auth.uid &&
+                       // Only allow changing isRead status
+                       request.resource.data.recipientId == resource.data.recipientId &&
+                       request.resource.data.type == resource.data.type &&
+                       request.resource.data.createdAt == resource.data.createdAt;
+      
+      // Users can delete their own notifications
+      allow delete: if isAuthenticated() &&
+                       resource.data.recipientId == request.auth.uid;
+    }
+    
+    // ==============================================
+    // SERVERS COLLECTION
+    // ==============================================
+    
+    match /servers/{serverId} {
+      // Public read access for server discovery, write access for members/admins
+      allow read: if isAuthenticated();
+      
+      // Only authenticated users can create servers
+      allow create: if isAuthenticated() &&
+                       'ownerId' in request.resource.data &&
+                       'name' in request.resource.data &&
+                       'createdAt' in request.resource.data &&
+                       request.resource.data.ownerId == request.auth.uid &&
+                       request.resource.data.createdAt is timestamp;
+      
+      // Only server owner/admins can update server
+      allow update: if isAuthenticated() &&
+                       (resource.data.ownerId == request.auth.uid ||
+                        request.auth.uid in resource.data.admins);
+      
+      // Only server owner can delete server
+      allow delete: if isAuthenticated() &&
+                       resource.data.ownerId == request.auth.uid;
+      
+      // Server members sub-collection
+      match /members/{memberId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() &&
+                         request.resource.data.userId == request.auth.uid;
+        allow update, delete: if isAuthenticated() &&
+                                 (resource.data.userId == request.auth.uid ||
+                                  get(/databases/$(database)/documents/servers/$(serverId)).data.ownerId == request.auth.uid);
+      }
+    }
+    
+    // ==============================================
+    // GROUPS COLLECTION
+    // ==============================================
+    
+    match /groups/{groupId} {
+      // Only group members can read group data
+      allow read: if isAuthenticated() &&
+                     request.auth.uid in resource.data.members;
+      
+      // Authenticated users can create groups
+      allow create: if isAuthenticated() &&
+                       'ownerId' in request.resource.data &&
+                       'name' in request.resource.data &&
+                       'members' in request.resource.data &&
+                       'createdAt' in request.resource.data &&
+                       request.resource.data.ownerId == request.auth.uid &&
+                       request.auth.uid in request.resource.data.members &&
+                       request.resource.data.createdAt is timestamp;
+      
+      // Only group owner/admins can update group
+      allow update: if isAuthenticated() &&
+                       request.auth.uid in resource.data.members &&
+                       (resource.data.ownerId == request.auth.uid ||
+                        request.auth.uid in resource.data.admins);
+      
+      // Only group owner can delete group
+      allow delete: if isAuthenticated() &&
+                       resource.data.ownerId == request.auth.uid;
+    }
+    
+    // ==============================================
+    // FILE UPLOADS COLLECTION
+    // ==============================================
+    
+    match /fileUploads/{uploadId} {
+      // Users can read their own uploads and uploads shared with them
+      allow read: if isAuthenticated() &&
+                     (resource.data.uploaderId == request.auth.uid ||
+                      request.auth.uid in resource.data.sharedWith);
+      
+      // Users can create file upload records
+      allow create: if isAuthenticated() &&
+                       'uploaderId' in request.resource.data &&
+                       'fileName' in request.resource.data &&
+                       'fileSize' in request.resource.data &&
+                       'mimeType' in request.resource.data &&
+                       'uploadedAt' in request.resource.data &&
+                       request.resource.data.uploaderId == request.auth.uid &&
+                       request.resource.data.uploadedAt is timestamp &&
+                       // File size limit (100MB)
+                       request.resource.data.fileSize <= 104857600;
+      
+      // Users can update their own uploads
+      allow update: if isAuthenticated() &&
+                       resource.data.uploaderId == request.auth.uid;
+      
+      // Users can delete their own uploads
+      allow delete: if isAuthenticated() &&
+                       resource.data.uploaderId == request.auth.uid;
+    }
+    
+    // ==============================================
+    // SYSTEM COLLECTIONS
+    // ==============================================
+    
+    // App settings (read-only for users)
+    match /appSettings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only admin through backend
+    }
+    
+    // User reports
+    match /reports/{reportId} {
+      allow read: if false; // Only admin access
+      allow create: if isAuthenticated() &&
+                       'reporterId' in request.resource.data &&
+                       'reportedUserId' in request.resource.data &&
+                       'reason' in request.resource.data &&
+                       'createdAt' in request.resource.data &&
+                       request.resource.data.reporterId == request.auth.uid &&
+                       request.resource.data.createdAt is timestamp;
+      allow update, delete: if false; // Only admin access
+    }
+    
+    // Analytics (write-only for tracking)
+    match /analytics/{analyticsId} {
+      allow read: if false; // Only admin access
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+    
+    // ==============================================
+    // DEVELOPMENT/TESTING
+    // ==============================================
+    
+    // Test collections (only in dev environment)
+    match /test/{document=**} {
+      allow read, write: if isAuthenticated() && 
+                            request.time < timestamp.date(2025, 12, 31); // Expire test access
+    }
+    
+    // ==============================================
+    // DENY ALL OTHER PATHS
+    // ==============================================
+    
+    // Explicitly deny access to any undefined paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
