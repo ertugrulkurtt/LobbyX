@@ -15,6 +15,19 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserStats } from '../hooks/useUserStats';
+import {
+  getUserFriends,
+  getFriendRequests,
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  removeFriend as removeUserFriend,
+  searchUsers,
+  subscribeToUserFriends,
+  subscribeToFriendRequests,
+  RealUser,
+  FriendRequest
+} from '../lib/userService';
 
 interface Friend {
   id: string;
