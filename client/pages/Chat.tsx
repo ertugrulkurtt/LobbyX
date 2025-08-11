@@ -47,6 +47,16 @@ export default function ChatReal() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Check for conversation ID in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const conversationFromUrl = urlParams.get('conversation');
+
+    if (conversationFromUrl && conversationFromUrl !== selectedChat) {
+      setSelectedChat(conversationFromUrl);
+    }
+  }, [location.search, selectedChat]);
+
   // Load conversations on mount
   useEffect(() => {
     if (!user?.uid) return;
@@ -58,43 +68,17 @@ export default function ChatReal() {
       setConversations(realTimeConversations);
       setLoading(false);
 
-      // Check if there's a conversation ID in URL
-      const urlParams = new URLSearchParams(window.location.search);
+      // Auto-select first conversation if none selected and no URL param
+      const urlParams = new URLSearchParams(location.search);
       const conversationFromUrl = urlParams.get('conversation');
 
-      if (conversationFromUrl && realTimeConversations.some(c => c.id === conversationFromUrl)) {
-        setSelectedChat(conversationFromUrl);
-      } else if (!selectedChat && realTimeConversations.length > 0) {
-        // Auto-select first conversation if none selected and no URL param
+      if (!conversationFromUrl && !selectedChat && realTimeConversations.length > 0) {
         setSelectedChat(realTimeConversations[0].id);
       }
     });
 
     return () => unsubscribe();
-  }, [user?.uid]);
-
-  // Check for URL parameters on mount and when URL changes
-  useEffect(() => {
-    const checkUrlParams = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const conversationFromUrl = urlParams.get('conversation');
-
-      if (conversationFromUrl && conversationFromUrl !== selectedChat) {
-        setSelectedChat(conversationFromUrl);
-      }
-    };
-
-    // Check on mount
-    checkUrlParams();
-
-    // Listen for hash changes (if using hash routing)
-    const handleHashChange = () => {
-      checkUrlParams();
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [selectedChat]);
+  }, [user?.uid, location.search, selectedChat]);
 
   // Subscribe to messages for selected conversation
   useEffect(() => {
