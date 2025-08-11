@@ -150,10 +150,10 @@ export const getUserConversations = async (userId: string): Promise<Conversation
  * Get or create direct conversation between two users
  */
 export const getOrCreateDirectConversation = async (
-  userId1: string, 
+  userId1: string,
   userId2: string
 ): Promise<string> => {
-  try {
+  return withRetry(async () => {
     // Check if conversation already exists
     const conversationsRef = collection(db, 'conversations');
     const q = query(
@@ -161,9 +161,9 @@ export const getOrCreateDirectConversation = async (
       where('type', '==', 'direct'),
       where('participants', 'array-contains', userId1)
     );
-    
+
     const snapshot = await getDocs(q);
-    
+
     // Find existing conversation
     for (const conversationDoc of snapshot.docs) {
       const data = conversationDoc.data();
@@ -171,7 +171,7 @@ export const getOrCreateDirectConversation = async (
         return conversationDoc.id;
       }
     }
-    
+
     // Create new conversation
     const newConversation = {
       type: 'direct',
@@ -183,13 +183,10 @@ export const getOrCreateDirectConversation = async (
         [userId2]: 0
       }
     };
-    
+
     const conversationRef = await addDoc(conversationsRef, newConversation);
     return conversationRef.id;
-  } catch (error) {
-    console.error('Error getting/creating conversation:', error);
-    throw error;
-  }
+  });
 };
 
 /**
