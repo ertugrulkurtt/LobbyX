@@ -511,6 +511,7 @@ export default function ChatReal() {
   };
 
   const handleAnswerCall = async () => {
+    console.log('📞 Answer call button clicked');
     try {
       await callActions.answerCall();
     } catch (error: any) {
@@ -520,10 +521,16 @@ export default function ChatReal() {
   };
 
   const handleRejectCall = () => {
+    console.log('📞 Reject call button clicked');
     callActions.rejectCall();
   };
 
   const handleEndCall = () => {
+    console.log('📞 End call button clicked', {
+      currentCall: callState.currentCall,
+      isConnected: callState.isConnected,
+      isCallModalOpen: callState.isCallModalOpen
+    });
     callActions.endCall();
   };
 
