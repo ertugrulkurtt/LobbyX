@@ -242,16 +242,48 @@ export function useCallManager(): [CallState, CallActions] {
   }, [callState.currentCall]);
 
   const endCall = useCallback(async () => {
-    if (!callState.currentCall?.id) return;
+    console.log('📞 useCallManager endCall called', {
+      hasCurrentCall: !!callState.currentCall,
+      callId: callState.currentCall?.id,
+      isConnected: callState.isConnected
+    });
+
+    if (!callState.currentCall?.id) {
+      console.warn('📞 No current call to end');
+      // Force close modal if it's open but no call exists
+      setCallState(prev => ({
+        ...prev,
+        currentCall: null,
+        isIncomingCall: false,
+        isCallModalOpen: false,
+        isConnected: false,
+        callDuration: 0
+      }));
+      return;
+    }
 
     try {
+      console.log('📞 Calling callService.endCall with ID:', callState.currentCall.id);
       await callService.endCall(callState.currentCall.id);
+      console.log('📞 callService.endCall completed');
     } catch (error: any) {
-      console.error('Error ending call:', error);
-      setCallState(prev => ({ 
-        ...prev, 
-        error: error.message || 'Arama sonlandırılamadı' 
+      console.error('📞 Error ending call:', error);
+      setCallState(prev => ({
+        ...prev,
+        error: error.message || 'Arama sonlandırılamadı'
       }));
+
+      // Force close modal even if there was an error
+      setTimeout(() => {
+        setCallState(prev => ({
+          ...prev,
+          currentCall: null,
+          isIncomingCall: false,
+          isCallModalOpen: false,
+          isConnected: false,
+          callDuration: 0
+        }));
+      }, 1000);
     }
   }, [callState.currentCall]);
 
