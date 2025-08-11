@@ -14,7 +14,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { RealUser } from './userService';
+import { RealUser, areFriends } from './userService';
 
 // Utility function to handle Firebase errors and retry
 const withRetry = async <T>(
