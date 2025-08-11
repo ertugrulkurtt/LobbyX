@@ -348,6 +348,16 @@ export const acceptFriendRequest = async (requestId: string): Promise<void> => {
 export const rejectFriendRequest = async (requestId: string): Promise<void> => {
   try {
     const requestRef = doc(db, 'friendRequests', requestId);
+    const requestDoc = await getDoc(requestRef);
+
+    if (requestDoc.exists()) {
+      const requestData = requestDoc.data();
+      const { fromUserId, toUserId } = requestData;
+
+      // Mark friend request notification as read for the person who rejected it
+      await markFriendRequestNotificationAsRead(fromUserId, toUserId);
+    }
+
     await updateDoc(requestRef, {
       status: 'rejected',
       rejectedAt: new Date().toISOString()
