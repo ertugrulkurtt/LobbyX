@@ -173,6 +173,28 @@ class SystemHealthCheck {
   }
 
   /**
+   * Check UI health
+   */
+  private async checkUIHealth(): Promise<void> {
+    try {
+      const uiIssues = await uiHealthCheck.runUIHealthCheck();
+      const summary = uiHealthCheck.getUIHealthSummary();
+
+      if (summary.overall === 'good') {
+        this.addResult('ui_health', 'healthy', 'UI/UX components functioning well');
+      } else if (summary.overall === 'fair') {
+        this.addResult('ui_health', 'warning',
+          `UI/UX has some issues (${summary.counts.warning} warnings, ${summary.counts.critical} critical)`);
+      } else {
+        this.addResult('ui_health', 'critical',
+          `UI/UX has critical issues (${summary.counts.critical} critical, ${summary.counts.warning} warnings)`);
+      }
+    } catch (error: any) {
+      this.addResult('ui_health', 'warning', 'UI health check failed', error.message);
+    }
+  }
+
+  /**
    * Add health check result
    */
   private addResult(
