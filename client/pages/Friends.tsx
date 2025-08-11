@@ -157,16 +157,28 @@ export default function Friends() {
     setNewFriendUsername('');
   };
 
-  const handleAcceptRequest = (requestId: string) => {
-    console.log('Accepting friend request:', requestId);
+  const handleAcceptRequest = async (requestId: string) => {
+    try {
+      console.log('Accepting friend request:', requestId);
+      // Update friend count statistics
+      await addFriend();
+    } catch (error) {
+      console.error('Error accepting friend request:', error);
+    }
   };
 
   const handleRejectRequest = (requestId: string) => {
     console.log('Rejecting friend request:', requestId);
   };
 
-  const handleRemoveFriend = (friendId: string) => {
-    console.log('Removing friend:', friendId);
+  const handleRemoveFriend = async (friendId: string) => {
+    try {
+      console.log('Removing friend:', friendId);
+      // Update friend count statistics
+      await removeFriend();
+    } catch (error) {
+      console.error('Error removing friend:', error);
+    }
   };
 
   const renderFriendCard = (friend: Friend) => (
