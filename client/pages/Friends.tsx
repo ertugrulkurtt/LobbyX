@@ -59,6 +59,16 @@ export default function Friends() {
   const [searchQuery, setSearchQuery] = useState('');
   const [newFriendUsername, setNewFriendUsername] = useState('');
 
+  // Real Firebase data states
+  const [friends, setFriends] = useState<RealUser[]>([]);
+  const [friendRequests, setFriendRequests] = useState<{ incoming: FriendRequest[]; outgoing: FriendRequest[] }>({
+    incoming: [],
+    outgoing: []
+  });
+  const [searchResults, setSearchResults] = useState<RealUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
+
   // Mock friends data - including current user for testing avatar display
   const friends: Friend[] = [
     // Add current user as a friend for testing avatar display
