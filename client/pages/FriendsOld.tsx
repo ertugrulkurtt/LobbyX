@@ -136,7 +136,7 @@ export default function FriendsOld() {
     if (query.trim() && user) {
       setIsSearching(true);
       try {
-        const results = await searchUsers(query.trim(), user.uid);
+        const results = await searchUsers(query.trim());
         setSearchResults(results);
       } catch (error) {
         console.error('Error searching users:', error);
