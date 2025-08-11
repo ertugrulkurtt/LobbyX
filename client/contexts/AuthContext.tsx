@@ -214,7 +214,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Update Firestore document
       await updateDoc(doc(db, 'users', user.uid), data);
-      
+
+      // Update local user state immediately
+      setUser(prevUser => prevUser ? { ...prevUser, ...data } : null);
+
     } catch (error: any) {
       throw new Error(getFirebaseErrorMessage(error.code));
     }
