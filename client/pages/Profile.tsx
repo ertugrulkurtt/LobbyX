@@ -64,6 +64,7 @@ const getSessionHistory = () => [
 
 export default function Profile() {
   const { user, updateProfile } = useAuth();
+  const { stats, loading: statsLoading, error: statsError, formatActiveTime, formatJoinDate, formatLastActivity } = useUserStats();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [isEditing, setIsEditing] = useState(false);
@@ -270,7 +271,7 @@ export default function Profile() {
       console.log('Password change:', passwordData);
       setShowPasswordModal(false);
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      alert('��ifre başarıyla değiştirildi!');
+      alert('Şifre başarıyla değiştirildi!');
     } catch (error) {
       alert('Şifre değiştirilemedi. Mevcut şifrenizi kontrol edin.');
     }
