@@ -53,18 +53,19 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users collection - users can read/write their own data
+    // Users collection - users can read all users for friends/search, write only their own
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // User statistics - users can read/write their own stats
+    // User statistics - users can read/write their own stats, read others for leaderboard
     match /userStats/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      allow read: if request.auth != null; // Allow reading for leaderboard
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Daily activity tracking - users can read/write their own activity
+    // Daily activity tracking
     match /dailyActivity/{activityId} {
       allow read, write: if request.auth != null
         && request.auth.uid == resource.data.userId;
@@ -72,7 +73,7 @@ service cloud.firestore {
         && request.auth.uid == request.resource.data.userId;
     }
 
-    // Message statistics - users can read/write their own message stats
+    // Message statistics
     match /messageStats/{messageStatsId} {
       allow read, write: if request.auth != null
         && request.auth.uid == resource.data.userId;
@@ -80,7 +81,7 @@ service cloud.firestore {
         && request.auth.uid == request.resource.data.userId;
     }
 
-    // XP logs - users can read their own XP logs, write is controlled
+    // XP logs
     match /xpLogs/{logId} {
       allow read: if request.auth != null
         && request.auth.uid == resource.data.userId;
@@ -88,7 +89,7 @@ service cloud.firestore {
         && request.auth.uid == request.resource.data.userId;
     }
 
-    // Achievement progress - users can read/write their own achievements
+    // Achievement progress
     match /achievementProgress/{progressId} {
       allow read, write: if request.auth != null
         && request.auth.uid == resource.data.userId;
@@ -96,7 +97,55 @@ service cloud.firestore {
         && request.auth.uid == request.resource.data.userId;
     }
 
-    // Default deny rule for any other documents
+    // Friend requests - users involved can read/write
+    match /friendRequests/{requestId} {
+      allow read, write: if request.auth != null
+        && (request.auth.uid == resource.data.fromUserId
+            || request.auth.uid == resource.data.toUserId);
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.fromUserId;
+    }
+
+    // Conversations - participants can read/write
+    match /conversations/{conversationId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid in resource.data.participants;
+      allow create: if request.auth != null
+        && request.auth.uid in request.resource.data.participants;
+    }
+
+    // Messages within conversations - participants can read/write
+    match /conversations/{conversationId}/messages/{messageId} {
+      allow read: if request.auth != null
+        && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.senderId
+        && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+      allow update: if request.auth != null
+        && request.auth.uid == resource.data.senderId;
+      allow delete: if request.auth != null
+        && request.auth.uid == resource.data.senderId;
+    }
+
+    // Servers - all authenticated users can read, members can write
+    match /servers/{serverId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && (request.auth.uid == resource.data.ownerId
+            || request.auth.uid in resource.data.members);
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.ownerId;
+    }
+
+    // Groups - members can read/write
+    match /groups/{groupId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid in resource.data.members;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.ownerId;
+    }
+
+    // Default deny rule
     match /{document=**} {
       allow read, write: if false;
     }
