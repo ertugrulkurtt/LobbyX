@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { uploadProfilePhoto } from '../lib/storage';
+import { useUserStats } from '../hooks/useUserStats';
 
 // Real user statistics
 const getUserStats = (userId: string) => {
