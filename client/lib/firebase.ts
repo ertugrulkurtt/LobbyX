@@ -37,7 +37,6 @@ export const handleFirebaseNetworkError = async (error: any) => {
     error.code === 'network-request-failed';
 
   if (!isNetworkError) {
-    console.log('Error is not network-related, skipping network handling');
     return false;
   }
 
@@ -45,7 +44,6 @@ export const handleFirebaseNetworkError = async (error: any) => {
     try {
       await enableNetwork(db);
       networkEnabled = true;
-      console.log('Firebase network re-enabled');
       return true;
     } catch (enableError) {
       console.error('Failed to re-enable Firebase network:', enableError);
@@ -58,12 +56,10 @@ export const handleFirebaseNetworkError = async (error: any) => {
 
 export const forceFirebaseReconnect = async (): Promise<boolean> => {
   try {
-    console.log('Forcing Firebase reconnection...');
 
     if (networkEnabled) {
       await disableNetwork(db);
       networkEnabled = false;
-      console.log('Firebase network disabled');
     }
 
     // Wait a moment then re-enable
@@ -72,7 +68,6 @@ export const forceFirebaseReconnect = async (): Promise<boolean> => {
     try {
       await enableNetwork(db);
       networkEnabled = true;
-      console.log('Firebase network reconnected successfully');
       return true;
     } catch (error) {
       console.error('Failed to reconnect Firebase:', error);
@@ -115,7 +110,6 @@ export const withExponentialBackoff = async <T>(
 
       if (attempt < maxRetries) {
         const delay = baseDelay * Math.pow(2, attempt - 1);
-        console.log(`Retrying Firebase operation in ${delay}ms (attempt ${attempt}/${maxRetries})`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
@@ -128,34 +122,25 @@ export const withExponentialBackoff = async <T>(
 let isReconnecting = false;
 
 window.addEventListener('online', async () => {
-  console.log('Browser online - attempting Firebase reconnect');
 
   if (isReconnecting) {
-    console.log('Reconnection already in progress');
     return;
   }
 
   isReconnecting = true;
   const success = await forceFirebaseReconnect();
 
-  if (success) {
-    console.log('Firebase reconnection successful');
-  } else {
-    console.error('Firebase reconnection failed');
-  }
 
   isReconnecting = false;
 });
 
 window.addEventListener('offline', () => {
-  console.log('Browser offline - Firebase operations will be queued');
   networkEnabled = false;
 });
 
 // Add visibility change handler for better reconnection
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible' && navigator.onLine && !networkEnabled) {
-    console.log('Page became visible and online - checking Firebase connection');
     await forceFirebaseReconnect();
   }
 });
@@ -173,11 +158,6 @@ window.addEventListener('unhandledrejection', (event) => {
       error.message?.includes('firestore');
 
     if (isFirebaseError) {
-      console.warn('🚨 Caught unhandled Firebase error:', {
-        message: error.message,
-        code: error.code,
-        stack: error.stack?.substring(0, 200)
-      });
 
       // Try to handle it
       handleFirebaseNetworkError(error).catch(console.error);
@@ -235,25 +215,21 @@ export const testFirebaseConnection = async (): Promise<boolean> => {
     const currentUser = auth.currentUser;
 
     if (!currentUser) {
-      console.log('ℹ️ Firebase connection test skipped - user not authenticated');
       return false;
     }
 
     // Test Firebase connectivity with a simple authenticated operation
     const testRef = collection(db, 'users');
     await getDocs(testRef);
-    console.log('✅ Firebase connection test passed');
     return true;
   } catch (error: any) {
     if (error.code === 'permission-denied') {
       console.warn('🔒 Firebase connection test failed - Firestore rules need deployment');
     } else {
-      console.error('❌ Firebase connection test failed:', error.message);
 
       // Only attempt reconnection for network errors
       if (error.message?.includes('Failed to fetch') ||
           error.message?.includes('network-request-failed')) {
-        console.warn('🔄 Attempting Firebase reconnection due to network failure...');
         await forceFirebaseReconnect();
       }
     }
