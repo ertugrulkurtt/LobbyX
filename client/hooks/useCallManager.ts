@@ -233,6 +233,13 @@ export function useCallManager(): [CallState, CallActions] {
       callId: callState.currentCall?.id
     });
 
+    // Immediately close the modal for better UX
+    setCallState(prev => ({
+      ...prev,
+      isCallModalOpen: false,
+      isConnected: false
+    }));
+
     if (!callState.currentCall?.id) {
       console.warn('📞 No current call to reject');
       // Force close modal
@@ -240,37 +247,40 @@ export function useCallManager(): [CallState, CallActions] {
         ...prev,
         currentCall: null,
         isIncomingCall: false,
-        isCallModalOpen: false,
-        isConnected: false,
         callDuration: 0
       }));
+      clearTimer();
       return;
     }
 
+    const currentCallId = callState.currentCall.id;
+
     try {
-      console.log('📞 Calling callService.rejectCall with ID:', callState.currentCall.id);
-      await callService.rejectCall(callState.currentCall.id);
+      console.log('📞 Calling callService.rejectCall with ID:', currentCallId);
+      await callService.rejectCall(currentCallId);
       console.log('📞 callService.rejectCall completed');
+
+      // Clean up state after successful reject
+      setCallState(prev => ({
+        ...prev,
+        currentCall: null,
+        isIncomingCall: false,
+        callDuration: 0
+      }));
+      clearTimer();
+
     } catch (error: any) {
       console.error('📞 Error rejecting call:', error);
       setCallState(prev => ({
         ...prev,
-        error: error.message || 'Arama reddedilemedi'
+        error: error.message || 'Arama reddedilemedi',
+        currentCall: null,
+        isIncomingCall: false,
+        callDuration: 0
       }));
-
-      // Force close modal even if there was an error
-      setTimeout(() => {
-        setCallState(prev => ({
-          ...prev,
-          currentCall: null,
-          isIncomingCall: false,
-          isCallModalOpen: false,
-          isConnected: false,
-          callDuration: 0
-        }));
-      }, 1000);
+      clearTimer();
     }
-  }, [callState.currentCall]);
+  }, [callState.currentCall, clearTimer]);
 
   const endCall = useCallback(async () => {
     console.log('📞 useCallManager endCall called', {
