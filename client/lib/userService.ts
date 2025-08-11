@@ -406,6 +406,39 @@ export const areFriends = async (userId1: string, userId2: string): Promise<bool
 };
 
 /**
+ * Mark friend request notifications as read
+ */
+const markFriendRequestNotificationAsRead = async (
+  fromUserId: string,
+  toUserId: string
+): Promise<void> => {
+  try {
+    const notificationsRef = collection(db, 'notifications');
+    const notificationQuery = query(
+      notificationsRef,
+      where('userId', '==', toUserId),
+      where('type', '==', 'friend_request'),
+      where('relatedUserId', '==', fromUserId),
+      where('isRead', '==', false)
+    );
+
+    const notificationSnapshot = await getDocs(notificationQuery);
+
+    const updatePromises = notificationSnapshot.docs.map(notificationDoc =>
+      updateDoc(notificationDoc.ref, {
+        isRead: true,
+        updatedAt: new Date().toISOString()
+      })
+    );
+
+    await Promise.all(updatePromises);
+  } catch (error) {
+    console.error('Error marking friend request notifications as read:', error);
+    // Don't throw error as this is secondary functionality
+  }
+};
+
+/**
  * Get conversations for a user
  */
 export const getUserConversations = async (userId: string): Promise<Conversation[]> => {
