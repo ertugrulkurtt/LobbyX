@@ -30,6 +30,7 @@ import {
   Conversation,
   Message
 } from '../lib/messageService';
+import { areFriends } from '../lib/userService';
 
 export default function ChatReal() {
   const { user } = useAuth();
