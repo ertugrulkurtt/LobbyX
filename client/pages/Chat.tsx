@@ -23,6 +23,7 @@ import {
   Settings
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useUserStats } from '../hooks/useUserStats';
 
 interface Message {
   id: string;
