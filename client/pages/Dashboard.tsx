@@ -139,11 +139,15 @@ export default function Dashboard() {
               return (
                 <div
                   key={stat.label}
-                  className="bg-gaming-surface/50 backdrop-blur-sm rounded-xl p-4 border border-gaming-border animate-scale-in hover:shadow-glow transition-all duration-300"
+                  className={`bg-gaming-surface/50 backdrop-blur-sm rounded-xl p-4 border border-gaming-border animate-scale-in hover:shadow-glow transition-all duration-300 ${
+                    statsLoading ? 'opacity-50' : ''
+                  }`}
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <Icon className={`w-6 h-6 mb-2 ${stat.color}`} />
-                  <div className="text-xl font-bold text-gaming-text">{stat.value}</div>
+                  <div className="text-xl font-bold text-gaming-text">
+                    {statsLoading ? '...' : stat.value}
+                  </div>
                   <div className="text-xs text-gaming-muted">{stat.label}</div>
                 </div>
               );
