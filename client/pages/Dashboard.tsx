@@ -16,7 +16,6 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useUserStats } from '../hooks/useUserStats';
 import { getUserConversations } from '../lib/messageService';
-import { createTestNotifications } from '../lib/testNotifications';
 import { forceCleanup, getLastCleanupTime } from '../lib/fileCleanupService';
 import { useState, useEffect } from 'react';
 
