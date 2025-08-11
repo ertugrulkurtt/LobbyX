@@ -20,8 +20,20 @@ import { RealUser, areFriends } from './userService';
 import { createMessageNotification } from './notificationService';
 import { handleNetworkError } from './firebaseConnectionMonitor';
 
-// Use enhanced retry function from firebase.ts
-const withRetry = withExponentialBackoff;
+// Enhanced retry function with error reporting
+const withRetry = async <T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<T> => {
+  try {
+    return await withExponentialBackoff(operation, maxRetries, delay);
+  } catch (error: any) {
+    // Report Firebase errors for critical recovery tracking
+    reportFirebaseError(error);
+    throw error;
+  }
+};
 
 export interface Message {
   id: string;
