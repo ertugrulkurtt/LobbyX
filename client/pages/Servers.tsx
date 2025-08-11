@@ -826,10 +826,10 @@ export default function Servers() {
                                       {channel.name}
                                     </span>
                                     {!canWriteChannel && (
-                                      <EyeOff className="w-3 h-3 text-gaming-muted" title="Sadece okuma" />
+                                      <EyeOff className="w-3 h-3 text-gaming-muted" />
                                     )}
                                     {channel.isPrivate && (
-                                      <Lock className="w-3 h-3 text-neon-orange" title="Özel kanal" />
+                                      <Lock className="w-3 h-3 text-neon-orange" />
                                     )}
                                   </div>
                                   <div className="flex items-center justify-between mt-1">
@@ -872,13 +872,13 @@ export default function Servers() {
 
                                         <div className="flex items-center space-x-1">
                                           {connectedUser.isMuted && (
-                                            <MicOff className="w-3 h-3 text-red-400" title="Mikrofon kapalı" />
+                                            <MicOff className="w-3 h-3 text-red-400" />
                                           )}
                                           {connectedUser.isDeafened && (
-                                            <Headphones className="w-3 h-3 text-red-400" title="Kulaklık kapalı" />
+                                            <Headphones className="w-3 h-3 text-red-400" />
                                           )}
                                           {!connectedUser.isMuted && !connectedUser.isDeafened && (
-                                            <Mic className="w-3 h-3 text-neon-green" title="Aktif" />
+                                            <Mic className="w-3 h-3 text-neon-green" />
                                           )}
                                         </div>
                                       </div>
