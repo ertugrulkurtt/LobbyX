@@ -228,16 +228,47 @@ export function useCallManager(): [CallState, CallActions] {
   }, [callState.currentCall]);
 
   const rejectCall = useCallback(async () => {
-    if (!callState.currentCall?.id) return;
+    console.log('📞 useCallManager rejectCall called', {
+      hasCurrentCall: !!callState.currentCall,
+      callId: callState.currentCall?.id
+    });
+
+    if (!callState.currentCall?.id) {
+      console.warn('📞 No current call to reject');
+      // Force close modal
+      setCallState(prev => ({
+        ...prev,
+        currentCall: null,
+        isIncomingCall: false,
+        isCallModalOpen: false,
+        isConnected: false,
+        callDuration: 0
+      }));
+      return;
+    }
 
     try {
+      console.log('📞 Calling callService.rejectCall with ID:', callState.currentCall.id);
       await callService.rejectCall(callState.currentCall.id);
+      console.log('📞 callService.rejectCall completed');
     } catch (error: any) {
-      console.error('Error rejecting call:', error);
-      setCallState(prev => ({ 
-        ...prev, 
-        error: error.message || 'Arama reddedilemedi' 
+      console.error('📞 Error rejecting call:', error);
+      setCallState(prev => ({
+        ...prev,
+        error: error.message || 'Arama reddedilemedi'
       }));
+
+      // Force close modal even if there was an error
+      setTimeout(() => {
+        setCallState(prev => ({
+          ...prev,
+          currentCall: null,
+          isIncomingCall: false,
+          isCallModalOpen: false,
+          isConnected: false,
+          callDuration: 0
+        }));
+      }, 1000);
     }
   }, [callState.currentCall]);
 
