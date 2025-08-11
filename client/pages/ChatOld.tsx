@@ -487,11 +487,6 @@ export default function Chat() {
                         <span className="text-sm font-medium text-gaming-text">
                           {message.senderName}
                         </span>
-                        {message.isSpecial && (
-                          <div className="flex items-center justify-center w-4 h-4 bg-neon-cyan rounded-full">
-                            <Check className="w-3 h-3 text-white" />
-                          </div>
-                        )}
                       </div>
                     )}
                     
