@@ -527,7 +527,10 @@ export default function ChatReal() {
                     }`}>
                       {message.senderId !== user?.uid && (
                         <div className="flex items-center space-x-2 mb-1">
-                          <span className="text-sm font-medium text-gaming-text">
+                          <span
+                            className="text-sm font-medium text-gaming-text cursor-pointer hover:text-neon-purple transition-colors"
+                            onClick={() => handleUserProfileClick(message.sender)}
+                          >
                             {message.sender.displayName || message.sender.username}
                           </span>
                         </div>
