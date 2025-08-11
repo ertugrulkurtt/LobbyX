@@ -18,6 +18,7 @@ import { useUserStats } from '../hooks/useUserStats';
 import { getUserConversations } from '../lib/messageService';
 import { forceCleanup, getLastCleanupTime } from '../lib/fileCleanupService';
 import { useState, useEffect } from 'react';
+import FirebaseStatus from '../components/FirebaseStatus';
 
 export default function Dashboard() {
   const { user } = useAuth();
