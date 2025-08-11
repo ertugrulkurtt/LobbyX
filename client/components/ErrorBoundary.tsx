@@ -36,8 +36,8 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     });
 
     // Report to error tracking service if available
-    if (window.gtag) {
-      window.gtag('event', 'exception', {
+    if ((window as any).gtag) {
+      (window as any).gtag('event', 'exception', {
         description: error.toString(),
         fatal: false
       });
