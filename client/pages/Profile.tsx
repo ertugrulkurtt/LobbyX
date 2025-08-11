@@ -440,11 +440,11 @@ export default function Profile() {
                   <div className="flex items-center space-x-4 mt-4 text-sm text-gaming-muted">
                     <span className="flex items-center space-x-1">
                       <Calendar className="w-4 h-4" />
-                      <span>Katılma: {userStats.joinDate}</span>
+                      <span>Katılma: {stats ? formatJoinDate(stats.joinDate) : 'Yükleniyor...'}</span>
                     </span>
                     <span className="flex items-center space-x-1">
                       <Clock className="w-4 h-4" />
-                      <span>Son aktiflik: {userStats.lastActivity}</span>
+                      <span>Son aktiflik: {stats ? formatLastActivity(stats.lastActivity) : 'Yükleniyor...'}</span>
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-3 mt-4">
