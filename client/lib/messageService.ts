@@ -260,9 +260,7 @@ export const sendMessage = async (
     if (fileSize !== undefined) messageData.fileSize = fileSize;
     if (replyTo !== undefined) messageData.replyTo = replyTo;
 
-    console.log('Adding message to Firestore:', messageData);
     const messageRef = await addDoc(messagesRef, messageData);
-    console.log('Message added with ID:', messageRef.id);
 
     // Update conversation with last message (reuse existing conversationRef)
     const conversationUpdate = {
@@ -275,7 +273,6 @@ export const sendMessage = async (
       updatedAt: timestamp
     };
 
-    console.log('Updating conversation:', conversationUpdate);
     await updateDoc(conversationRef, conversationUpdate);
 
     // Update unread counts for other participants and create notifications
@@ -316,13 +313,11 @@ export const sendMessage = async (
         }
       }
 
-      console.log('Updating unread counts:', newUnreadCounts);
       await updateDoc(conversationRef, {
         unreadCounts: newUnreadCounts
       });
     }
 
-    console.log('Message sent successfully');
     return messageRef.id;
   }, 'sendMessage');
 };
@@ -557,7 +552,6 @@ export const subscribeToMessages = (
   callback: (messages: Message[]) => void,
   limitCount: number = 50
 ) => {
-  console.log('Setting up message subscription for conversation:', conversationId);
 
   const messagesRef = collection(db, 'conversations', conversationId, 'messages');
   const q = query(
@@ -568,12 +562,10 @@ export const subscribeToMessages = (
 
   return onSnapshot(q, async (snapshot) => {
     try {
-      console.log('Messages snapshot received:', snapshot.docs.length, 'messages');
 
       const messages = await Promise.all(
         snapshot.docs.map(async (messageDoc) => {
           const messageData = messageDoc.data();
-          console.log('Processing message:', messageDoc.id, messageData);
 
           // Get sender details with retry
           const senderDoc = await withRetry(() => getDoc(doc(db, 'users', messageData.senderId)));
@@ -588,7 +580,6 @@ export const subscribeToMessages = (
       );
 
       const chronologicalMessages = messages.reverse();
-      console.log('Sending', chronologicalMessages.length, 'messages to callback');
       callback(chronologicalMessages);
     } catch (error) {
       console.error('Error in messages subscription:', error);
