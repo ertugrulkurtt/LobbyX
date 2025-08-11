@@ -624,6 +624,19 @@ export default function ChatReal() {
           </div>
         )}
       </div>
+
+      {/* User Profile Modal */}
+      <UserProfileModal
+        user={selectedUserProfile}
+        isOpen={isProfileModalOpen}
+        onClose={handleCloseProfileModal}
+        currentUserId={user?.uid || ''}
+        onSendMessage={handleSendMessageFromProfile}
+        isFriend={selectedUserProfile ? conversations.some(c =>
+          c.type === 'direct' &&
+          c.participantDetails.some(p => p.uid === selectedUserProfile.uid)
+        ) : false}
+      />
     </div>
   );
 }
