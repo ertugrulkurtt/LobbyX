@@ -95,6 +95,10 @@ function AppRouter() {
 
   // Initialize services when app starts
   useEffect(() => {
+    // Initialize performance monitoring first
+    initializePerformanceMonitoring();
+
+    // Initialize core services
     initFileCleanupService();
     initializeConnectionMonitoring();
     initializeErrorHandler();
