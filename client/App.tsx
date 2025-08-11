@@ -18,6 +18,7 @@ import { initFileCleanupService } from "./lib/fileCleanupService";
 import { initializeConnectionMonitoring } from "./lib/firebaseConnectionMonitor";
 import { initializeGlobalErrorHandler } from "./lib/globalErrorHandler";
 import { initializeGlobalFirebaseErrorHandling } from "./lib/globalFirebaseErrorHandler";
+import { initializeCriticalErrorRecovery } from "./lib/criticalErrorRecovery";
 import "./lib/firebaseDebugUtils"; // Initialize debug utilities
 
 
