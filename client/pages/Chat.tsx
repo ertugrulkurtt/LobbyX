@@ -181,6 +181,7 @@ export default function Chat() {
       id: '2',
       senderId: user?.uid || '',
       senderName: user?.displayName || user?.username || 'Sen',
+      senderAvatar: user?.photoURL,
       content: 'Evet, akşam müsaitim. Hangi saatte?',
       timestamp: '19:47',
       type: 'text',
