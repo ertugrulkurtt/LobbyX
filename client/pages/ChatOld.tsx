@@ -494,8 +494,6 @@ export default function Chat() {
                       className={`rounded-2xl px-4 py-2 ${
                         message.senderId === user?.uid
                           ? 'bg-neon-purple text-white ml-4'
-                          : message.isSpecial
-                          ? 'bg-gradient-to-br from-neon-cyan/20 to-neon-blue/20 border border-neon-cyan/30 text-gaming-text'
                           : 'bg-gaming-surface text-gaming-text mr-4'
                       }`}
                     >
