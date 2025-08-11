@@ -33,6 +33,7 @@ import {
 export default function ChatReal() {
   const { user } = useAuth();
   const { incrementMessages } = useUserStats();
+  const location = useLocation();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [messageText, setMessageText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
