@@ -434,6 +434,11 @@ class CallService {
       return;
     }
 
+    if (!callId) {
+      console.error('No callId provided to endCall');
+      return;
+    }
+
     try {
       const endTime = new Date().toISOString();
       const duration = Math.floor((new Date(endTime).getTime() - new Date(this.currentCall.startedAt).getTime()) / 1000);
