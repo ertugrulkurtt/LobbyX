@@ -427,20 +427,29 @@ class CallService {
 
     try {
       // Update call status in realtime database
-      await set(ref(rtdb, `calls/status/${callData.callerId}`), {
-        callId,
-        status: 'answered',
-        answeredAt: new Date().toISOString()
-      });
+      await withFirebaseErrorHandling(
+        () => set(ref(rtdb, `calls/status/${callData.callerId}`), {
+          callId,
+          status: 'answered',
+          answeredAt: new Date().toISOString()
+        }),
+        { operation: 'answer_call_caller_status', component: 'callService' }
+      );
 
-      await set(ref(rtdb, `calls/status/${callData.receiverId}`), {
-        callId,
-        status: 'answered',
-        answeredAt: new Date().toISOString()
-      });
+      await withFirebaseErrorHandling(
+        () => set(ref(rtdb, `calls/status/${callData.receiverId}`), {
+          callId,
+          status: 'answered',
+          answeredAt: new Date().toISOString()
+        }),
+        { operation: 'answer_call_receiver_status', component: 'callService' }
+      );
 
       // Remove from incoming calls
-      await remove(ref(rtdb, `calls/incoming/${callData.receiverId}`));
+      await withFirebaseErrorHandling(
+        () => remove(ref(rtdb, `calls/incoming/${callData.receiverId}`)),
+        { operation: 'remove_incoming_call', component: 'callService' }
+      );
 
       // Update current call status safely
       if (this.currentCall && this.currentCall.id === callId) {
@@ -518,7 +527,10 @@ class CallService {
       // Update call status for caller if available
       if (callData.callerId) {
         try {
-          await set(ref(rtdb, `calls/status/${callData.callerId}`), statusUpdate);
+          await withFirebaseErrorHandling(
+            () => set(ref(rtdb, `calls/status/${callData.callerId}`), statusUpdate),
+            { operation: 'end_call_caller_status', component: 'callService' }
+          );
           console.log(`📞 Status updated for caller: ${callData.callerId}`);
         } catch (error) {
           console.warn('Error updating caller status:', error);
@@ -528,27 +540,34 @@ class CallService {
       // Update call status for receiver if available
       if (callData.receiverId) {
         try {
-          await set(ref(rtdb, `calls/status/${callData.receiverId}`), statusUpdate);
+          await withFirebaseErrorHandling(
+            () => set(ref(rtdb, `calls/status/${callData.receiverId}`), statusUpdate),
+            { operation: 'end_call_receiver_status', component: 'callService' }
+          );
           console.log(`📞 Status updated for receiver: ${callData.receiverId}`);
         } catch (error) {
           console.warn('Error updating receiver status:', error);
         }
       }
 
-      // Clean up realtime database
+      // Clean up realtime database with error handling
       const cleanupPromises = [];
 
       if (callData.receiverId) {
         cleanupPromises.push(
-          remove(ref(rtdb, `calls/incoming/${callData.receiverId}`))
-            .catch(error => console.warn('Error removing incoming call:', error))
+          withFirebaseErrorHandling(
+            () => remove(ref(rtdb, `calls/incoming/${callData.receiverId}`)),
+            { operation: 'cleanup_incoming_call', component: 'callService' }
+          ).catch(error => console.warn('Error removing incoming call:', error))
         );
       }
 
       if (callData.callerId) {
         cleanupPromises.push(
-          remove(ref(rtdb, `calls/outgoing/${callData.callerId}`))
-            .catch(error => console.warn('Error removing outgoing call:', error))
+          withFirebaseErrorHandling(
+            () => remove(ref(rtdb, `calls/outgoing/${callData.callerId}`)),
+            { operation: 'cleanup_outgoing_call', component: 'callService' }
+          ).catch(error => console.warn('Error removing outgoing call:', error))
         );
       }
 
