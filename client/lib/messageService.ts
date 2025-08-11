@@ -13,7 +13,7 @@ import {
   deleteDoc,
   serverTimestamp
 } from 'firebase/firestore';
-import { db, withExponentialBackoff } from './firebase';
+import { db, auth, withExponentialBackoff } from './firebase';
 import { wrapOperation, reportError } from './unifiedErrorHandler';
 import { RealUser, areFriends } from './userService';
 import { createMessageNotification } from './notificationService';
