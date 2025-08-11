@@ -495,6 +495,8 @@ export const subscribeToMessages = (
   callback: (messages: Message[]) => void,
   limitCount: number = 50
 ) => {
+  console.log('Setting up message subscription for conversation:', conversationId);
+
   const messagesRef = collection(db, 'conversations', conversationId, 'messages');
   const q = query(
     messagesRef,
@@ -504,12 +506,15 @@ export const subscribeToMessages = (
 
   return onSnapshot(q, async (snapshot) => {
     try {
+      console.log('Messages snapshot received:', snapshot.docs.length, 'messages');
+
       const messages = await Promise.all(
         snapshot.docs.map(async (messageDoc) => {
           const messageData = messageDoc.data();
+          console.log('Processing message:', messageDoc.id, messageData);
 
-          // Get sender details
-          const senderDoc = await getDoc(doc(db, 'users', messageData.senderId));
+          // Get sender details with retry
+          const senderDoc = await withRetry(() => getDoc(doc(db, 'users', messageData.senderId)));
           const sender = { uid: senderDoc.id, ...senderDoc.data() } as RealUser;
 
           return {
@@ -520,7 +525,9 @@ export const subscribeToMessages = (
         })
       );
 
-      callback(messages.reverse()); // Return in chronological order
+      const chronologicalMessages = messages.reverse();
+      console.log('Sending', chronologicalMessages.length, 'messages to callback');
+      callback(chronologicalMessages);
     } catch (error) {
       console.error('Error in messages subscription:', error);
       callback([]);
@@ -529,6 +536,8 @@ export const subscribeToMessages = (
     console.error('Messages subscription error:', error);
     if (error.code === 'permission-denied') {
       console.error('Permission denied: Please update Firestore rules for conversations/messages');
+    } else if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
+      console.warn('Network error in messages subscription - will retry');
     }
     callback([]);
   });
