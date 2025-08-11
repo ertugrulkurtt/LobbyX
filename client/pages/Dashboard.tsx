@@ -379,15 +379,6 @@ export default function Dashboard() {
         <section className="card-glass">
           <h2 className="text-xl font-bold text-gaming-text mb-4">🧪 Geliştirici Araçları</h2>
           <div className="space-y-3">
-            <p className="text-gaming-muted text-sm">
-              Test bildirimleri oluşturmak için aşağıdaki butonu kullanın:
-            </p>
-            <button
-              onClick={handleCreateTestNotifications}
-              className="px-4 py-2 bg-neon-purple/20 text-neon-purple rounded-lg hover:bg-neon-purple/30 transition-colors text-sm"
-            >
-              Test Bildirimleri Oluştur
-            </button>
             <button
               onClick={handleForceFileCleanup}
               className="px-4 py-2 bg-neon-orange/20 text-neon-orange rounded-lg hover:bg-neon-orange/30 transition-colors text-sm"
