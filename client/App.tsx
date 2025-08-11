@@ -6,14 +6,21 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
 
 // Contexts
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 
+// Services
+import { initFileCleanupService } from "./lib/fileCleanupService";
+import { initializeConnectionMonitoring } from "./lib/firebaseConnectionMonitor";
+import { initializeGlobalErrorHandler } from "./lib/globalErrorHandler";
+
 // Layout
 import { Layout } from "./components/Layout";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -80,7 +87,14 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 // Main App Router
 function AppRouter() {
   const { isAuthenticated, isLoading } = useAuth();
-  
+
+  // Initialize services when app starts
+  useEffect(() => {
+    initFileCleanupService();
+    initializeConnectionMonitoring();
+    initializeGlobalErrorHandler();
+  }, []);
+
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -165,17 +179,19 @@ function AppRouter() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <NotificationProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AppRouter />
-            </BrowserRouter>
-          </NotificationProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <ErrorBoundary>
+        <ThemeProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <AppRouter />
+              </BrowserRouter>
+            </NotificationProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </ErrorBoundary>
     </TooltipProvider>
   </QueryClientProvider>
 );

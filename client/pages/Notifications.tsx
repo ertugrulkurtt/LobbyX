@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Bell,
   Check,
@@ -12,138 +12,80 @@ import {
   CheckCircle,
   X,
   User,
-  Clock
+  Clock,
+  Heart,
+  UserPlus
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-
-interface Notification {
-  id: string;
-  type: 'message' | 'friend_request' | 'group_invite' | 'system' | 'achievement';
-  title: string;
-  content: string;
-  timestamp: string;
-  isRead: boolean;
-  actionUrl?: string;
-  senderName?: string;
-  isSpecial?: boolean;
-}
+import { useNotifications } from '../contexts/NotificationContext';
+import { deleteNotification } from '../lib/notificationService';
+import { getFriendRequests, acceptFriendRequest, rejectFriendRequest } from '../lib/userService';
 
 export default function Notifications() {
   const { user } = useAuth();
+  const { notifications, counts, loading, markAsRead, markAllAsRead } = useNotifications();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
-  const [notificationSettings, setNotificationSettings] = useState({
-    messages: true,
-    friendRequests: true,
-    groupInvites: false,
-    systemUpdates: true
-  });
 
-  // Load notification settings
-  React.useEffect(() => {
-    const savedSettings = localStorage.getItem('lobbyx-settings');
-    if (savedSettings) {
-      try {
-        const parsedSettings = JSON.parse(savedSettings);
-        setNotificationSettings(parsedSettings.notifications || notificationSettings);
-      } catch (error) {
-        console.error('Failed to load notification settings:', error);
-      }
-    }
-  }, []);
-  
-  // Mock notifications data
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      type: 'system',
-      title: 'LobbyX Resmi Sunucu',
-      content: 'LobbyX platformuna hoş geldiniz! Sunucumuza katıldığınız için teşekkürler.',
-      timestamp: '5 dk önce',
-      isRead: false,
-      senderName: 'LobbyXAdmin',
-      isSpecial: true
-    },
-    {
-      id: '2',
-      type: 'friend_request',
-      title: 'Yeni arkadaşlık isteği',
-      content: 'ProGamer123 size arkadaşlık isteği gönderdi.',
-      timestamp: '15 dk önce',
-      isRead: false,
-      senderName: 'ProGamer123'
-    },
-    {
-      id: '3',
-      type: 'message',
-      title: 'Yeni mesaj',
-      content: 'GameMaster: Bu akşam CS2 turnuvası var, katılmak ister misin?',
-      timestamp: '1 saat önce',
-      isRead: true,
-      senderName: 'GameMaster'
-    },
-    {
-      id: '4',
-      type: 'group_invite',
-      title: 'Grup davet',
-      content: 'Valorant Takımı grubuna davet edildiniz.',
-      timestamp: '2 saat önce',
-      isRead: false,
-      senderName: 'SpeedRunner'
-    },
-    {
-      id: '5',
-      type: 'achievement',
-      title: 'Yeni başarım',
-      content: 'İlk 50 mesajınızı tamamladınız! "Sohbet Ustası" başarımını kazandınız.',
-      timestamp: '1 gün önce',
-      isRead: true
-    },
-    {
-      id: '6',
-      type: 'system',
-      title: 'Sistem güncellemesi',
-      content: 'LobbyX v2.1 güncellemesi yayınlandı. Yeni özellikler ve iyileştirmeler mevcut.',
-      timestamp: '2 gün önce',
-      isRead: true,
-      isSpecial: true
-    }
-  ]);
-
-  const getNotificationIcon = (type: string, isSpecial?: boolean) => {
-    const iconClass = isSpecial ? 'text-neon-cyan' : 'text-gaming-muted';
-    
+  const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'message':
-        return <MessageSquare className={`w-5 h-5 ${iconClass}`} />;
+        return <MessageSquare className="w-5 h-5 text-neon-purple" />;
       case 'friend_request':
-        return <Users className={`w-5 h-5 ${iconClass}`} />;
+        return <UserPlus className="w-5 h-5 text-neon-green" />;
+      case 'friend_accepted':
+        return <Heart className="w-5 h-5 text-neon-pink" />;
       case 'group_invite':
-        return <Users className={`w-5 h-5 ${iconClass}`} />;
-      case 'system':
-        return <Shield className={`w-5 h-5 ${iconClass}`} />;
-      case 'achievement':
-        return <Trophy className={`w-5 h-5 ${iconClass}`} />;
+        return <Users className="w-5 h-5 text-neon-orange" />;
+      case 'server_invite':
+        return <Shield className="w-5 h-5 text-neon-cyan" />;
+      case 'mention':
+        return <MessageSquare className="w-5 h-5 text-neon-blue" />;
       default:
-        return <Bell className={`w-5 h-5 ${iconClass}`} />;
+        return <Bell className="w-5 h-5 text-gaming-muted" />;
     }
   };
 
-  const getNotificationColor = (type: string, isSpecial?: boolean) => {
-    if (isSpecial) return 'bg-neon-cyan/10 border-neon-cyan/30';
-    
+  const getNotificationColor = (type: string) => {
     switch (type) {
       case 'message':
         return 'bg-neon-purple/10';
       case 'friend_request':
         return 'bg-neon-green/10';
+      case 'friend_accepted':
+        return 'bg-neon-pink/10';
       case 'group_invite':
         return 'bg-neon-orange/10';
-      case 'system':
+      case 'server_invite':
         return 'bg-neon-cyan/10';
-      case 'achievement':
-        return 'bg-neon-pink/10';
+      case 'mention':
+        return 'bg-neon-blue/10';
       default:
         return 'bg-gaming-surface/10';
+    }
+  };
+
+  const formatTime = (isoDate: string): string => {
+    try {
+      const date = new Date(isoDate);
+      const now = new Date();
+      const diffMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+
+      if (diffMinutes < 1) return 'Şimdi';
+      if (diffMinutes < 60) return `${diffMinutes} dk önce`;
+      
+      const diffHours = Math.floor(diffMinutes / 60);
+      if (diffHours < 24) return `${diffHours} saat önce`;
+      
+      const diffDays = Math.floor(diffHours / 24);
+      if (diffDays < 7) return `${diffDays} gün önce`;
+      
+      return date.toLocaleDateString('tr-TR', { 
+        day: 'numeric', 
+        month: 'short' 
+      });
+    } catch {
+      return '';
     }
   };
 
@@ -153,25 +95,115 @@ export default function Notifications() {
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, isRead: true } : n)
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await markAsRead(id);
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllAsRead();
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
+  };
+
+  const handleDeleteNotification = async (id: string) => {
+    try {
+      await deleteNotification(id);
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
+
+  const handleAcceptFriendRequest = async (notification: any) => {
+    if (!notification.relatedUserId) return;
+
+    try {
+      // Get the friend request ID from the database
+      const friendRequests = await getFriendRequests(user?.uid || '');
+      const friendRequest = friendRequests.incoming.find(
+        req => req.fromUserId === notification.relatedUserId && req.status === 'pending'
+      );
+
+      if (friendRequest) {
+        await acceptFriendRequest(friendRequest.id);
+        // Mark notification as read
+        await handleMarkAsRead(notification.id);
+      }
+    } catch (error) {
+      console.error('Error accepting friend request:', error);
+      alert('Arkadaşlık isteği kabul edilemedi. Lütfen tekrar deneyin.');
+    }
+  };
+
+  const handleRejectFriendRequest = async (notification: any) => {
+    if (!notification.relatedUserId) return;
+
+    try {
+      // Get the friend request ID from the database
+      const friendRequests = await getFriendRequests(user?.uid || '');
+      const friendRequest = friendRequests.incoming.find(
+        req => req.fromUserId === notification.relatedUserId && req.status === 'pending'
+      );
+
+      if (friendRequest) {
+        await rejectFriendRequest(friendRequest.id);
+        // Mark notification as read
+        await handleMarkAsRead(notification.id);
+      }
+    } catch (error) {
+      console.error('Error rejecting friend request:', error);
+      alert('Arkadaşlık isteği reddedilemedi. Lütfen tekrar deneyin.');
+    }
+  };
+
+  const handleNotificationClick = (notification: any) => {
+    // Mark as read when clicked
+    if (!notification.isRead) {
+      handleMarkAsRead(notification.id);
+    }
+
+    // Navigate to the appropriate page
+    if (notification.actionUrl) {
+      navigate(notification.actionUrl);
+    } else {
+      // Default navigation based on type
+      switch (notification.type) {
+        case 'message':
+          if (notification.conversationId) {
+            navigate(`/chat?conversation=${notification.conversationId}`);
+          } else {
+            navigate('/chat');
+          }
+          break;
+        case 'friend_request':
+        case 'friend_accepted':
+          navigate('/friends');
+          break;
+        case 'group_invite':
+          navigate('/groups');
+          break;
+        case 'server_invite':
+          navigate('/servers');
+          break;
+        default:
+          break;
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-purple"></div>
+        <span className="ml-2 text-gaming-text">Bildirimler yükleniyor...</span>
+      </div>
     );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(n => ({ ...n, isRead: true }))
-    );
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
-
-  const clearAllNotifications = () => {
-    setNotifications([]);
-  };
+  }
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -190,21 +222,13 @@ export default function Notifications() {
         <div className="flex items-center space-x-3">
           {unreadCount > 0 && (
             <button
-              onClick={markAllAsRead}
+              onClick={handleMarkAllAsRead}
               className="px-4 py-2 bg-neon-green/20 text-neon-green rounded-lg hover:bg-neon-green/30 transition-colors flex items-center space-x-2"
             >
               <CheckCircle className="w-4 h-4" />
               <span>Tümünü Okundu İşaretle</span>
             </button>
           )}
-          
-          <button
-            onClick={clearAllNotifications}
-            className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors flex items-center space-x-2"
-          >
-            <Trash2 className="w-4 h-4" />
-            <span>Tümünü Temizle</span>
-          </button>
         </div>
       </div>
 
@@ -238,60 +262,64 @@ export default function Notifications() {
           filteredNotifications.map((notification) => (
             <div
               key={notification.id}
-              className={`group relative card-glass transition-all duration-300 hover:shadow-glow ${
+              className={`group relative card-glass transition-all duration-300 hover:shadow-glow cursor-pointer ${
                 !notification.isRead ? 'border-l-4 border-l-neon-purple' : ''
-              } ${getNotificationColor(notification.type, notification.isSpecial)}`}
+              } ${getNotificationColor(notification.type)}`}
+              onClick={() => handleNotificationClick(notification)}
             >
               <div className="flex items-start space-x-4">
                 {/* Icon */}
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  notification.isSpecial 
-                    ? 'bg-neon-cyan/20' 
-                    : 'bg-gaming-surface'
-                }`}>
-                  {getNotificationIcon(notification.type, notification.isSpecial)}
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-gaming-surface`}>
+                  {getNotificationIcon(notification.type)}
                 </div>
+
+                {/* Avatar if available */}
+                {notification.relatedUserAvatar && (
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-neon-purple to-neon-cyan">
+                    <img
+                      src={notification.relatedUserAvatar}
+                      alt={notification.relatedUserName || 'User'}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2">
-                    <h3 className={`font-medium ${
-                      notification.isSpecial ? 'text-neon-cyan' : 'text-gaming-text'
-                    }`}>
+                    <h3 className="font-medium text-gaming-text">
                       {notification.title}
                     </h3>
-                    {notification.isSpecial && (
-                      <div className="flex items-center justify-center w-4 h-4 bg-neon-cyan rounded-full">
-                        <Check className="w-3 h-3 text-white" />
-                      </div>
-                    )}
                     {!notification.isRead && (
                       <div className="w-2 h-2 bg-neon-purple rounded-full"></div>
                     )}
                   </div>
                   
-                  <p className="text-gaming-muted mt-1">{notification.content}</p>
+                  <p className="text-gaming-muted mt-1">{notification.message}</p>
                   
                   <div className="flex items-center space-x-4 mt-2">
                     <span className="text-xs text-gaming-muted flex items-center space-x-1">
                       <Clock className="w-3 h-3" />
-                      <span>{notification.timestamp}</span>
+                      <span>{formatTime(notification.createdAt)}</span>
                     </span>
                     
-                    {notification.senderName && (
+                    {notification.relatedUserName && (
                       <span className="text-xs text-gaming-muted flex items-center space-x-1">
                         <User className="w-3 h-3" />
-                        <span>{notification.senderName}</span>
+                        <span>{notification.relatedUserName}</span>
                       </span>
                     )}
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div 
+                  className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {!notification.isRead && (
                     <button
-                      onClick={() => markAsRead(notification.id)}
+                      onClick={() => handleMarkAsRead(notification.id)}
                       className="p-2 rounded-lg hover:bg-neon-green/20 transition-colors"
                       title="Okundu İşaretle"
                     >
@@ -300,7 +328,7 @@ export default function Notifications() {
                   )}
                   
                   <button
-                    onClick={() => deleteNotification(notification.id)}
+                    onClick={() => handleDeleteNotification(notification.id)}
                     className="p-2 rounded-lg hover:bg-red-500/20 transition-colors"
                     title="Bildirimi Sil"
                   >
@@ -309,24 +337,19 @@ export default function Notifications() {
                 </div>
               </div>
 
-              {/* Action buttons for specific notification types */}
+              {/* Action buttons for friend requests */}
               {notification.type === 'friend_request' && !notification.isRead && (
-                <div className="mt-4 flex space-x-3 pt-4 border-t border-gaming-border">
-                  <button className="px-4 py-2 bg-neon-green text-white rounded-lg hover:bg-neon-green/80 transition-colors text-sm">
+                <div className="mt-4 flex space-x-3 pt-4 border-t border-gaming-border" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => handleAcceptFriendRequest(notification)}
+                    className="px-4 py-2 bg-neon-green text-white rounded-lg hover:bg-neon-green/80 transition-colors text-sm"
+                  >
                     Kabul Et
                   </button>
-                  <button className="px-4 py-2 bg-gaming-surface text-gaming-text rounded-lg hover:bg-gaming-surface/80 transition-colors text-sm">
-                    Reddet
-                  </button>
-                </div>
-              )}
-
-              {notification.type === 'group_invite' && !notification.isRead && (
-                <div className="mt-4 flex space-x-3 pt-4 border-t border-gaming-border">
-                  <button className="px-4 py-2 bg-neon-cyan text-white rounded-lg hover:bg-neon-cyan/80 transition-colors text-sm">
-                    Gruba Katıl
-                  </button>
-                  <button className="px-4 py-2 bg-gaming-surface text-gaming-text rounded-lg hover:bg-gaming-surface/80 transition-colors text-sm">
+                  <button
+                    onClick={() => handleRejectFriendRequest(notification)}
+                    className="px-4 py-2 bg-gaming-surface text-gaming-text rounded-lg hover:bg-gaming-surface/80 transition-colors text-sm"
+                  >
                     Reddet
                   </button>
                 </div>
@@ -360,15 +383,27 @@ export default function Notifications() {
           <p>Bildirim tercihlerinizi ayarlamak için Ayarlar sayfasını ziyaret edin.</p>
           <div className="mt-4 space-y-2">
             <div className="flex items-center justify-between">
+              <span>Toplam bildirim: </span>
+              <span className="text-neon-cyan font-medium">
+                {counts.total}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
               <span>Mesaj bildirimleri: </span>
-              <span className={notificationSettings.messages ? 'text-neon-green' : 'text-red-400'}>
-                {notificationSettings.messages ? 'Açık' : 'Kapalı'}
+              <span className="text-neon-purple font-medium">
+                {counts.messages}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span>Arkadaş istekleri: </span>
-              <span className={notificationSettings.friendRequests ? 'text-neon-green' : 'text-red-400'}>
-                {notificationSettings.friendRequests ? 'Açık' : 'Kapalı'}
+              <span className="text-neon-green font-medium">
+                {counts.friendRequests}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Diğer bildirimler: </span>
+              <span className="text-neon-orange font-medium">
+                {counts.others}
               </span>
             </div>
           </div>

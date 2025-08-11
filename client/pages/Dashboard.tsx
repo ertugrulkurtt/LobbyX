@@ -16,11 +16,37 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useUserStats } from '../hooks/useUserStats';
 import { getUserConversations } from '../lib/messageService';
+import { createTestNotifications } from '../lib/testNotifications';
+import { forceCleanup, getLastCleanupTime } from '../lib/fileCleanupService';
 import { useState, useEffect } from 'react';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { stats, loading: statsLoading, formatActiveTime } = useUserStats();
+
+  const handleCreateTestNotifications = async () => {
+    if (!user?.uid) return;
+
+    try {
+      await createTestNotifications(user.uid);
+      alert('Test bildirimleri oluşturuldu! Bildirimler sayfasını kontrol edin.');
+    } catch (error) {
+      console.error('Error creating test notifications:', error);
+      alert('Test bildirimleri oluşturulamadı.');
+    }
+  };
+
+  const handleForceFileCleanup = async () => {
+    try {
+      await forceCleanup();
+      alert('Dosya temizleme işlemi tamamlandı!');
+    } catch (error) {
+      console.error('Error during file cleanup:', error);
+      alert('Dosya temizleme işlemi başarısız oldu.');
+    }
+  };
+
+  const lastCleanupTime = getLastCleanupTime();
 
   // User statistics based on real data
   const userStats = stats ? [
@@ -359,6 +385,40 @@ export default function Dashboard() {
           </div>
         </div>
       </section>
+
+      {/* Developer Test Section - Only show in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <section className="card-glass">
+          <h2 className="text-xl font-bold text-gaming-text mb-4">🧪 Geliştirici Araçları</h2>
+          <div className="space-y-3">
+            <p className="text-gaming-muted text-sm">
+              Test bildirimleri oluşturmak için aşağıdaki butonu kullanın:
+            </p>
+            <button
+              onClick={handleCreateTestNotifications}
+              className="px-4 py-2 bg-neon-purple/20 text-neon-purple rounded-lg hover:bg-neon-purple/30 transition-colors text-sm"
+            >
+              Test Bildirimleri Oluştur
+            </button>
+            <button
+              onClick={handleForceFileCleanup}
+              className="px-4 py-2 bg-neon-orange/20 text-neon-orange rounded-lg hover:bg-neon-orange/30 transition-colors text-sm"
+            >
+              Dosya Temizleme Yap
+            </button>
+            {lastCleanupTime && (
+              <p className="text-xs text-gaming-muted">
+                Son temizlik: {lastCleanupTime.toLocaleDateString('tr-TR', {
+                  day: 'numeric',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

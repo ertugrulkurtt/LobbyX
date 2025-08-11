@@ -13,12 +13,14 @@ import {
   VolumeX,
   Settings,
   Check,
+  CheckCheck,
   User,
   Loader2
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserStats } from '../hooks/useUserStats';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import {
   getUserConversations,
   getOrCreateDirectConversation,
@@ -30,12 +32,22 @@ import {
   Conversation,
   Message
 } from '../lib/messageService';
+import { testFirebaseConnection } from '../lib/firebaseTest';
 import { areFriends, RealUser, sendFriendRequest, removeFriend } from '../lib/userService';
 import UserProfileModal from '../components/UserProfileModal';
+import { uploadFile, UploadProgress } from '../lib/fileService';
+import FileUploadModal from '../components/FileUploadModal';
+import FileUploadProgress from '../components/FileUploadProgress';
+import FileMessage from '../components/FileMessage';
+import EmojiPicker from '../components/EmojiPicker';
+import MessageSearch from '../components/MessageSearch';
+import VoiceCallModal from '../components/VoiceCallModal';
+import voiceChatService, { VoiceCallState } from '../lib/voiceChatService';
 
 export default function ChatReal() {
   const { user } = useAuth();
   const { incrementMessages } = useUserStats();
+  const { isOnline, wasOffline } = useNetworkStatus();
   const location = useLocation();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [messageText, setMessageText] = useState('');
@@ -52,7 +64,59 @@ export default function ChatReal() {
   const [selectedUserProfile, setSelectedUserProfile] = useState<RealUser | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
+  // File upload states
+  const [isFileModalOpen, setIsFileModalOpen] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState<Map<string, { file: File; progress: number; status: 'uploading' | 'completed' | 'error'; error?: string }>>(new Map());
+
+  // Emoji picker state
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
+
+  // Message search state
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Voice call state
+  const [voiceCallState, setVoiceCallState] = useState<VoiceCallState>({
+    isInCall: false,
+    isMuted: false,
+    isDeafened: false,
+    isConnecting: false
+  });
+  const [isVoiceCallModalOpen, setIsVoiceCallModalOpen] = useState(false);
+  const [isIncomingCall, setIsIncomingCall] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Initialize voice chat service
+  useEffect(() => {
+    voiceChatService.initialize({
+      onCallStarted: (userId) => {
+        setIsVoiceCallModalOpen(true);
+        setIsIncomingCall(false);
+      },
+      onCallEnded: () => {
+        setIsVoiceCallModalOpen(false);
+        setIsIncomingCall(false);
+        setVoiceCallState({
+          isInCall: false,
+          isMuted: false,
+          isDeafened: false,
+          isConnecting: false
+        });
+      },
+      onCallReceived: (from) => {
+        setVoiceCallState(prev => ({ ...prev, remoteUser: from }));
+        setIsIncomingCall(true);
+        setIsVoiceCallModalOpen(true);
+      },
+      onCallAccepted: () => {
+        setIsIncomingCall(false);
+        setVoiceCallState(prev => ({ ...prev, isInCall: true, isConnecting: false }));
+      },
+      onError: (error) => {
+        setVoiceCallState(prev => ({ ...prev, error, isConnecting: false }));
+      }
+    });
+  }, []);
 
   // Check for conversation ID in URL
   useEffect(() => {
@@ -70,7 +134,14 @@ export default function ChatReal() {
 
     setLoading(true);
 
-    // Subscribe to real-time conversations
+    // Test Firebase connection first
+    testFirebaseConnection().then(isConnected => {
+      if (!isConnected) {
+        console.error('Firebase connection failed - trying to continue anyway');
+      }
+    });
+
+    // Subscribe to real-time conversations with better error handling
     const unsubscribe = subscribeToConversations(user.uid, (realTimeConversations) => {
       setConversations(realTimeConversations);
       setLoading(false);
@@ -170,8 +241,19 @@ export default function ChatReal() {
         // This shouldn't happen anymore since we check friendship status in UI
         setCanSendMessage(false);
         setFriendshipStatus(error.message);
-      } else if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
-        alert('Bağlantı hatası. İnternet bağlantınızı kontrol edin ve tekrar deneyin.');
+      } else if (error.name === 'NetworkError' ||
+                 error.message.includes('Ağ bağlantısı sorunu')) {
+        alert('Ağ bağlantısı sorunu. İnternet bağlantınızı kontrol edin ve tekrar deneyin.');
+      } else if (error.message.includes('Failed to fetch') ||
+                 error.code === 'unavailable' ||
+                 error.message.includes('network-request-failed')) {
+        if (!isOnline) {
+          alert('İnternet bağlantısı yok. Lütfen bağlantınızı kontrol edin.');
+        } else {
+          alert('Bağlantı sorunu yaşanıyor. Lütfen tekrar deneyin.');
+        }
+      } else if (error.code === 'permission-denied') {
+        alert('Bu sohbete mesaj gönderme izniniz yok.');
       } else {
         alert('Mesaj gönderilemedi. Lütfen tekrar deneyin.');
       }
@@ -266,6 +348,196 @@ export default function ChatReal() {
     }
   };
 
+  // File upload handlers
+  const handleFileSelect = async (file: File) => {
+    if (!selectedChat || !user?.uid) return;
+
+    const fileId = `${Date.now()}_${file.name}`;
+
+    // Add to uploading files map
+    setUploadingFiles(prev => new Map(prev.set(fileId, {
+      file,
+      progress: 0,
+      status: 'uploading'
+    })));
+
+    try {
+      // Upload file to Firebase Storage
+      const fileMetadata = await uploadFile(
+        file,
+        selectedChat,
+        user.uid,
+        (progress: UploadProgress) => {
+          setUploadingFiles(prev => {
+            const newMap = new Map(prev);
+            const existing = newMap.get(fileId);
+            if (existing) {
+              newMap.set(fileId, {
+                ...existing,
+                progress: progress.progress
+              });
+            }
+            return newMap;
+          });
+        }
+      );
+
+      // Update upload status to completed
+      setUploadingFiles(prev => {
+        const newMap = new Map(prev);
+        const existing = newMap.get(fileId);
+        if (existing) {
+          newMap.set(fileId, {
+            ...existing,
+            status: 'completed'
+          });
+        }
+        return newMap;
+      });
+
+      // Send file message
+      await sendMessage(
+        selectedChat,
+        user.uid,
+        file.name,
+        'file',
+        fileMetadata.downloadUrl,
+        file.name,
+        file.size
+      );
+
+      // Remove from uploading files after successful send
+      setTimeout(() => {
+        setUploadingFiles(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(fileId);
+          return newMap;
+        });
+      }, 2000);
+
+    } catch (error: any) {
+      console.error('Error uploading file:', error);
+
+      // Update upload status to error
+      setUploadingFiles(prev => {
+        const newMap = new Map(prev);
+        const existing = newMap.get(fileId);
+        if (existing) {
+          newMap.set(fileId, {
+            ...existing,
+            status: 'error',
+            error: error.message || 'Dosya yüklenemedi'
+          });
+        }
+        return newMap;
+      });
+
+      // Remove error after a delay
+      setTimeout(() => {
+        setUploadingFiles(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(fileId);
+          return newMap;
+        });
+      }, 5000);
+    }
+  };
+
+  const handleCancelUpload = (fileId: string) => {
+    setUploadingFiles(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(fileId);
+      return newMap;
+    });
+  };
+
+  // Emoji handlers
+  const handleEmojiSelect = (emoji: string) => {
+    setMessageText(prev => prev + emoji);
+    setIsEmojiPickerOpen(false);
+  };
+
+  // Search handlers
+  const handleMessageSelect = (messageId: string) => {
+    const messageElement = document.getElementById(`message-${messageId}`);
+    if (messageElement) {
+      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Highlight the message briefly
+      messageElement.classList.add('animate-pulse', 'bg-neon-purple/20', 'rounded-lg');
+      setTimeout(() => {
+        messageElement.classList.remove('animate-pulse', 'bg-neon-purple/20', 'rounded-lg');
+      }, 2000);
+    }
+    setIsSearchOpen(false);
+  };
+
+  // Voice call handlers
+  const handleStartVoiceCall = async () => {
+    if (!selectedChatData || selectedChatData.type !== 'direct') return;
+
+    const otherParticipant = selectedChatData.participantDetails.find(p => p.uid !== user?.uid);
+    if (!otherParticipant) return;
+
+    try {
+      const hasPermission = await voiceChatService.getMicrophonePermission();
+      if (!hasPermission) {
+        alert('Sesli arama için mikrofon iznine ihtiyaç var.');
+        return;
+      }
+
+      setVoiceCallState(prev => ({ ...prev, isConnecting: true }));
+      await voiceChatService.startCall({
+        id: otherParticipant.uid,
+        name: otherParticipant.displayName || otherParticipant.username || 'Kullanıcı',
+        avatar: otherParticipant.photoURL
+      });
+    } catch (error: any) {
+      console.error('Error starting voice call:', error);
+      alert('Sesli arama başlatılamadı: ' + error.message);
+    }
+  };
+
+  const handleAnswerCall = async () => {
+    try {
+      await voiceChatService.answerCall();
+    } catch (error: any) {
+      console.error('Error answering call:', error);
+      alert('Arama cevaplanamadı: ' + error.message);
+    }
+  };
+
+  const handleRejectCall = () => {
+    voiceChatService.endCall();
+  };
+
+  const handleEndCall = () => {
+    voiceChatService.endCall();
+  };
+
+  const handleToggleMute = () => {
+    const isMuted = voiceChatService.toggleMute();
+    setVoiceCallState(prev => ({ ...prev, isMuted }));
+  };
+
+  const handleToggleDeafen = () => {
+    const isDeafened = voiceChatService.toggleDeafen();
+    setVoiceCallState(prev => ({ ...prev, isDeafened }));
+  };
+
+  // Demo: Simulate incoming call
+  const handleSimulateIncomingCall = () => {
+    if (!selectedChatData || selectedChatData.type !== 'direct') return;
+
+    const otherParticipant = selectedChatData.participantDetails.find(p => p.uid !== user?.uid);
+    if (!otherParticipant) return;
+
+    voiceChatService.simulateIncomingCall({
+      id: otherParticipant.uid,
+      name: otherParticipant.displayName || otherParticipant.username || 'Kullanıcı',
+      avatar: otherParticipant.photoURL
+    });
+  };
+
   // Get conversation details
   const selectedChatData = conversations.find(c => c.id === selectedChat);
 
@@ -316,13 +588,55 @@ export default function ChatReal() {
   const formatTime = (isoDate: string): string => {
     try {
       const date = new Date(isoDate);
-      return date.toLocaleTimeString('tr-TR', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      return date.toLocaleTimeString('tr-TR', {
+        hour: '2-digit',
+        minute: '2-digit'
       });
     } catch {
       return '';
     }
+  };
+
+  // Check if message is read by other participants
+  const isMessageRead = (message: Message): boolean => {
+    if (!message.readBy || message.readBy.length === 0) return false;
+
+    // For direct conversations, check if the other participant has read it
+    if (selectedChatData?.type === 'direct') {
+      const otherParticipant = selectedChatData.participantDetails.find(p => p.uid !== user?.uid);
+      return message.readBy.some(read => read.userId === otherParticipant?.uid);
+    }
+
+    // For group conversations, check if anyone else has read it
+    return message.readBy.some(read => read.userId !== user?.uid);
+  };
+
+  // Get read status tooltip text
+  const getReadStatusTooltip = (message: Message): string => {
+    if (!message.readBy || message.readBy.length === 0) return 'Gönderildi';
+
+    if (selectedChatData?.type === 'direct') {
+      const otherParticipant = selectedChatData.participantDetails.find(p => p.uid !== user?.uid);
+      const readInfo = message.readBy.find(read => read.userId === otherParticipant?.uid);
+
+      if (readInfo) {
+        const readTime = formatTime(readInfo.readAt);
+        return `Görüldü ${readTime}`;
+      }
+      return 'Gönderildi';
+    }
+
+    // For group conversations, show who read it
+    const readByOthers = message.readBy.filter(read => read.userId !== user?.uid);
+    if (readByOthers.length === 0) return 'Gönderildi';
+
+    if (readByOthers.length === 1) {
+      const reader = selectedChatData?.participantDetails.find(p => p.uid === readByOthers[0].userId);
+      const readerName = reader?.displayName || reader?.username || 'Kullanıcı';
+      return `${readerName} tarafından görüldü`;
+    }
+
+    return `${readByOthers.length} kişi tarafından görüldü`;
   };
 
   // Get unread count for conversation
@@ -330,17 +644,58 @@ export default function ChatReal() {
     return conversation.unreadCounts?.[user?.uid || ''] || 0;
   };
 
+  // Check if last message was sent by current user and is read
+  const isLastMessageRead = (conversation: Conversation): boolean => {
+    if (!conversation.lastMessage || conversation.lastMessage.senderId !== user?.uid) {
+      return false; // Not our message or no message
+    }
+
+    // For direct conversations, check if other participant has unread count of 0
+    if (conversation.type === 'direct') {
+      const otherParticipant = conversation.participantDetails.find(p => p.uid !== user?.uid);
+      if (otherParticipant) {
+        const otherUnreadCount = conversation.unreadCounts?.[otherParticipant.uid] || 0;
+        return otherUnreadCount === 0;
+      }
+    }
+
+    // For group conversations, check if anyone else has read it
+    const otherParticipants = conversation.participantDetails.filter(p => p.uid !== user?.uid);
+    return otherParticipants.some(p => (conversation.unreadCounts?.[p.uid] || 0) === 0);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
         <Loader2 className="w-8 h-8 animate-spin text-neon-purple" />
-        <span className="ml-2 text-gaming-text">Sohbetler yükleniyor...</span>
+        <span className="ml-2 text-gaming-text">
+          {!isOnline ? 'Bağlantı bekleniyor...' : 'Sohbetler yükleniyor...'}
+        </span>
       </div>
     );
   }
 
   return (
     <div className="flex h-[calc(100vh-theme(spacing.16))] bg-gaming-bg rounded-2xl overflow-hidden">
+      {/* Network Status Indicator */}
+      {!isOnline && (
+        <div className="fixed top-16 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <span className="text-sm">İnternet bağlantısı yok</span>
+          </div>
+        </div>
+      )}
+
+      {wasOffline && isOnline && (
+        <div className="fixed top-16 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in-up">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-white rounded-full"></div>
+            <span className="text-sm">Bağlantı yeniden kuruldu</span>
+          </div>
+        </div>
+      )}
+
       {/* Chat List */}
       <div className="w-80 bg-gaming-surface/30 backdrop-blur-xl border-r border-gaming-border flex flex-col">
         {/* Header */}
@@ -426,9 +781,21 @@ export default function ChatReal() {
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <p className="text-sm text-gaming-muted truncate">
-                          {chat.lastMessage?.content || 'Mesaj yok'}
-                        </p>
+                        <div className="flex items-center space-x-2 flex-1 min-w-0">
+                          <p className="text-sm text-gaming-muted truncate">
+                            {chat.lastMessage?.content || 'Mesaj yok'}
+                          </p>
+                          {/* Show read status for last message if sent by current user */}
+                          {chat.lastMessage && chat.lastMessage.senderId === user?.uid && (
+                            <div className="flex-shrink-0" title={isLastMessageRead(chat) ? 'Görüldü' : 'Gönderildi'}>
+                              {isLastMessageRead(chat) ? (
+                                <CheckCheck className="w-3 h-3 text-neon-cyan" />
+                              ) : (
+                                <Check className="w-3 h-3 text-gaming-muted" />
+                              )}
+                            </div>
+                          )}
+                        </div>
                         {unreadCount > 0 && (
                           <span className="bg-neon-red text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
                             {unreadCount}
@@ -451,9 +818,17 @@ export default function ChatReal() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col relative">
         {selectedChatData ? (
           <>
+            {/* Message Search */}
+            <MessageSearch
+              isOpen={isSearchOpen}
+              onClose={() => setIsSearchOpen(false)}
+              messages={messages}
+              onMessageSelect={handleMessageSelect}
+            />
+
             {/* Chat Header */}
             <div className="p-4 bg-gaming-surface/30 backdrop-blur-xl border-b border-gaming-border">
               <div className="flex items-center justify-between">
@@ -510,17 +885,27 @@ export default function ChatReal() {
 
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={handleManualRefresh}
-                    className="p-2 rounded-lg hover:bg-gaming-surface transition-colors bg-red-500/20"
-                    title="Debug: Refresh Messages"
+                    onClick={() => setIsSearchOpen(!isSearchOpen)}
+                    className="p-2 rounded-lg hover:bg-gaming-surface transition-colors"
+                    title="Mesajlarda Ara"
                   >
-                    <Search className="w-5 h-5 text-red-400" />
+                    <Search className="w-5 h-5 text-gaming-muted hover:text-neon-purple" />
                   </button>
-                  <button className="p-2 rounded-lg hover:bg-gaming-surface transition-colors">
-                    <Phone className="w-5 h-5 text-gaming-muted" />
+                  <button
+                    onClick={handleStartVoiceCall}
+                    className="p-2 rounded-lg hover:bg-gaming-surface transition-colors"
+                    title="Sesli Arama"
+                    disabled={selectedChatData?.type !== 'direct'}
+                  >
+                    <Phone className="w-5 h-5 text-gaming-muted hover:text-neon-green" />
                   </button>
-                  <button className="p-2 rounded-lg hover:bg-gaming-surface transition-colors">
-                    <Video className="w-5 h-5 text-gaming-muted" />
+                  <button
+                    onClick={handleSimulateIncomingCall}
+                    className="p-2 rounded-lg hover:bg-gaming-surface transition-colors"
+                    title="Demo: Gelen Arama Simülasyonu"
+                    disabled={selectedChatData?.type !== 'direct'}
+                  >
+                    <Video className="w-5 h-5 text-gaming-muted hover:text-neon-blue" />
                   </button>
                   <button className="p-2 rounded-lg hover:bg-gaming-surface transition-colors">
                     <MoreVertical className="w-5 h-5 text-gaming-muted" />
@@ -535,10 +920,27 @@ export default function ChatReal() {
                 <div className="text-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin text-neon-purple mx-auto" />
                 </div>
-              ) : messages.length > 0 ? (
+              ) : (
+                <>
+                  {/* File Upload Progress */}
+                  {Array.from(uploadingFiles.entries()).map(([fileId, uploadInfo]) => (
+                    <div key={fileId} className="flex justify-end">
+                      <FileUploadProgress
+                        file={uploadInfo.file}
+                        progress={uploadInfo.progress}
+                        status={uploadInfo.status}
+                        error={uploadInfo.error}
+                        onCancel={() => handleCancelUpload(fileId)}
+                      />
+                    </div>
+                  ))}
+
+                  {/* Messages */}
+                  {messages.length > 0 ? (
                 messages.map((message) => (
                   <div
                     key={message.id}
+                    id={`message-${message.id}`}
                     className={`flex items-start space-x-3 ${message.senderId === user?.uid ? 'justify-end' : 'justify-start'}`}
                   >
                     {/* Avatar for received messages */}
@@ -575,31 +977,85 @@ export default function ChatReal() {
                         </div>
                       )}
                       
-                      <div
-                        className={`rounded-2xl px-4 py-2 ${
-                          message.senderId === user?.uid
-                            ? 'bg-neon-purple text-white ml-4'
-                            : 'bg-gaming-surface text-gaming-text mr-4'
-                        }`}
-                      >
-                        <p className="text-sm">{message.content}</p>
-                        <p className={`text-xs mt-1 ${
-                          message.senderId === user?.uid 
-                            ? 'text-white/70' 
-                            : 'text-gaming-muted'
-                        }`}>
-                          {formatTime(message.timestamp)}
-                        </p>
-                      </div>
+                      {/* Render different message types */}
+                      {message.type === 'file' && message.fileUrl && message.fileName && message.fileSize ? (
+                        <div className={message.senderId === user?.uid ? 'ml-4' : 'mr-4'}>
+                          <FileMessage
+                            fileName={message.fileName}
+                            fileSize={message.fileSize}
+                            fileType={message.fileUrl.includes('.') ?
+                              `file/${message.fileName.split('.').pop()}` : 'application/octet-stream'
+                            }
+                            downloadUrl={message.fileUrl}
+                            className="max-w-xs"
+                          />
+                          <div className={`flex items-center justify-between mt-1 px-1 ${
+                            message.senderId === user?.uid
+                              ? 'text-white/70'
+                              : 'text-gaming-muted'
+                          }`}>
+                            <p className="text-xs">
+                              {formatTime(message.timestamp)}
+                            </p>
+                            {/* Read receipt for sent messages */}
+                            {message.senderId === user?.uid && (
+                              <div
+                                className="flex items-center ml-2"
+                                title={getReadStatusTooltip(message)}
+                              >
+                                {isMessageRead(message) ? (
+                                  <CheckCheck className="w-3 h-3 text-neon-cyan" />
+                                ) : (
+                                  <Check className="w-3 h-3 text-white/50" />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          className={`rounded-2xl px-4 py-2 ${
+                            message.senderId === user?.uid
+                              ? 'bg-neon-purple text-white ml-4'
+                              : 'bg-gaming-surface text-gaming-text mr-4'
+                          }`}
+                        >
+                          <p className="text-sm">{message.content}</p>
+                          <div className={`flex items-center justify-between mt-1 ${
+                            message.senderId === user?.uid
+                              ? 'text-white/70'
+                              : 'text-gaming-muted'
+                          }`}>
+                            <p className="text-xs">
+                              {formatTime(message.timestamp)}
+                            </p>
+                            {/* Read receipt for sent messages */}
+                            {message.senderId === user?.uid && (
+                              <div
+                                className="flex items-center ml-2"
+                                title={getReadStatusTooltip(message)}
+                              >
+                                {isMessageRead(message) ? (
+                                  <CheckCheck className="w-3 h-3 text-neon-cyan" />
+                                ) : (
+                                  <Check className="w-3 h-3 text-white/50" />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))
-              ) : (
-                <div className="text-center py-8 text-gaming-muted">
-                  <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Henüz mesaj yok</p>
-                  <p className="text-sm">Sohbeti başlatmak için bir mesaj gönderin</p>
-                </div>
+                  ) : (
+                    <div className="text-center py-8 text-gaming-muted">
+                      <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>Henüz mesaj yok</p>
+                      <p className="text-sm">Sohbeti başlatmak için bir mesaj gönderin</p>
+                    </div>
+                  )}
+                </>
               )}
               <div ref={messagesEndRef} />
             </div>
@@ -618,10 +1074,12 @@ export default function ChatReal() {
 
               <div className="flex items-center space-x-3">
                 <button
+                  onClick={() => setIsFileModalOpen(true)}
                   className="p-2 rounded-lg hover:bg-gaming-surface transition-colors disabled:opacity-50"
                   disabled={!canSendMessage}
+                  title="Dosya Gönder"
                 >
-                  <Paperclip className="w-5 h-5 text-gaming-muted" />
+                  <Paperclip className="w-5 h-5 text-gaming-muted hover:text-neon-purple" />
                 </button>
 
                 <div className="flex-1 relative">
@@ -634,12 +1092,22 @@ export default function ChatReal() {
                     disabled={!canSendMessage}
                     className="w-full px-4 py-3 bg-gaming-surface border border-gaming-border rounded-xl focus:outline-none focus:ring-2 focus:ring-neon-purple/50 text-gaming-text pr-12 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
-                  <button
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-lg hover:bg-gaming-surface transition-colors disabled:opacity-50"
-                    disabled={!canSendMessage}
-                  >
-                    <Smile className="w-5 h-5 text-gaming-muted" />
-                  </button>
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 relative">
+                    <button
+                      onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+                      className="p-1 rounded-lg hover:bg-gaming-surface transition-colors disabled:opacity-50"
+                      disabled={!canSendMessage}
+                      title="Emoji Ekle"
+                    >
+                      <Smile className="w-5 h-5 text-gaming-muted hover:text-neon-purple" />
+                    </button>
+                    <EmojiPicker
+                      isOpen={isEmojiPickerOpen}
+                      onClose={() => setIsEmojiPickerOpen(false)}
+                      onEmojiSelect={handleEmojiSelect}
+                      position="top"
+                    />
+                  </div>
                 </div>
 
                 <button
@@ -677,6 +1145,26 @@ export default function ChatReal() {
           c.type === 'direct' &&
           c.participantDetails.some(p => p.uid === selectedUserProfile.uid)
         ) : false}
+      />
+
+      {/* File Upload Modal */}
+      <FileUploadModal
+        isOpen={isFileModalOpen}
+        onClose={() => setIsFileModalOpen(false)}
+        onFileSelect={handleFileSelect}
+        disabled={!canSendMessage}
+      />
+
+      {/* Voice Call Modal */}
+      <VoiceCallModal
+        isOpen={isVoiceCallModalOpen}
+        callState={voiceCallState}
+        onEndCall={handleEndCall}
+        onToggleMute={handleToggleMute}
+        onToggleDeafen={handleToggleDeafen}
+        onAnswer={handleAnswerCall}
+        onReject={handleRejectCall}
+        isIncoming={isIncomingCall}
       />
     </div>
   );

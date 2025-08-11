@@ -13,9 +13,10 @@ import {
   deleteDoc,
   serverTimestamp
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, handleFirebaseNetworkError } from './firebase';
 import { RealUser, areFriends } from './userService';
 import { createMessageNotification } from './notificationService';
+import { handleNetworkError } from './firebaseConnectionMonitor';
 
 // Utility function to handle Firebase errors and retry
 const withRetry = async <T>(
@@ -35,19 +36,41 @@ const withRetry = async <T>(
       if (error.code === 'permission-denied' ||
           error.code === 'invalid-argument' ||
           error.code === 'not-found') {
+        console.error(`Firebase operation failed (non-retryable):`, error.code, error.message);
         throw error;
       }
 
-      // Log the error
-      console.warn(`Firebase message operation failed (attempt ${attempt}/${maxRetries}):`, error.message);
+      // Handle network errors with connection monitor
+      const isNetworkError = handleNetworkError(error);
+
+      if (isNetworkError) {
+        console.warn(`Network error in Firebase operation (attempt ${attempt}/${maxRetries}):`, error.message);
+        // Also try Firebase-specific network handling
+        await handleFirebaseNetworkError(error);
+      } else {
+        console.warn(`Firebase message operation failed (attempt ${attempt}/${maxRetries}):`, error.message);
+      }
 
       // If this was the last attempt, throw the error
       if (attempt === maxRetries) {
+        console.error(`Firebase operation failed after ${maxRetries} attempts:`, error);
+
+        // For network errors, provide user-friendly message
+        if (isNetworkError) {
+          const networkError = new Error('Ağ bağlantısı sorunu. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.');
+          networkError.name = 'NetworkError';
+          throw networkError;
+        }
+
         throw error;
       }
 
-      // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, delay * attempt));
+      // Wait before retrying (exponential backoff for network errors)
+      const backoffDelay = isNetworkError ?
+        delay * Math.pow(2, attempt - 1) :
+        delay * attempt;
+
+      await new Promise(resolve => setTimeout(resolve, backoffDelay));
     }
   }
 
@@ -633,7 +656,10 @@ export const subscribeToMessages = (
     if (error.code === 'permission-denied') {
       console.error('Permission denied: Please update Firestore rules for conversations/messages');
     } else if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
-      console.warn('Network error in messages subscription - will retry');
+      console.warn('Network error in messages subscription - will retry automatically');
+      // Firebase SDK will automatically retry, so we don't need to do anything
+    } else if (error.message.includes('network-request-failed')) {
+      console.warn('Network request failed - Firebase will retry');
     }
     callback([]);
   });
@@ -692,6 +718,10 @@ export const subscribeToConversations = (
     console.error('Conversations subscription error:', error);
     if (error.code === 'permission-denied') {
       console.error('Permission denied: Please update Firestore rules for conversations');
+    } else if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
+      console.warn('Network error in conversations subscription - Firebase will retry automatically');
+    } else if (error.message.includes('network-request-failed')) {
+      console.warn('Network request failed in conversations subscription - Firebase will retry');
     }
     callback([]);
   });

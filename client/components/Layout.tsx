@@ -4,6 +4,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useUserStats } from '../hooks/useUserStats';
+import { useFirebaseConnection } from '../hooks/useFirebaseConnection';
 import {
   Home,
   MessageSquare,
@@ -50,6 +51,7 @@ export function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
   const { trackVoice } = useUserStats();
   const { counts } = useNotifications();
+  const firebaseConnection = useFirebaseConnection();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -150,8 +152,18 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-gaming-bg">
+      {/* Firebase Connection Status */}
+      {!firebaseConnection.isConnected && (
+        <div className="fixed top-0 left-0 right-0 bg-red-500 text-white text-center py-1 text-sm z-[60]">
+          <div className="flex items-center justify-center space-x-2">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <span>Bağlantı sorunu - Yeniden bağlanılıyor... ({firebaseConnection.retryCount}/3)</span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <header className={`fixed top-0 left-0 right-0 z-50 ${voiceChannel ? 'h-32' : 'h-16'} bg-gaming-surface/80 backdrop-blur-xl border-b border-gaming-border transition-all duration-300`}>
+      <header className={`fixed ${!firebaseConnection.isConnected ? 'top-8' : 'top-0'} left-0 right-0 z-50 ${voiceChannel ? 'h-32' : 'h-16'} bg-gaming-surface/80 backdrop-blur-xl border-b border-gaming-border transition-all duration-300`}>
         <div className="flex items-center justify-between h-16 px-4">
           {/* Mobile menu button */}
           <button
@@ -465,7 +477,7 @@ export function Layout({ children }: LayoutProps) {
       )}
 
       {/* Main content */}
-      <main className={`${voiceChannel ? 'pt-32' : 'pt-16'} min-h-screen transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'}`}>
+      <main className={`${voiceChannel ? 'pt-32' : 'pt-16'} ${!firebaseConnection.isConnected ? 'pt-24' : 'pt-16'} min-h-screen transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'}`}>
         <div className="p-6">
           {children}
         </div>
