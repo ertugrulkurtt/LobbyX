@@ -115,9 +115,16 @@ export default function ChatReal() {
       await sendMessage(selectedChat, user.uid, messageText.trim());
       await incrementMessages(selectedChat);
       setMessageText('');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending message:', error);
-      alert('Mesaj gönderilemedi. Lütfen tekrar deneyin.');
+
+      if (error.message.includes('arkadaş')) {
+        alert(error.message); // Friendship specific error
+      } else if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
+        alert('Bağlantı hatası. İnternet bağlantınızı kontrol edin ve tekrar deneyin.');
+      } else {
+        alert('Mesaj gönderilemedi. Lütfen tekrar deneyin.');
+      }
     }
   };
 
@@ -210,7 +217,7 @@ export default function ChatReal() {
     return (
       <div className="flex items-center justify-center min-h-96">
         <Loader2 className="w-8 h-8 animate-spin text-neon-purple" />
-        <span className="ml-2 text-gaming-text">Sohbetler y��kleniyor...</span>
+        <span className="ml-2 text-gaming-text">Sohbetler yükleniyor...</span>
       </div>
     );
   }
