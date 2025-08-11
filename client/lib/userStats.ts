@@ -420,12 +420,16 @@ export const calculateUserRank = async (userId: string): Promise<number> => {
       collection(db, 'userStats'),
       where('totalXP', '>', userStats.totalXP)
     );
-    
+
     const querySnapshot = await getDocs(q);
     return querySnapshot.size + 1; // Rank is number of users with higher XP + 1
-  } catch (error) {
-    console.error('Error calculating user rank:', error);
-    return 0;
+  } catch (error: any) {
+    if (error?.code === 'permission-denied') {
+      console.warn('🔒 Rank calculation disabled - Firestore rules need deployment');
+      return 1; // Return default rank
+    }
+    console.warn('Error calculating user rank (non-critical):', error.message);
+    return 1; // Return default rank
   }
 };
 
@@ -434,17 +438,47 @@ export const calculateUserRank = async (userId: string): Promise<number> => {
  */
 export const subscribeToUserStats = (userId: string, callback: (stats: UserStats) => void) => {
   const userStatsRef = doc(db, 'userStats', userId);
-  
+
   return onSnapshot(userStatsRef, (doc) => {
     if (doc.exists()) {
       const data = doc.data() as UserStats;
       const level = calculateLevel(data.totalXP);
       const xpToNextLevel = calculateXPToNextLevel(data.totalXP);
-      
+
       callback({
         ...data,
         level,
         xpToNextLevel
+      });
+    }
+  }, (error) => {
+    console.warn('Error in user stats subscription:', error);
+    if (error.code === 'permission-denied') {
+      console.warn('🔒 User stats subscription disabled - Firestore rules need deployment');
+      // Provide default stats when subscription fails
+      callback({
+        userId,
+        totalMessages: 0,
+        friendCount: 0,
+        activeHours: 0,
+        achievements: 0,
+        joinDate: new Date().toISOString(),
+        lastActivity: new Date().toISOString(),
+        level: 1,
+        xp: 0,
+        xpToNextLevel: LEVEL_REQUIREMENTS[1],
+        totalXP: 0,
+        weeklyXP: 0,
+        monthlyXP: 0,
+        rank: 0,
+        gamesPlayed: 0,
+        gameWins: 0,
+        favoriteGames: [],
+        dailyStreak: 0,
+        lastLoginDate: new Date().toISOString().split('T')[0],
+        voiceChannelTime: 0,
+        serversJoined: 0,
+        eventsParticipated: 0
       });
     }
   });

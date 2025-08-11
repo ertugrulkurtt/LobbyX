@@ -246,13 +246,17 @@ export const testFirebaseConnection = async (): Promise<boolean> => {
     console.log('✅ Firebase connection test passed');
     return true;
   } catch (error: any) {
-    console.error('❌ Firebase connection test failed:', error.message);
+    if (error.code === 'permission-denied') {
+      console.warn('🔒 Firebase connection test failed - Firestore rules need deployment');
+    } else {
+      console.error('❌ Firebase connection test failed:', error.message);
 
-    // Only attempt reconnection for network errors
-    if (error.message?.includes('Failed to fetch') ||
-        error.message?.includes('network-request-failed')) {
-      console.warn('🔄 Attempting Firebase reconnection due to network failure...');
-      await forceFirebaseReconnect();
+      // Only attempt reconnection for network errors
+      if (error.message?.includes('Failed to fetch') ||
+          error.message?.includes('network-request-failed')) {
+        console.warn('🔄 Attempting Firebase reconnection due to network failure...');
+        await forceFirebaseReconnect();
+      }
     }
 
     return false;
