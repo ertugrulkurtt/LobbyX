@@ -69,7 +69,7 @@ interface ServerChannel {
   memberCount: number;
   isActive?: boolean;
   categoryId: string;
-  permissions?: PermissionSettings;
+  permissions?: ChannelPermission[] | PermissionSettings;
   connectedUsers?: VoiceChannelUser[];
 }
 
@@ -112,7 +112,7 @@ interface ServerCategory {
   name: string;
   position: number;
   isCollapsed?: boolean;
-  permissions?: PermissionSettings;
+  permissions?: ChannelPermission[] | PermissionSettings;
 }
 
 interface GameServer {
@@ -127,7 +127,7 @@ interface GameServer {
   tags: string[];
   channels: ServerChannel[];
   categories: ServerCategory[];
-  roles: ServerRole[];
+  roles?: ServerRole[];
   owner?: string;
   lastActivity: string;
   isJoined?: boolean;
