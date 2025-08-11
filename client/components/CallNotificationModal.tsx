@@ -26,6 +26,7 @@ interface CallNotificationModalProps {
   onEndCall?: () => void;
   onToggleMute?: () => void;
   onToggleDeafen?: () => void;
+  onForceClose?: () => void;
   callDuration?: number;
 }
 
