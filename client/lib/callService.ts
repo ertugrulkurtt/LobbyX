@@ -439,13 +439,16 @@ class CallService {
       return;
     }
 
+    // Store currentCall in local variable to prevent race conditions
+    const callData = this.currentCall;
+
     try {
       const endTime = new Date().toISOString();
-      const duration = Math.floor((new Date(endTime).getTime() - new Date(this.currentCall.startedAt).getTime()) / 1000);
+      const duration = Math.floor((new Date(endTime).getTime() - new Date(callData.startedAt).getTime()) / 1000);
 
       // Update call status for caller if available
-      if (this.currentCall.callerId) {
-        await set(ref(rtdb, `calls/status/${this.currentCall.callerId}`), {
+      if (callData.callerId) {
+        await set(ref(rtdb, `calls/status/${callData.callerId}`), {
           callId,
           status: reason,
           endedAt: endTime,
@@ -454,8 +457,8 @@ class CallService {
       }
 
       // Update call status for receiver if available
-      if (this.currentCall.receiverId) {
-        await set(ref(rtdb, `calls/status/${this.currentCall.receiverId}`), {
+      if (callData.receiverId) {
+        await set(ref(rtdb, `calls/status/${callData.receiverId}`), {
           callId,
           status: reason,
           endedAt: endTime,
@@ -464,11 +467,11 @@ class CallService {
       }
 
       // Clean up realtime database
-      if (this.currentCall.receiverId) {
-        await remove(ref(rtdb, `calls/incoming/${this.currentCall.receiverId}`));
+      if (callData.receiverId) {
+        await remove(ref(rtdb, `calls/incoming/${callData.receiverId}`));
       }
-      if (this.currentCall.callerId) {
-        await remove(ref(rtdb, `calls/outgoing/${this.currentCall.callerId}`));
+      if (callData.callerId) {
+        await remove(ref(rtdb, `calls/outgoing/${callData.callerId}`));
       }
 
       // Update Firestore record
