@@ -24,6 +24,7 @@ import { initializePerformanceMonitoring } from "./lib/performanceOptimizations"
 import { initializeAuthAwareFirebaseTest } from "./lib/authAwareFirebaseTest";
 import { initializeRulesCheck } from "./lib/firebaseRulesChecker";
 import { cleanupAllSubscriptions } from "./lib/subscriptionManager";
+import "./lib/firebaseRecovery"; // Initialize Firebase assertion failure handler
 
 
 // Layout
