@@ -457,25 +457,36 @@ export const subscribeToMessages = (
     orderBy('timestamp', 'desc'),
     limit(limitCount)
   );
-  
+
   return onSnapshot(q, async (snapshot) => {
-    const messages = await Promise.all(
-      snapshot.docs.map(async (messageDoc) => {
-        const messageData = messageDoc.data();
-        
-        // Get sender details
-        const senderDoc = await getDoc(doc(db, 'users', messageData.senderId));
-        const sender = { uid: senderDoc.id, ...senderDoc.data() } as RealUser;
-        
-        return {
-          id: messageDoc.id,
-          ...messageData,
-          sender
-        } as Message;
-      })
-    );
-    
-    callback(messages.reverse()); // Return in chronological order
+    try {
+      const messages = await Promise.all(
+        snapshot.docs.map(async (messageDoc) => {
+          const messageData = messageDoc.data();
+
+          // Get sender details
+          const senderDoc = await getDoc(doc(db, 'users', messageData.senderId));
+          const sender = { uid: senderDoc.id, ...senderDoc.data() } as RealUser;
+
+          return {
+            id: messageDoc.id,
+            ...messageData,
+            sender
+          } as Message;
+        })
+      );
+
+      callback(messages.reverse()); // Return in chronological order
+    } catch (error) {
+      console.error('Error in messages subscription:', error);
+      callback([]);
+    }
+  }, (error) => {
+    console.error('Messages subscription error:', error);
+    if (error.code === 'permission-denied') {
+      console.error('Permission denied: Please update Firestore rules for conversations/messages');
+    }
+    callback([]);
   });
 };
 
