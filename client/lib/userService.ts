@@ -293,28 +293,31 @@ export const acceptFriendRequest = async (requestId: string): Promise<void> => {
   try {
     const requestRef = doc(db, 'friendRequests', requestId);
     const requestDoc = await getDoc(requestRef);
-    
+
     if (!requestDoc.exists()) {
       throw new Error('Friend request not found');
     }
-    
+
     const requestData = requestDoc.data();
     const { fromUserId, toUserId } = requestData;
-    
+
     // Add each user to the other's friends list
     await updateDoc(doc(db, 'users', fromUserId), {
       friends: arrayUnion(toUserId)
     });
-    
+
     await updateDoc(doc(db, 'users', toUserId), {
       friends: arrayUnion(fromUserId)
     });
-    
+
     // Update request status
     await updateDoc(requestRef, {
       status: 'accepted',
       acceptedAt: new Date().toISOString()
     });
+
+    // Mark friend request notification as read for the person who accepted it
+    await markFriendRequestNotificationAsRead(fromUserId, toUserId);
 
     // Create notification for the person who sent the request
     try {
