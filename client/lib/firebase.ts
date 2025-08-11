@@ -152,6 +152,7 @@ window.addEventListener('unhandledrejection', (event) => {
   if (error && typeof error === 'object') {
     const isFirebaseError =
       error.message?.includes('Failed to fetch') ||
+      error.message?.includes('Target ID already exists') ||
       error.code === 'unavailable' ||
       error.code === 'network-request-failed' ||
       error.message?.includes('firebase') ||
@@ -160,7 +161,11 @@ window.addEventListener('unhandledrejection', (event) => {
     if (isFirebaseError) {
       // Prevent the error from being logged as unhandled
       event.preventDefault();
-      // Don't show notification or reload page
+
+      // For Target ID errors, try to force reconnect
+      if (error.message?.includes('Target ID already exists')) {
+        setTimeout(() => forceFirebaseReconnect(), 1000);
+      }
     }
   }
 });

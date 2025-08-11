@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { 
-  NotificationData, 
+import {
+  NotificationData,
   NotificationCounts,
   subscribeToNotifications,
   subscribeToNotificationCounts,
   markNotificationAsRead,
   markAllNotificationsAsRead
 } from '../lib/notificationService';
+import { createManagedSubscription } from '../lib/subscriptionManager';
 
 interface NotificationContextType {
   notifications: NotificationData[];
@@ -48,32 +49,26 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
 
     setLoading(true);
-    let unsubscribeNotifications: (() => void) | null = null;
-    let unsubscribeCounts: (() => void) | null = null;
 
-    try {
-      // Subscribe to notifications
-      unsubscribeNotifications = subscribeToNotifications(user.uid, (realTimeNotifications) => {
+    // Use managed subscriptions to prevent Target ID conflicts
+    const unsubscribeNotifications = createManagedSubscription(
+      `notifications_${user.uid}`,
+      () => subscribeToNotifications(user.uid, (realTimeNotifications) => {
         setNotifications(realTimeNotifications);
         setLoading(false);
-      });
+      })
+    );
 
-      // Subscribe to notification counts
-      unsubscribeCounts = subscribeToNotificationCounts(user.uid, (realTimeCounts) => {
+    const unsubscribeCounts = createManagedSubscription(
+      `notification_counts_${user.uid}`,
+      () => subscribeToNotificationCounts(user.uid, (realTimeCounts) => {
         setCounts(realTimeCounts);
-      });
-    } catch (error) {
-      console.error('Error setting up notification subscriptions:', error);
-      setLoading(false);
-    }
+      })
+    );
 
     return () => {
-      try {
-        if (unsubscribeNotifications) unsubscribeNotifications();
-        if (unsubscribeCounts) unsubscribeCounts();
-      } catch (error) {
-        console.warn('Error unsubscribing from notifications:', error);
-      }
+      unsubscribeNotifications();
+      unsubscribeCounts();
     };
   }, [user?.uid]);
 
