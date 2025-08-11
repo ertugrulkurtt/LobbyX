@@ -18,6 +18,7 @@ import { initFileCleanupService } from "./lib/fileCleanupService";
 import { initializeConnectionMonitoring } from "./lib/firebaseConnectionMonitor";
 import { initializeGlobalErrorHandler } from "./lib/globalErrorHandler";
 import { initializeGlobalFirebaseErrorHandling } from "./lib/globalFirebaseErrorHandler";
+import "./lib/firebaseDebugUtils"; // Initialize debug utilities
 
 
 // Layout
@@ -180,7 +181,7 @@ function AppRouter() {
 }
 
 const App = () => {
-  console.log('���� LobbyX App starting...');
+  console.log('🚀 LobbyX App starting...');
 
   return (
     <QueryClientProvider client={queryClient}>
