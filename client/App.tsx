@@ -16,9 +16,7 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 // Services
 import { initFileCleanupService } from "./lib/fileCleanupService";
 import { initializeConnectionMonitoring } from "./lib/firebaseConnectionMonitor";
-import { initializeGlobalErrorHandler } from "./lib/globalErrorHandler";
-import { initializeGlobalFirebaseErrorHandling } from "./lib/globalFirebaseErrorHandler";
-import { initializeCriticalErrorRecovery } from "./lib/criticalErrorRecovery";
+import { initializeErrorHandler } from "./lib/unifiedErrorHandler";
 import "./lib/firebaseDebugUtils"; // Initialize debug utilities
 
 
