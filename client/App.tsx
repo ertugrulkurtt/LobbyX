@@ -18,10 +18,6 @@ import { initFileCleanupService } from "./lib/fileCleanupService";
 import { initializeConnectionMonitoring } from "./lib/firebaseConnectionMonitor";
 import { initializeGlobalErrorHandler } from "./lib/globalErrorHandler";
 
-// Debug - only in development
-if (import.meta.env.DEV) {
-  import("./lib/testNotifications").catch(console.error);
-}
 
 // Layout
 import { Layout } from "./components/Layout";
