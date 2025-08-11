@@ -22,6 +22,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useUserStats } from '../hooks/useUserStats';
 import BadgeSystem, { Badge } from './BadgeSystem';
 
 export interface UserLevel {
