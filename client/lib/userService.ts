@@ -535,5 +535,6 @@ export default {
   getUserConversations,
   searchUsers,
   subscribeToUserFriends,
-  subscribeToFriendRequests
+  subscribeToFriendRequests,
+  areFriends
 };
