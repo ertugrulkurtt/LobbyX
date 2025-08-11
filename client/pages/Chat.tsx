@@ -16,6 +16,7 @@ import {
   User,
   Loader2
 } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserStats } from '../hooks/useUserStats';
 import {
