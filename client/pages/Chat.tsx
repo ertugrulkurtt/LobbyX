@@ -43,6 +43,8 @@ import EmojiPicker from '../components/EmojiPicker';
 import MessageSearch from '../components/MessageSearch';
 import VoiceCallModal from '../components/VoiceCallModal';
 import voiceChatService, { VoiceCallState } from '../lib/voiceChatService';
+import CallNotificationModal from '../components/CallNotificationModal';
+import { useCallManager } from '../hooks/useCallManager';
 
 export default function ChatReal() {
   const { user } = useAuth();
@@ -74,7 +76,7 @@ export default function ChatReal() {
   // Message search state
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // Voice call state
+  // Voice call state (legacy - keeping for compatibility)
   const [voiceCallState, setVoiceCallState] = useState<VoiceCallState>({
     isInCall: false,
     isMuted: false,
@@ -83,6 +85,9 @@ export default function ChatReal() {
   });
   const [isVoiceCallModalOpen, setIsVoiceCallModalOpen] = useState(false);
   const [isIncomingCall, setIsIncomingCall] = useState(false);
+
+  // New call manager
+  const [callState, callActions] = useCallManager();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -479,27 +484,42 @@ export default function ChatReal() {
     if (!otherParticipant) return;
 
     try {
-      const hasPermission = await voiceChatService.getMicrophonePermission();
-      if (!hasPermission) {
-        alert('Sesli arama için mikrofon iznine ihtiyaç var.');
-        return;
-      }
-
-      setVoiceCallState(prev => ({ ...prev, isConnecting: true }));
-      await voiceChatService.startCall({
-        id: otherParticipant.uid,
-        name: otherParticipant.displayName || otherParticipant.username || 'Kullanıcı',
-        avatar: otherParticipant.photoURL
-      });
+      await callActions.initiateCall(
+        otherParticipant.uid,
+        otherParticipant.displayName || otherParticipant.username || 'Kullanıcı',
+        otherParticipant.photoURL,
+        selectedChat!,
+        'voice'
+      );
     } catch (error: any) {
       console.error('Error starting voice call:', error);
       alert('Sesli arama başlatılamadı: ' + error.message);
     }
   };
 
+  const handleStartVideoCall = async () => {
+    if (!selectedChatData || selectedChatData.type !== 'direct') return;
+
+    const otherParticipant = selectedChatData.participantDetails.find(p => p.uid !== user?.uid);
+    if (!otherParticipant) return;
+
+    try {
+      await callActions.initiateCall(
+        otherParticipant.uid,
+        otherParticipant.displayName || otherParticipant.username || 'Kullanıcı',
+        otherParticipant.photoURL,
+        selectedChat!,
+        'video'
+      );
+    } catch (error: any) {
+      console.error('Error starting video call:', error);
+      alert('Görüntülü arama başlatılamadı: ' + error.message);
+    }
+  };
+
   const handleAnswerCall = async () => {
     try {
-      await voiceChatService.answerCall();
+      await callActions.answerCall();
     } catch (error: any) {
       console.error('Error answering call:', error);
       alert('Arama cevaplanamadı: ' + error.message);
@@ -507,21 +527,19 @@ export default function ChatReal() {
   };
 
   const handleRejectCall = () => {
-    voiceChatService.endCall();
+    callActions.rejectCall();
   };
 
   const handleEndCall = () => {
-    voiceChatService.endCall();
+    callActions.endCall();
   };
 
   const handleToggleMute = () => {
-    const isMuted = voiceChatService.toggleMute();
-    setVoiceCallState(prev => ({ ...prev, isMuted }));
+    callActions.toggleMute();
   };
 
   const handleToggleDeafen = () => {
-    const isDeafened = voiceChatService.toggleDeafen();
-    setVoiceCallState(prev => ({ ...prev, isDeafened }));
+    callActions.toggleDeafen();
   };
 
   // Demo: Simulate incoming call
@@ -900,9 +918,9 @@ export default function ChatReal() {
                     <Phone className="w-5 h-5 text-gaming-muted hover:text-neon-green" />
                   </button>
                   <button
-                    onClick={handleSimulateIncomingCall}
+                    onClick={handleStartVideoCall}
                     className="p-2 rounded-lg hover:bg-gaming-surface transition-colors"
-                    title="Demo: Gelen Arama Simülasyonu"
+                    title="Görüntülü Arama"
                     disabled={selectedChatData?.type !== 'direct'}
                   >
                     <Video className="w-5 h-5 text-gaming-muted hover:text-neon-blue" />
@@ -1166,6 +1184,38 @@ export default function ChatReal() {
         onReject={handleRejectCall}
         isIncoming={isIncomingCall}
       />
+
+      {/* New Call Notification Modal */}
+      <CallNotificationModal
+        isOpen={callState.isCallModalOpen}
+        callData={callState.currentCall}
+        isIncoming={callState.isIncomingCall}
+        isConnected={callState.isConnected}
+        isMuted={callState.isMuted}
+        isDeafened={callState.isDeafened}
+        callDuration={callState.callDuration}
+        onAnswer={handleAnswerCall}
+        onReject={handleRejectCall}
+        onEndCall={handleEndCall}
+        onToggleMute={handleToggleMute}
+        onToggleDeafen={handleToggleDeafen}
+      />
+
+      {/* Call Error Alert */}
+      {callState.error && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in-up">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-white rounded-full"></div>
+            <span className="text-sm">{callState.error}</span>
+            <button
+              onClick={callActions.clearError}
+              className="ml-2 text-white/80 hover:text-white"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
