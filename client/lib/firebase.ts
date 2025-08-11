@@ -259,4 +259,16 @@ export const testFirebaseConnection = async (): Promise<boolean> => {
   }
 };
 
+// Listen for authentication state changes to run connection test
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    // User is signed in, run connection test
+    setTimeout(() => {
+      testFirebaseConnection();
+    }, 1000);
+  } else {
+    console.log('ℹ️ User signed out - Firebase connection test not needed');
+  }
+});
+
 export default app;
