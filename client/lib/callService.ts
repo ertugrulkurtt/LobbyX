@@ -375,8 +375,11 @@ class CallService {
         startedAt: callData.startedAt
       });
 
-      this.currentCall = callData;
+      // Update current call state
+      this.currentCall = { ...callData, status: 'ringing' };
       this.playCallSound();
+
+      console.log('📞 Call initiated successfully:', callId);
 
       // Auto-timeout after 30 seconds
       setTimeout(() => {
