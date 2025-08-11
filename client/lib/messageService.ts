@@ -312,7 +312,7 @@ export const sendMessage = async (
     console.log('Updating conversation:', conversationUpdate);
     await updateDoc(conversationRef, conversationUpdate);
 
-    // Update unread counts for other participants
+    // Update unread counts for other participants and create notifications
     // Get fresh conversation data after the last message update
     const updatedConversationDoc = await getDoc(conversationRef);
     if (updatedConversationDoc.exists()) {
@@ -321,11 +321,34 @@ export const sendMessage = async (
       const currentUnreadCounts = updatedConversationData.unreadCounts || {};
 
       const newUnreadCounts = { ...currentUnreadCounts };
-      participants.forEach((participantId: string) => {
+
+      // Get sender details for notifications
+      const senderDoc = await getDoc(doc(db, 'users', senderId));
+      const senderData = senderDoc.exists() ? senderDoc.data() : null;
+      const senderName = senderData?.displayName || senderData?.username || 'Unknown User';
+      const senderAvatar = senderData?.photoURL || '';
+
+      // Update unread counts and create notifications for other participants
+      for (const participantId of participants) {
         if (participantId !== senderId) {
           newUnreadCounts[participantId] = (newUnreadCounts[participantId] || 0) + 1;
+
+          // Create notification for this participant
+          try {
+            await createMessageNotification(
+              participantId,
+              senderId,
+              senderName,
+              senderAvatar,
+              conversationId,
+              content
+            );
+          } catch (notificationError) {
+            console.error('Error creating message notification:', notificationError);
+            // Don't fail the message sending if notification creation fails
+          }
         }
-      });
+      }
 
       console.log('Updating unread counts:', newUnreadCounts);
       await updateDoc(conversationRef, {
