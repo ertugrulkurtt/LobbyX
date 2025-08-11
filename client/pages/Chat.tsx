@@ -171,7 +171,7 @@ export default function ChatReal() {
         setCanSendMessage(false);
         setFriendshipStatus(error.message);
       } else if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
-        alert('Bağlantı hatası. İnternet bağlant��nızı kontrol edin ve tekrar deneyin.');
+        alert('Bağlantı hatası. İnternet bağlantınızı kontrol edin ve tekrar deneyin.');
       } else {
         alert('Mesaj gönderilemedi. Lütfen tekrar deneyin.');
       }
@@ -671,6 +671,8 @@ export default function ChatReal() {
         onClose={handleCloseProfileModal}
         currentUserId={user?.uid || ''}
         onSendMessage={handleSendMessageFromProfile}
+        onAddFriend={handleAddFriendFromProfile}
+        onRemoveFriend={handleRemoveFriendFromProfile}
         isFriend={selectedUserProfile ? conversations.some(c =>
           c.type === 'direct' &&
           c.participantDetails.some(p => p.uid === selectedUserProfile.uid)
