@@ -242,6 +242,8 @@ export const sendMessage = async (
   fileSize?: number,
   replyTo?: { messageId: string; content: string; senderId: string }
 ): Promise<string> => {
+  console.log('Sending message:', { conversationId, senderId, content, type });
+
   return withRetry(async () => {
     const messagesRef = collection(db, 'conversations', conversationId, 'messages');
     const timestamp = new Date().toISOString();
@@ -264,11 +266,13 @@ export const sendMessage = async (
     if (fileSize !== undefined) messageData.fileSize = fileSize;
     if (replyTo !== undefined) messageData.replyTo = replyTo;
 
+    console.log('Adding message to Firestore:', messageData);
     const messageRef = await addDoc(messagesRef, messageData);
+    console.log('Message added with ID:', messageRef.id);
 
     // Update conversation with last message
     const conversationRef = doc(db, 'conversations', conversationId);
-    await updateDoc(conversationRef, {
+    const conversationUpdate = {
       lastMessage: {
         senderId,
         content: type === 'text' ? content : `📎 ${fileName || 'Dosya'}`,
@@ -276,7 +280,10 @@ export const sendMessage = async (
         type
       },
       updatedAt: timestamp
-    });
+    };
+
+    console.log('Updating conversation:', conversationUpdate);
+    await updateDoc(conversationRef, conversationUpdate);
 
     // Update unread counts for other participants
     const conversationDoc = await getDoc(conversationRef);
@@ -292,11 +299,13 @@ export const sendMessage = async (
         }
       });
 
+      console.log('Updating unread counts:', newUnreadCounts);
       await updateDoc(conversationRef, {
         unreadCounts: newUnreadCounts
       });
     }
 
+    console.log('Message sent successfully');
     return messageRef.id;
   });
 };
