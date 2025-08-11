@@ -324,6 +324,15 @@ class CallService {
     conversationId: string,
     type: 'voice' | 'video' = 'voice'
   ): Promise<string> {
+    // Validate required parameters
+    if (!callerId || !receiverId || !conversationId) {
+      throw new Error('Missing required parameters: callerId, receiverId, or conversationId');
+    }
+
+    if (callerId === receiverId) {
+      throw new Error('Cannot call yourself');
+    }
+
     try {
       const callId = `call_${Date.now()}_${callerId}_${receiverId}`;
       const callData: CallData = {
