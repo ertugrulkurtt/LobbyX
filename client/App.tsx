@@ -94,6 +94,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 // Main App Router
 function AppRouter() {
   const { isAuthenticated, isLoading } = useAuth();
+  const [showFirebaseError, setShowFirebaseError] = React.useState(false);
 
   // Initialize services when app starts
   useEffect(() => {
