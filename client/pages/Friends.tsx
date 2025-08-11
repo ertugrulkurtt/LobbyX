@@ -149,12 +149,20 @@ export default function Friends() {
     friend.displayName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSendFriendRequest = () => {
+  const handleSendFriendRequest = async () => {
     if (!newFriendUsername.trim()) return;
-    
-    // In real app, this would send to Firebase
-    console.log('Sending friend request to:', newFriendUsername);
-    setNewFriendUsername('');
+
+    try {
+      // In real app, this would send to Firebase
+      console.log('Sending friend request to:', newFriendUsername);
+
+      // Note: We don't increment friend count here since request is just sent
+      // Friend count will be incremented when the request is accepted
+
+      setNewFriendUsername('');
+    } catch (error) {
+      console.error('Error sending friend request:', error);
+    }
   };
 
   const handleAcceptRequest = async (requestId: string) => {
