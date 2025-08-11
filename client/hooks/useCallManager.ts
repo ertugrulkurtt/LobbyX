@@ -279,6 +279,13 @@ export function useCallManager(): [CallState, CallActions] {
       isConnected: callState.isConnected
     });
 
+    // Immediately close the modal for better UX
+    setCallState(prev => ({
+      ...prev,
+      isCallModalOpen: false,
+      isConnected: false
+    }));
+
     if (!callState.currentCall?.id) {
       console.warn('📞 No current call to end');
       // Force close modal if it's open but no call exists
@@ -286,37 +293,40 @@ export function useCallManager(): [CallState, CallActions] {
         ...prev,
         currentCall: null,
         isIncomingCall: false,
-        isCallModalOpen: false,
-        isConnected: false,
         callDuration: 0
       }));
+      clearTimer();
       return;
     }
 
+    const currentCallId = callState.currentCall.id;
+
     try {
-      console.log('📞 Calling callService.endCall with ID:', callState.currentCall.id);
-      await callService.endCall(callState.currentCall.id);
+      console.log('📞 Calling callService.endCall with ID:', currentCallId);
+      await callService.endCall(currentCallId);
       console.log('📞 callService.endCall completed');
+
+      // Clean up state after successful end
+      setCallState(prev => ({
+        ...prev,
+        currentCall: null,
+        isIncomingCall: false,
+        callDuration: 0
+      }));
+      clearTimer();
+
     } catch (error: any) {
       console.error('📞 Error ending call:', error);
       setCallState(prev => ({
         ...prev,
-        error: error.message || 'Arama sonlandırılamadı'
+        error: error.message || 'Arama sonlandırılamadı',
+        currentCall: null,
+        isIncomingCall: false,
+        callDuration: 0
       }));
-
-      // Force close modal even if there was an error
-      setTimeout(() => {
-        setCallState(prev => ({
-          ...prev,
-          currentCall: null,
-          isIncomingCall: false,
-          isCallModalOpen: false,
-          isConnected: false,
-          callDuration: 0
-        }));
-      }, 1000);
+      clearTimer();
     }
-  }, [callState.currentCall]);
+  }, [callState.currentCall, clearTimer]);
 
   const toggleMute = useCallback(() => {
     setCallState(prev => ({
