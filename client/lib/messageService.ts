@@ -246,21 +246,23 @@ export const sendMessage = async (
     const messagesRef = collection(db, 'conversations', conversationId, 'messages');
     const timestamp = new Date().toISOString();
 
-    const messageData = {
+    const messageData: any = {
       conversationId,
       senderId,
       content,
       timestamp,
       type,
-      fileUrl,
-      fileName,
-      fileSize,
       isDelivered: true,
       isRead: false,
       readBy: [],
-      replyTo,
       reactions: []
     };
+
+    // Only add optional fields if they have values (not undefined)
+    if (fileUrl !== undefined) messageData.fileUrl = fileUrl;
+    if (fileName !== undefined) messageData.fileName = fileName;
+    if (fileSize !== undefined) messageData.fileSize = fileSize;
+    if (replyTo !== undefined) messageData.replyTo = replyTo;
 
     const messageRef = await addDoc(messagesRef, messageData);
 
