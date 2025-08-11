@@ -512,7 +512,7 @@ export const searchUsers = async (searchTerm: string): Promise<RealUser[]> => {
 
     // Return first 10 results
     return filteredUsers.slice(0, 10);
-  });
+  }, 'searchUsers');
 };
 
 /**
@@ -572,7 +572,7 @@ export const subscribeToFriendRequests = (
   // Refresh function that fetches all data with retry
   const refreshData = async () => {
     try {
-      const requests = await withRetry(() => getFriendRequests(userId));
+      const requests = await withRetry(() => getFriendRequests(userId), 'getFriendRequests');
       callback(requests);
     } catch (error: any) {
       console.error('Error refreshing friend requests:', error);
