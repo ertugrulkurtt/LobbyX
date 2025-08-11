@@ -105,6 +105,15 @@ export default function Friends() {
 
   // Mock friend requests
   const friendRequests: FriendRequest[] = [
+    // Add current user's photo to test avatar display
+    ...(user ? [{
+      id: 'req-user',
+      username: user.username || 'CurrentUser',
+      displayName: user.displayName || 'Kullanıcı',
+      avatar: user.photoURL,
+      type: 'incoming' as const,
+      sentAt: 'Test - Avatar'
+    }] : []),
     {
       id: 'req1',
       username: 'NewPlayer2024',
