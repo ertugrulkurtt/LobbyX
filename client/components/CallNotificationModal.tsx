@@ -169,7 +169,14 @@ export default function CallNotificationModal({
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={onReject}
+                  onClick={() => {
+                    console.log('📞 Reject call button clicked in modal', { onReject: !!onReject });
+                    if (onReject) {
+                      onReject();
+                    } else {
+                      console.error('📞 No onReject handler provided');
+                    }
+                  }}
                   className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-glow"
                 >
                   <PhoneOff className="w-8 h-8 text-white" />
