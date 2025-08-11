@@ -356,6 +356,20 @@ export function useCallManager(): [CallState, CallActions] {
     setCallState(prev => ({ ...prev, error: null }));
   }, []);
 
+  const forceCloseCall = useCallback(() => {
+    console.log('📞 Force closing call modal');
+    setCallState(prev => ({
+      ...prev,
+      currentCall: null,
+      isIncomingCall: false,
+      isCallModalOpen: false,
+      isConnected: false,
+      callDuration: 0,
+      error: null
+    }));
+    clearTimer();
+  }, [clearTimer]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
