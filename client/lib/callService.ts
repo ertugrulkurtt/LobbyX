@@ -68,7 +68,9 @@ class CallService {
   private ringtoneSound: HTMLAudioElement | null = null;
 
   constructor() {
+    this.currentCall = null;
     this.initializeAudioFiles();
+    console.log('📞 CallService initialized');
   }
 
   /**
