@@ -108,8 +108,24 @@ export function Layout({ children }: LayoutProps) {
     console.log('Ses kanalına katıldı:', channelName);
   };
 
-  const leaveVoiceChannel = () => {
+  const leaveVoiceChannel = async () => {
+    // Track voice time before leaving
+    if (voiceStartTime) {
+      const endTime = new Date();
+      const voiceTimeMinutes = Math.floor((endTime.getTime() - voiceStartTime.getTime()) / (1000 * 60));
+
+      if (voiceTimeMinutes > 0) {
+        try {
+          await trackVoice(voiceTimeMinutes);
+          console.log(`Ses kanalında ${voiceTimeMinutes} dakika geçirildi`);
+        } catch (error) {
+          console.error('Error tracking voice time:', error);
+        }
+      }
+    }
+
     setVoiceChannel(null);
+    setVoiceStartTime(null);
     setVoiceSettings(prev => ({ ...prev, videoEnabled: false, screenShare: false }));
     console.log('Ses kanalından ayrıldı');
   };
