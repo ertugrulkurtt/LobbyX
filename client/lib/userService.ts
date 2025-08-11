@@ -101,7 +101,7 @@ export interface Conversation {
  * Get all registered users from Firebase Auth/Firestore
  */
 export const getAllUsers = async (): Promise<RealUser[]> => {
-  try {
+  return withRetry(async () => {
     const usersRef = collection(db, 'users');
     const snapshot = await getDocs(usersRef);
 
@@ -112,10 +112,7 @@ export const getAllUsers = async (): Promise<RealUser[]> => {
 
     // Sort on client side to avoid permission issues
     return users.sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    throw error;
-  }
+  });
 };
 
 /**
