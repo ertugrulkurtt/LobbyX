@@ -236,7 +236,7 @@ export const getFriendRequests = async (userId: string): Promise<{
  * Send friend request
  */
 export const sendFriendRequest = async (fromUserId: string, toUserId: string): Promise<void> => {
-  try {
+  return withRetry(async () => {
     // Check if request already exists
     const requestsRef = collection(db, 'friendRequests');
     const existingQuery = query(
@@ -246,28 +246,25 @@ export const sendFriendRequest = async (fromUserId: string, toUserId: string): P
       where('status', '==', 'pending')
     );
     const existingSnapshot = await getDocs(existingQuery);
-    
+
     if (!existingSnapshot.empty) {
       throw new Error('Friend request already sent');
     }
-    
+
     // Check if already friends
     const userDoc = await getDoc(doc(db, 'users', fromUserId));
     const userData = userDoc.data();
     if (userData?.friends?.includes(toUserId)) {
       throw new Error('Users are already friends');
     }
-    
+
     await addDoc(requestsRef, {
       fromUserId,
       toUserId,
       sentAt: new Date().toISOString(),
       status: 'pending'
     });
-  } catch (error) {
-    console.error('Error sending friend request:', error);
-    throw error;
-  }
+  });
 };
 
 /**
