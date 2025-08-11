@@ -401,6 +401,14 @@ export default function FriendsReal() {
 
         {activeTab === 'pending' && (
           <div className="space-y-6">
+            {/* Debug button - temporary */}
+            <button
+              onClick={refreshFriendRequests}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            >
+              Debug: Refresh Requests
+            </button>
+
             {friendRequests.incoming.length > 0 && (
               <div>
                 <h2 className="text-xl font-semibold text-gaming-text mb-4 flex items-center space-x-2">
