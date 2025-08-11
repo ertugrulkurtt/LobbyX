@@ -157,11 +157,19 @@ export default function Friends() {
       <div className="flex items-center space-x-4">
         <div className="relative">
           <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-            friend.isSpecial 
-              ? 'bg-gradient-to-br from-neon-cyan to-neon-blue' 
+            friend.isSpecial
+              ? 'bg-gradient-to-br from-neon-cyan to-neon-blue'
               : 'bg-gradient-to-br from-neon-purple to-neon-cyan'
           }`}>
-            <User className="w-6 h-6 text-white" />
+            {friend.avatar ? (
+              <img
+                src={friend.avatar}
+                alt={friend.displayName}
+                className="w-full h-full object-cover rounded-full"
+              />
+            ) : (
+              <User className="w-6 h-6 text-white" />
+            )}
           </div>
           {friend.isOnline && (
             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-neon-green rounded-full border-2 border-gaming-surface"></div>
