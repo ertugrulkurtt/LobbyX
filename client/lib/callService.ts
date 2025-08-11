@@ -427,26 +427,34 @@ class CallService {
    * End a call
    */
   async endCall(callId: string, reason: 'ended' | 'rejected' | 'missed' = 'ended'): Promise<void> {
-    if (!this.currentCall) return;
+    if (!this.currentCall) {
+      console.warn('No current call to end');
+      return;
+    }
 
     try {
       const endTime = new Date().toISOString();
       const duration = Math.floor((new Date(endTime).getTime() - new Date(this.currentCall.startedAt).getTime()) / 1000);
 
-      // Update call status for both participants
-      await set(ref(rtdb, `calls/status/${this.currentCall.callerId}`), {
-        callId,
-        status: reason,
-        endedAt: endTime,
-        duration
-      });
+      // Update call status for caller if available
+      if (this.currentCall.callerId) {
+        await set(ref(rtdb, `calls/status/${this.currentCall.callerId}`), {
+          callId,
+          status: reason,
+          endedAt: endTime,
+          duration
+        });
+      }
 
-      await set(ref(rtdb, `calls/status/${this.currentCall.receiverId}`), {
-        callId,
-        status: reason,
-        endedAt: endTime,
-        duration
-      });
+      // Update call status for receiver if available
+      if (this.currentCall.receiverId) {
+        await set(ref(rtdb, `calls/status/${this.currentCall.receiverId}`), {
+          callId,
+          status: reason,
+          endedAt: endTime,
+          duration
+        });
+      }
 
       // Clean up realtime database
       await remove(ref(rtdb, `calls/incoming/${this.currentCall.receiverId}`));
