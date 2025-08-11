@@ -250,12 +250,17 @@ export default function FriendsReal() {
         </div>
         
         <div className="flex items-center space-x-2">
-          <button className="p-2 rounded-lg hover:bg-neon-cyan/20 transition-colors">
+          <button
+            onClick={() => handleStartConversation(friend.uid)}
+            className="p-2 rounded-lg hover:bg-neon-cyan/20 transition-colors"
+            title="Mesaj gönder"
+          >
             <MessageSquare className="w-4 h-4 text-neon-cyan" />
           </button>
           <button
             onClick={() => handleRemoveFriend(friend.uid)}
             className="p-2 rounded-lg hover:bg-red-500/20 transition-colors"
+            title="Arkadaşlıktan çıkar"
           >
             <UserMinus className="w-4 h-4 text-red-400" />
           </button>
