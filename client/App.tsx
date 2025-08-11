@@ -27,6 +27,7 @@ import { initializeAuthAwareFirebaseTest } from "./lib/authAwareFirebaseTest";
 // Layout
 import { Layout } from "./components/Layout";
 import ErrorBoundary from "./components/ErrorBoundary";
+import FirebaseErrorNotification from "./components/FirebaseErrorNotification";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
