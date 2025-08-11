@@ -23,17 +23,6 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { stats, loading: statsLoading, formatActiveTime } = useUserStats();
 
-  const handleCreateTestNotifications = async () => {
-    if (!user?.uid) return;
-
-    try {
-      await createTestNotifications(user.uid);
-      alert('Test bildirimleri oluşturuldu! Bildirimler sayfasını kontrol edin.');
-    } catch (error) {
-      console.error('Error creating test notifications:', error);
-      alert('Test bildirimleri oluşturulamadı.');
-    }
-  };
 
   const handleForceFileCleanup = async () => {
     try {
