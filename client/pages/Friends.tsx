@@ -238,7 +238,15 @@ export default function Friends() {
     <div key={request.id} className="card-glass hover:shadow-glow transition-all duration-300">
       <div className="flex items-center space-x-4">
         <div className="w-12 h-12 bg-gradient-to-br from-neon-orange to-neon-pink rounded-full flex items-center justify-center">
-          <User className="w-6 h-6 text-white" />
+          {request.avatar ? (
+            <img
+              src={request.avatar}
+              alt={request.displayName}
+              className="w-full h-full object-cover rounded-full"
+            />
+          ) : (
+            <User className="w-6 h-6 text-white" />
+          )}
         </div>
         
         <div className="flex-1 min-w-0">
