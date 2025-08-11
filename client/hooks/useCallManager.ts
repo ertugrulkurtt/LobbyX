@@ -391,7 +391,8 @@ export function useCallManager(): [CallState, CallActions] {
       endCall,
       toggleMute,
       toggleDeafen,
-      clearError
+      clearError,
+      forceCloseCall
     }
   ];
 }
