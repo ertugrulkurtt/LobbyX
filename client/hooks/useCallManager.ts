@@ -27,6 +27,7 @@ interface CallActions {
   toggleMute: () => void;
   toggleDeafen: () => void;
   clearError: () => void;
+  forceCloseCall: () => void;
 }
 
 export function useCallManager(): [CallState, CallActions] {
