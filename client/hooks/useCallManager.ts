@@ -1,0 +1,289 @@
+import { useState, useEffect, useCallback } from 'react';
+import { callService, CallData, CallCallbacks } from '../lib/callService';
+import { useAuth } from '../contexts/AuthContext';
+
+interface CallState {
+  currentCall: CallData | null;
+  isIncomingCall: boolean;
+  isCallModalOpen: boolean;
+  isConnected: boolean;
+  isMuted: boolean;
+  isDeafened: boolean;
+  callDuration: number;
+  error: string | null;
+}
+
+interface CallActions {
+  initiateCall: (
+    receiverId: string,
+    receiverName: string,
+    receiverAvatar: string | undefined,
+    conversationId: string,
+    type?: 'voice' | 'video'
+  ) => Promise<void>;
+  answerCall: () => Promise<void>;
+  rejectCall: () => Promise<void>;
+  endCall: () => Promise<void>;
+  toggleMute: () => void;
+  toggleDeafen: () => void;
+  clearError: () => void;
+}
+
+export function useCallManager(): [CallState, CallActions] {
+  const { user } = useAuth();
+  const [callState, setCallState] = useState<CallState>({
+    currentCall: null,
+    isIncomingCall: false,
+    isCallModalOpen: false,
+    isConnected: false,
+    isMuted: false,
+    isDeafened: false,
+    callDuration: 0,
+    error: null
+  });
+
+  // Timer for call duration
+  const [callTimer, setCallTimer] = useState<NodeJS.Timeout | null>(null);
+
+  // Set up call service callbacks
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const callbacks: CallCallbacks = {
+      onIncomingCall: (callData: CallData) => {
+        console.log('📞 Incoming call from:', callData.callerName);
+        setCallState(prev => ({
+          ...prev,
+          currentCall: callData,
+          isIncomingCall: true,
+          isCallModalOpen: true,
+          isConnected: false,
+          error: null
+        }));
+      },
+
+      onCallAnswered: (callData: CallData) => {
+        console.log('✅ Call answered:', callData.id);
+        setCallState(prev => ({
+          ...prev,
+          isIncomingCall: false,
+          isConnected: true,
+          callDuration: 0
+        }));
+
+        // Start call timer
+        const startTime = Date.now();
+        const timer = setInterval(() => {
+          setCallState(prev => ({
+            ...prev,
+            callDuration: Math.floor((Date.now() - startTime) / 1000)
+          }));
+        }, 1000);
+        setCallTimer(timer);
+      },
+
+      onCallRejected: (callData: CallData) => {
+        console.log('❌ Call rejected:', callData.id);
+        setCallState(prev => ({
+          ...prev,
+          currentCall: null,
+          isIncomingCall: false,
+          isCallModalOpen: false,
+          isConnected: false,
+          callDuration: 0,
+          error: null
+        }));
+        clearTimer();
+      },
+
+      onCallEnded: (callData: CallData) => {
+        console.log('📞 Call ended:', callData.id);
+        setCallState(prev => ({
+          ...prev,
+          currentCall: null,
+          isIncomingCall: false,
+          isCallModalOpen: false,
+          isConnected: false,
+          callDuration: 0,
+          error: null
+        }));
+        clearTimer();
+      },
+
+      onCallMissed: (callData: CallData) => {
+        console.log('📵 Call missed:', callData.id);
+        setCallState(prev => ({
+          ...prev,
+          currentCall: null,
+          isIncomingCall: false,
+          isCallModalOpen: false,
+          isConnected: false,
+          callDuration: 0,
+          error: null
+        }));
+        clearTimer();
+      },
+
+      onError: (error: string) => {
+        console.error('📞 Call error:', error);
+        setCallState(prev => ({
+          ...prev,
+          error,
+          isConnected: false
+        }));
+      }
+    };
+
+    callService.setCallbacks(callbacks);
+    callService.startListening(user.uid);
+
+    return () => {
+      callService.stopListening();
+      clearTimer();
+    };
+  }, [user?.uid]);
+
+  const clearTimer = useCallback(() => {
+    if (callTimer) {
+      clearInterval(callTimer);
+      setCallTimer(null);
+    }
+  }, [callTimer]);
+
+  // Actions
+  const initiateCall = useCallback(async (
+    receiverId: string,
+    receiverName: string,
+    receiverAvatar: string | undefined,
+    conversationId: string,
+    type: 'voice' | 'video' = 'voice'
+  ) => {
+    if (!user?.uid) {
+      setCallState(prev => ({ ...prev, error: 'Kullanıcı girişi gerekli' }));
+      return;
+    }
+
+    try {
+      setCallState(prev => ({ ...prev, error: null }));
+      
+      // Check microphone permission
+      const hasPermission = await callService.checkMicrophonePermission();
+      if (!hasPermission) {
+        setCallState(prev => ({ 
+          ...prev, 
+          error: 'Sesli arama için mikrofon iznine ihtiyaç var.' 
+        }));
+        return;
+      }
+
+      const callId = await callService.initiateCall(
+        user.uid,
+        user.displayName || user.username || 'Kullanıcı',
+        user.photoURL,
+        receiverId,
+        receiverName,
+        receiverAvatar,
+        conversationId,
+        type
+      );
+
+      const callData = callService.getCurrentCall();
+      if (callData) {
+        setCallState(prev => ({
+          ...prev,
+          currentCall: callData,
+          isIncomingCall: false,
+          isCallModalOpen: true,
+          isConnected: false
+        }));
+      }
+    } catch (error: any) {
+      console.error('Error initiating call:', error);
+      setCallState(prev => ({ 
+        ...prev, 
+        error: error.message || 'Arama başlatılamadı' 
+      }));
+    }
+  }, [user]);
+
+  const answerCall = useCallback(async () => {
+    if (!callState.currentCall?.id) return;
+
+    try {
+      await callService.answerCall(callState.currentCall.id);
+    } catch (error: any) {
+      console.error('Error answering call:', error);
+      setCallState(prev => ({ 
+        ...prev, 
+        error: error.message || 'Arama cevaplanamadı' 
+      }));
+    }
+  }, [callState.currentCall]);
+
+  const rejectCall = useCallback(async () => {
+    if (!callState.currentCall?.id) return;
+
+    try {
+      await callService.rejectCall(callState.currentCall.id);
+    } catch (error: any) {
+      console.error('Error rejecting call:', error);
+      setCallState(prev => ({ 
+        ...prev, 
+        error: error.message || 'Arama reddedilemedi' 
+      }));
+    }
+  }, [callState.currentCall]);
+
+  const endCall = useCallback(async () => {
+    if (!callState.currentCall?.id) return;
+
+    try {
+      await callService.endCall(callState.currentCall.id);
+    } catch (error: any) {
+      console.error('Error ending call:', error);
+      setCallState(prev => ({ 
+        ...prev, 
+        error: error.message || 'Arama sonlandırılamadı' 
+      }));
+    }
+  }, [callState.currentCall]);
+
+  const toggleMute = useCallback(() => {
+    setCallState(prev => ({
+      ...prev,
+      isMuted: !prev.isMuted
+    }));
+  }, []);
+
+  const toggleDeafen = useCallback(() => {
+    setCallState(prev => ({
+      ...prev,
+      isDeafened: !prev.isDeafened
+    }));
+  }, []);
+
+  const clearError = useCallback(() => {
+    setCallState(prev => ({ ...prev, error: null }));
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      callService.cleanup();
+      clearTimer();
+    };
+  }, [clearTimer]);
+
+  return [
+    callState,
+    {
+      initiateCall,
+      answerCall,
+      rejectCall,
+      endCall,
+      toggleMute,
+      toggleDeafen,
+      clearError
+    }
+  ];
+}
