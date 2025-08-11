@@ -197,8 +197,6 @@ function AppRouter() {
 }
 
 const App = () => {
-  console.log('🚀 LobbyX App starting...');
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

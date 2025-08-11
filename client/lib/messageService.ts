@@ -216,7 +216,6 @@ export const sendMessage = async (
   fileSize?: number,
   replyTo?: { messageId: string; content: string; senderId: string }
 ): Promise<string> => {
-  console.log('Sending message:', { conversationId, senderId, content, type });
 
   return withRetry(async () => {
     // First, check if this is a direct conversation and verify friendship
