@@ -503,29 +503,40 @@ export const subscribeToConversations = (
     where('participants', 'array-contains', userId),
     orderBy('updatedAt', 'desc')
   );
-  
+
   return onSnapshot(q, async (snapshot) => {
-    const conversations = await Promise.all(
-      snapshot.docs.map(async (conversationDoc) => {
-        const conversationData = conversationDoc.data();
-        
-        // Get participant details
-        const participantDetails = await Promise.all(
-          conversationData.participants.map(async (participantId: string) => {
-            const userDoc = await getDoc(doc(db, 'users', participantId));
-            return { uid: userDoc.id, ...userDoc.data() } as RealUser;
-          })
-        );
-        
-        return {
-          id: conversationDoc.id,
-          ...conversationData,
-          participantDetails
-        } as Conversation;
-      })
-    );
-    
-    callback(conversations);
+    try {
+      const conversations = await Promise.all(
+        snapshot.docs.map(async (conversationDoc) => {
+          const conversationData = conversationDoc.data();
+
+          // Get participant details
+          const participantDetails = await Promise.all(
+            conversationData.participants.map(async (participantId: string) => {
+              const userDoc = await getDoc(doc(db, 'users', participantId));
+              return { uid: userDoc.id, ...userDoc.data() } as RealUser;
+            })
+          );
+
+          return {
+            id: conversationDoc.id,
+            ...conversationData,
+            participantDetails
+          } as Conversation;
+        })
+      );
+
+      callback(conversations);
+    } catch (error) {
+      console.error('Error in conversations subscription:', error);
+      callback([]);
+    }
+  }, (error) => {
+    console.error('Conversations subscription error:', error);
+    if (error.code === 'permission-denied') {
+      console.error('Permission denied: Please update Firestore rules for conversations');
+    }
+    callback([]);
   });
 };
 
