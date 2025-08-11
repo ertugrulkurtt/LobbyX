@@ -98,14 +98,17 @@ class UnifiedErrorHandler {
    */
   private isFirebaseError(error: any): boolean {
     if (!error.message) return false;
-    
+
     return (
       error.message.includes('Failed to fetch') ||
       error.message.includes('firebase') ||
       error.message.includes('firestore') ||
       error.message.includes('network-request-failed') ||
+      error.message.includes('Missing or insufficient permissions') ||
+      error.message.includes('client is offline') ||
       error.code === 'unavailable' ||
-      error.code === 'permission-denied'
+      error.code === 'permission-denied' ||
+      error.code === 'unauthenticated'
     );
   }
 
