@@ -66,13 +66,17 @@ export default function UserProfileModal({
   const checkFriendshipStatus = async (retryCount = 0) => {
     if (!user || !currentUserId || user.uid === currentUserId) {
       setActualFriendshipStatus(false);
+      setFriendshipCheckError('');
       return;
     }
 
     setCheckingFriendship(true);
+    setFriendshipCheckError('');
+
     try {
       const friendshipStatus = await areFriends(currentUserId, user.uid);
       setActualFriendshipStatus(friendshipStatus);
+      setFriendshipCheckError('');
     } catch (error: any) {
       console.error('Error checking friendship status:', error);
 
@@ -85,12 +89,15 @@ export default function UserProfileModal({
         return;
       }
 
-      // On final failure, assume not friends (safer default)
+      // On final failure, show error and assume not friends
       setActualFriendshipStatus(false);
-    } finally {
-      if (retryCount === 0) { // Only set loading false on first attempt
-        setCheckingFriendship(false);
+      if (error.message?.includes('Failed to fetch') || error.code === 'unavailable') {
+        setFriendshipCheckError('Bağlantı sorunu. Arkadaşlık durumu kontrol edilemiyor.');
+      } else {
+        setFriendshipCheckError('Arkadaşlık durumu kontrol edilemedi.');
       }
+    } finally {
+      setCheckingFriendship(false);
     }
   };
 
