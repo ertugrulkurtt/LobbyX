@@ -1,0 +1,510 @@
+import { 
+  collection, 
+  doc, 
+  getDoc, 
+  getDocs, 
+  query, 
+  where, 
+  orderBy, 
+  limit, 
+  onSnapshot, 
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+  serverTimestamp,
+  addDoc,
+  deleteDoc
+} from 'firebase/firestore';
+import { db } from './firebase';
+
+export interface RealUser {
+  uid: string;
+  email: string;
+  displayName?: string;
+  photoURL?: string;
+  username?: string;
+  bio?: string;
+  status?: string;
+  isOnline: boolean;
+  lastSeen: string;
+  joinDate: string;
+  isVerified?: boolean;
+  gameStatus?: {
+    game: string;
+    status: string;
+  };
+}
+
+export interface FriendRequest {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  fromUser: RealUser;
+  toUser: RealUser;
+  sentAt: string;
+  status: 'pending' | 'accepted' | 'rejected';
+}
+
+export interface Conversation {
+  id: string;
+  type: 'direct' | 'group';
+  participants: string[];
+  participantDetails: RealUser[];
+  lastMessage?: {
+    senderId: string;
+    content: string;
+    timestamp: string;
+    type: 'text' | 'image' | 'file';
+  };
+  updatedAt: string;
+  unreadCounts: Record<string, number>;
+}
+
+/**
+ * Get all registered users from Firebase Auth/Firestore
+ */
+export const getAllUsers = async (): Promise<RealUser[]> => {
+  try {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, orderBy('displayName'));
+    const snapshot = await getDocs(q);
+    
+    return snapshot.docs.map(doc => ({
+      uid: doc.id,
+      ...doc.data()
+    })) as RealUser[];
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get online users
+ */
+export const getOnlineUsers = async (): Promise<RealUser[]> => {
+  try {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('isOnline', '==', true), orderBy('displayName'));
+    const snapshot = await getDocs(q);
+    
+    return snapshot.docs.map(doc => ({
+      uid: doc.id,
+      ...doc.data()
+    })) as RealUser[];
+  } catch (error) {
+    console.error('Error fetching online users:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get user's friends
+ */
+export const getUserFriends = async (userId: string): Promise<RealUser[]> => {
+  try {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (!userDoc.exists()) return [];
+    
+    const userData = userDoc.data();
+    const friendIds = userData.friends || [];
+    
+    if (friendIds.length === 0) return [];
+    
+    const friendsPromises = friendIds.map((friendId: string) => 
+      getDoc(doc(db, 'users', friendId))
+    );
+    
+    const friendsDocs = await Promise.all(friendsPromises);
+    
+    return friendsDocs
+      .filter(doc => doc.exists())
+      .map(doc => ({
+        uid: doc.id,
+        ...doc.data()
+      })) as RealUser[];
+  } catch (error) {
+    console.error('Error fetching user friends:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get friend requests for a user
+ */
+export const getFriendRequests = async (userId: string): Promise<{
+  incoming: FriendRequest[];
+  outgoing: FriendRequest[];
+}> => {
+  try {
+    const requestsRef = collection(db, 'friendRequests');
+    
+    // Get incoming requests
+    const incomingQuery = query(
+      requestsRef, 
+      where('toUserId', '==', userId),
+      where('status', '==', 'pending')
+    );
+    const incomingSnapshot = await getDocs(incomingQuery);
+    
+    // Get outgoing requests  
+    const outgoingQuery = query(
+      requestsRef,
+      where('fromUserId', '==', userId),
+      where('status', '==', 'pending')
+    );
+    const outgoingSnapshot = await getDocs(outgoingQuery);
+    
+    // Get user details for requests
+    const incoming = await Promise.all(
+      incomingSnapshot.docs.map(async (requestDoc) => {
+        const requestData = requestDoc.data();
+        const fromUserDoc = await getDoc(doc(db, 'users', requestData.fromUserId));
+        const toUserDoc = await getDoc(doc(db, 'users', requestData.toUserId));
+        
+        return {
+          id: requestDoc.id,
+          ...requestData,
+          fromUser: { uid: fromUserDoc.id, ...fromUserDoc.data() } as RealUser,
+          toUser: { uid: toUserDoc.id, ...toUserDoc.data() } as RealUser
+        } as FriendRequest;
+      })
+    );
+    
+    const outgoing = await Promise.all(
+      outgoingSnapshot.docs.map(async (requestDoc) => {
+        const requestData = requestDoc.data();
+        const fromUserDoc = await getDoc(doc(db, 'users', requestData.fromUserId));
+        const toUserDoc = await getDoc(doc(db, 'users', requestData.toUserId));
+        
+        return {
+          id: requestDoc.id,
+          ...requestData,
+          fromUser: { uid: fromUserDoc.id, ...fromUserDoc.data() } as RealUser,
+          toUser: { uid: toUserDoc.id, ...toUserDoc.data() } as RealUser
+        } as FriendRequest;
+      })
+    );
+    
+    return { incoming, outgoing };
+  } catch (error) {
+    console.error('Error fetching friend requests:', error);
+    throw error;
+  }
+};
+
+/**
+ * Send friend request
+ */
+export const sendFriendRequest = async (fromUserId: string, toUserId: string): Promise<void> => {
+  try {
+    // Check if request already exists
+    const requestsRef = collection(db, 'friendRequests');
+    const existingQuery = query(
+      requestsRef,
+      where('fromUserId', '==', fromUserId),
+      where('toUserId', '==', toUserId),
+      where('status', '==', 'pending')
+    );
+    const existingSnapshot = await getDocs(existingQuery);
+    
+    if (!existingSnapshot.empty) {
+      throw new Error('Friend request already sent');
+    }
+    
+    // Check if already friends
+    const userDoc = await getDoc(doc(db, 'users', fromUserId));
+    const userData = userDoc.data();
+    if (userData?.friends?.includes(toUserId)) {
+      throw new Error('Users are already friends');
+    }
+    
+    await addDoc(requestsRef, {
+      fromUserId,
+      toUserId,
+      sentAt: new Date().toISOString(),
+      status: 'pending'
+    });
+  } catch (error) {
+    console.error('Error sending friend request:', error);
+    throw error;
+  }
+};
+
+/**
+ * Accept friend request
+ */
+export const acceptFriendRequest = async (requestId: string): Promise<void> => {
+  try {
+    const requestRef = doc(db, 'friendRequests', requestId);
+    const requestDoc = await getDoc(requestRef);
+    
+    if (!requestDoc.exists()) {
+      throw new Error('Friend request not found');
+    }
+    
+    const requestData = requestDoc.data();
+    const { fromUserId, toUserId } = requestData;
+    
+    // Add each user to the other's friends list
+    await updateDoc(doc(db, 'users', fromUserId), {
+      friends: arrayUnion(toUserId)
+    });
+    
+    await updateDoc(doc(db, 'users', toUserId), {
+      friends: arrayUnion(fromUserId)
+    });
+    
+    // Update request status
+    await updateDoc(requestRef, {
+      status: 'accepted',
+      acceptedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error accepting friend request:', error);
+    throw error;
+  }
+};
+
+/**
+ * Reject friend request
+ */
+export const rejectFriendRequest = async (requestId: string): Promise<void> => {
+  try {
+    const requestRef = doc(db, 'friendRequests', requestId);
+    await updateDoc(requestRef, {
+      status: 'rejected',
+      rejectedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error rejecting friend request:', error);
+    throw error;
+  }
+};
+
+/**
+ * Remove friend
+ */
+export const removeFriend = async (userId: string, friendId: string): Promise<void> => {
+  try {
+    // Remove friend from both users' friend lists
+    await updateDoc(doc(db, 'users', userId), {
+      friends: arrayRemove(friendId)
+    });
+    
+    await updateDoc(doc(db, 'users', friendId), {
+      friends: arrayRemove(userId)
+    });
+  } catch (error) {
+    console.error('Error removing friend:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get conversations for a user
+ */
+export const getUserConversations = async (userId: string): Promise<Conversation[]> => {
+  try {
+    const conversationsRef = collection(db, 'conversations');
+    const q = query(
+      conversationsRef,
+      where('participants', 'array-contains', userId),
+      orderBy('updatedAt', 'desc')
+    );
+    
+    const snapshot = await getDocs(q);
+    
+    const conversations = await Promise.all(
+      snapshot.docs.map(async (conversationDoc) => {
+        const conversationData = conversationDoc.data();
+        
+        // Get participant details
+        const participantDetails = await Promise.all(
+          conversationData.participants.map(async (participantId: string) => {
+            const userDoc = await getDoc(doc(db, 'users', participantId));
+            return { uid: userDoc.id, ...userDoc.data() } as RealUser;
+          })
+        );
+        
+        return {
+          id: conversationDoc.id,
+          ...conversationData,
+          participantDetails
+        } as Conversation;
+      })
+    );
+    
+    return conversations;
+  } catch (error) {
+    console.error('Error fetching conversations:', error);
+    throw error;
+  }
+};
+
+/**
+ * Search users by username or display name
+ */
+export const searchUsers = async (searchTerm: string): Promise<RealUser[]> => {
+  try {
+    if (!searchTerm.trim()) return [];
+    
+    const usersRef = collection(db, 'users');
+    
+    // Search by username
+    const usernameQuery = query(
+      usersRef,
+      where('username', '>=', searchTerm.toLowerCase()),
+      where('username', '<=', searchTerm.toLowerCase() + '\uf8ff'),
+      limit(10)
+    );
+    
+    // Search by display name
+    const displayNameQuery = query(
+      usersRef,
+      where('displayName', '>=', searchTerm),
+      where('displayName', '<=', searchTerm + '\uf8ff'),
+      limit(10)
+    );
+    
+    const [usernameSnapshot, displayNameSnapshot] = await Promise.all([
+      getDocs(usernameQuery),
+      getDocs(displayNameQuery)
+    ]);
+    
+    const userMap = new Map();
+    
+    usernameSnapshot.docs.forEach(doc => {
+      userMap.set(doc.id, { uid: doc.id, ...doc.data() });
+    });
+    
+    displayNameSnapshot.docs.forEach(doc => {
+      userMap.set(doc.id, { uid: doc.id, ...doc.data() });
+    });
+    
+    return Array.from(userMap.values()) as RealUser[];
+  } catch (error) {
+    console.error('Error searching users:', error);
+    throw error;
+  }
+};
+
+/**
+ * Subscribe to real-time user friends updates
+ */
+export const subscribeToUserFriends = (userId: string, callback: (friends: RealUser[]) => void) => {
+  const userRef = doc(db, 'users', userId);
+  
+  return onSnapshot(userRef, async (userDoc) => {
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      const friendIds = userData.friends || [];
+      
+      if (friendIds.length === 0) {
+        callback([]);
+        return;
+      }
+      
+      try {
+        const friendsPromises = friendIds.map((friendId: string) => 
+          getDoc(doc(db, 'users', friendId))
+        );
+        
+        const friendsDocs = await Promise.all(friendsPromises);
+        
+        const friends = friendsDocs
+          .filter(doc => doc.exists())
+          .map(doc => ({
+            uid: doc.id,
+            ...doc.data()
+          })) as RealUser[];
+          
+        callback(friends);
+      } catch (error) {
+        console.error('Error in friends subscription:', error);
+        callback([]);
+      }
+    }
+  });
+};
+
+/**
+ * Subscribe to real-time friend requests
+ */
+export const subscribeToFriendRequests = (
+  userId: string, 
+  callback: (requests: { incoming: FriendRequest[]; outgoing: FriendRequest[] }) => void
+) => {
+  const requestsRef = collection(db, 'friendRequests');
+  
+  const incomingQuery = query(
+    requestsRef,
+    where('toUserId', '==', userId),
+    where('status', '==', 'pending')
+  );
+  
+  const outgoingQuery = query(
+    requestsRef,
+    where('fromUserId', '==', userId),
+    where('status', '==', 'pending')
+  );
+  
+  let incoming: FriendRequest[] = [];
+  let outgoing: FriendRequest[] = [];
+  
+  const incomingUnsubscribe = onSnapshot(incomingQuery, async (snapshot) => {
+    incoming = await Promise.all(
+      snapshot.docs.map(async (requestDoc) => {
+        const requestData = requestDoc.data();
+        const fromUserDoc = await getDoc(doc(db, 'users', requestData.fromUserId));
+        const toUserDoc = await getDoc(doc(db, 'users', requestData.toUserId));
+        
+        return {
+          id: requestDoc.id,
+          ...requestData,
+          fromUser: { uid: fromUserDoc.id, ...fromUserDoc.data() } as RealUser,
+          toUser: { uid: toUserDoc.id, ...toUserDoc.data() } as RealUser
+        } as FriendRequest;
+      })
+    );
+    callback({ incoming, outgoing });
+  });
+  
+  const outgoingUnsubscribe = onSnapshot(outgoingQuery, async (snapshot) => {
+    outgoing = await Promise.all(
+      snapshot.docs.map(async (requestDoc) => {
+        const requestData = requestDoc.data();
+        const fromUserDoc = await getDoc(doc(db, 'users', requestData.fromUserId));
+        const toUserDoc = await getDoc(doc(db, 'users', requestData.toUserId));
+        
+        return {
+          id: requestDoc.id,
+          ...requestData,
+          fromUser: { uid: fromUserDoc.id, ...fromUserDoc.data() } as RealUser,
+          toUser: { uid: toUserDoc.id, ...toUserDoc.data() } as RealUser
+        } as FriendRequest;
+      })
+    );
+    callback({ incoming, outgoing });
+  });
+  
+  return () => {
+    incomingUnsubscribe();
+    outgoingUnsubscribe();
+  };
+};
+
+export default {
+  getAllUsers,
+  getOnlineUsers,
+  getUserFriends,
+  getFriendRequests,
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  removeFriend,
+  getUserConversations,
+  searchUsers,
+  subscribeToUserFriends,
+  subscribeToFriendRequests
+};
