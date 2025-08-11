@@ -109,8 +109,26 @@ export default function Dashboard() {
                 {user?.username === 'LobbyXAdmin' && (
                   <Shield className="w-6 h-6 text-neon-cyan" />
                 )}
+                {statsLoading && (
+                  <div className="w-5 h-5 border border-neon-cyan border-t-transparent rounded-full animate-spin"></div>
+                )}
               </h1>
               <p className="text-gaming-muted">Bugün hangi maceraya atılacaksın?</p>
+              {stats && (
+                <div className="mt-3 flex items-center space-x-3 text-sm">
+                  <span className="bg-neon-purple/20 text-neon-purple px-2 py-1 rounded-full">
+                    Seviye {stats.level}
+                  </span>
+                  <span className="bg-neon-cyan/20 text-neon-cyan px-2 py-1 rounded-full">
+                    {stats.totalXP.toLocaleString()} XP
+                  </span>
+                  {stats.rank > 0 && (
+                    <span className="bg-neon-orange/20 text-neon-orange px-2 py-1 rounded-full">
+                      #{stats.rank} Sırada
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           
