@@ -40,6 +40,7 @@ export const useUserStats = (): UseUserStatsReturn => {
     }
 
     let unsubscribe: (() => void) | undefined;
+    let mounted = true;
 
     const initializeStats = async () => {
       try {
@@ -65,19 +66,24 @@ export const useUserStats = (): UseUserStatsReturn => {
 
         setStats(initialStats);
 
-        // Set up real-time subscription
-        unsubscribe = subscribeToUserStats(user.uid, async (updatedStats) => {
-          setStats(updatedStats);
+        // Set up real-time subscription only if component is still mounted
+        if (mounted) {
+          unsubscribe = subscribeToUserStats(user.uid, async (updatedStats) => {
+            if (!mounted) return;
+            setStats(updatedStats);
 
-          // Recalculate rank (non-blocking)
-          calculateUserRank(user.uid)
-            .then(newRank => {
-              setStats(prevStats => prevStats ? { ...prevStats, rank: newRank } : null);
-            })
-            .catch(err => {
-              console.warn('Rank recalculation failed:', err);
-            });
-        });
+            // Recalculate rank (non-blocking)
+            calculateUserRank(user.uid)
+              .then(newRank => {
+                if (mounted) {
+                  setStats(prevStats => prevStats ? { ...prevStats, rank: newRank } : null);
+                }
+              })
+              .catch(err => {
+                console.warn('Rank recalculation failed:', err);
+              });
+          });
+        }
 
       } catch (err: any) {
         console.error('Error initializing user stats:', err);
@@ -98,8 +104,13 @@ export const useUserStats = (): UseUserStatsReturn => {
 
     // Cleanup subscription on unmount
     return () => {
+      mounted = false;
       if (unsubscribe) {
-        unsubscribe();
+        try {
+          unsubscribe();
+        } catch (error) {
+          console.warn('Error unsubscribing from user stats:', error);
+        }
       }
     };
   }, [user?.uid]);
