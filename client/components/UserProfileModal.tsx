@@ -14,7 +14,7 @@ import {
   UserMinus,
   Settings
 } from 'lucide-react';
-import { RealUser } from '../lib/userService';
+import { RealUser, areFriends } from '../lib/userService';
 import { getUserStats, UserStats as UserStatsType } from '../lib/userStats';
 
 interface UserProfileModalProps {
