@@ -50,7 +50,7 @@ export default function UserProfileModal({
   onRemoveFriend,
   isFriend = false
 }: UserProfileModalProps) {
-  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [userStats, setUserStats] = useState<DisplayUserStats | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
