@@ -186,10 +186,15 @@ export function Layout({ children }: LayoutProps) {
             <div className="flex items-center space-x-2">
               <Link
                 to="/notifications"
-                className="p-2 rounded-lg hover:bg-gaming-surface transition-all duration-300 hover:shadow-glow text-gaming-muted hover:text-neon-cyan"
+                className="relative p-2 rounded-lg hover:bg-gaming-surface transition-all duration-300 hover:shadow-glow text-gaming-muted hover:text-neon-cyan"
                 title="Bildirimler"
               >
                 <Bell className="w-5 h-5" />
+                {counts.total > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-neon-red text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center font-medium">
+                    {counts.total > 99 ? '99+' : counts.total}
+                  </span>
+                )}
               </Link>
 
               <Link
