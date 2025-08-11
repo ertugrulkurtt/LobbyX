@@ -67,7 +67,7 @@ export default function Settings() {
     setSettings(prev => ({
       ...prev,
       [category]: {
-        ...prev[category as keyof typeof prev],
+        ...(prev[category as keyof typeof prev] || {}),
         [key]: value
       }
     }));
