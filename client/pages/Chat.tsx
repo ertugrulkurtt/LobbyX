@@ -41,6 +41,7 @@ interface FriendChat {
   id: string;
   name: string;
   username: string;
+  avatar?: string;
   isOnline: boolean;
   lastSeen?: string;
   lastMessage: string;
