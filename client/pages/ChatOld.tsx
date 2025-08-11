@@ -484,9 +484,7 @@ export default function Chat() {
                   }`}>
                     {message.senderId !== user?.uid && (
                       <div className="flex items-center space-x-2 mb-1">
-                        <span className={`text-sm font-medium ${
-                          message.isSpecial ? 'text-neon-cyan' : 'text-gaming-text'
-                        }`}>
+                        <span className="text-sm font-medium text-gaming-text">
                           {message.senderName}
                         </span>
                         {message.isSpecial && (
