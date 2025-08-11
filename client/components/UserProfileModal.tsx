@@ -28,7 +28,7 @@ interface UserProfileModalProps {
   isFriend?: boolean;
 }
 
-interface UserStats {
+interface DisplayUserStats {
   level: number;
   totalXP: number;
   messagesCount: number;
@@ -37,7 +37,7 @@ interface UserStats {
   lastSeen: string;
   serversCount: number;
   friendsCount: number;
-  achievements: string[];
+  achievements: number;
 }
 
 export default function UserProfileModal({
