@@ -47,7 +47,10 @@ export function useCallManager(): [CallState, CallActions] {
 
   // Set up call service callbacks
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!user?.uid) {
+      console.log('No user ID available for call service');
+      return;
+    }
 
     const callbacks: CallCallbacks = {
       onIncomingCall: (callData: CallData) => {
