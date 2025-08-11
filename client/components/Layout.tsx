@@ -49,6 +49,7 @@ export function Layout({ children }: LayoutProps) {
   const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const { trackVoice } = useUserStats();
+  const { counts } = useNotifications();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
