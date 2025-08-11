@@ -504,11 +504,14 @@ export default function ChatReal() {
                   >
                     {/* Avatar for received messages */}
                     {message.senderId !== user?.uid && (
-                      <div className="w-8 h-8 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center flex-shrink-0">
+                      <div
+                        className="w-8 h-8 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-neon-purple/50 transition-all"
+                        onClick={() => handleUserProfileClick(message.sender)}
+                      >
                         {message.sender.photoURL ? (
-                          <img 
-                            src={message.sender.photoURL} 
-                            alt={message.sender.displayName || message.sender.username} 
+                          <img
+                            src={message.sender.photoURL}
+                            alt={message.sender.displayName || message.sender.username}
                             className="w-full h-full object-cover rounded-full"
                           />
                         ) : (
