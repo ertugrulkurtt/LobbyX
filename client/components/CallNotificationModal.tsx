@@ -51,6 +51,23 @@ export default function CallNotificationModal({
     }
   }, [isOpen]);
 
+  // Add keyboard escape handler
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        console.log('📞 Escape key pressed - ending call');
+        if (onEndCall) {
+          onEndCall();
+        }
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen, onEndCall]);
+
   if (!isOpen || !callData) return null;
 
   const formatDuration = (seconds: number): string => {
