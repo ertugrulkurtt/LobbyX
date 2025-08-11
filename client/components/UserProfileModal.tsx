@@ -284,39 +284,67 @@ export default function UserProfileModal({
         {/* Action Buttons */}
         {!isOwnProfile && (
           <div className="p-6">
-            <div className="flex gap-3">
-              {onSendMessage && (
-                <button
-                  onClick={() => onSendMessage(user.uid)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-neon-purple text-white rounded-lg hover:bg-neon-purple/80 transition-colors"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  Mesaj Gönder
-                </button>
-              )}
-              
-              {isFriend ? (
-                onRemoveFriend && (
+            {checkingFriendship ? (
+              <div className="text-center py-4">
+                <div className="animate-spin w-6 h-6 border-2 border-neon-purple border-t-transparent rounded-full mx-auto"></div>
+                <p className="text-sm text-gaming-muted mt-2">Arkadaşlık durumu kontrol ediliyor...</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {/* Message button - only show if friends */}
+                {actualFriendshipStatus && onSendMessage && (
                   <button
-                    onClick={() => onRemoveFriend(user.uid)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
+                    onClick={() => onSendMessage(user.uid)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-neon-purple text-white rounded-lg hover:bg-neon-purple/80 transition-colors"
                   >
-                    <UserMinus className="w-4 h-4" />
-                    Arkadaşlıktan Çıkar
+                    <MessageSquare className="w-4 h-4" />
+                    Mesaj Gönder
                   </button>
-                )
-              ) : (
-                onAddFriend && (
-                  <button
-                    onClick={() => onAddFriend(user.uid)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-neon-green/20 text-neon-green rounded-lg hover:bg-neon-green/30 transition-colors"
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    Arkadaş Ekle
-                  </button>
-                )
-              )}
-            </div>
+                )}
+
+                {/* Friendship status message for non-friends */}
+                {!actualFriendshipStatus && (
+                  <div className="p-3 bg-amber-500/20 border border-amber-500/30 rounded-lg">
+                    <p className="text-amber-400 text-sm text-center">
+                      Mesaj göndermek için önce arkadaş olmanız gerekiyor
+                    </p>
+                  </div>
+                )}
+
+                {/* Friend management buttons */}
+                <div className="flex gap-3">
+                  {actualFriendshipStatus ? (
+                    onRemoveFriend && (
+                      <button
+                        onClick={async () => {
+                          await onRemoveFriend(user.uid);
+                          // Update friendship status after removal
+                          setActualFriendshipStatus(false);
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
+                      >
+                        <UserMinus className="w-4 h-4" />
+                        Arkadaşlıktan Çıkar
+                      </button>
+                    )
+                  ) : (
+                    onAddFriend && (
+                      <button
+                        onClick={async () => {
+                          await onAddFriend(user.uid);
+                          // Re-check friendship status after adding
+                          checkFriendshipStatus();
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-neon-green/20 text-neon-green rounded-lg hover:bg-neon-green/30 transition-colors"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Arkadaş Ekle
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
