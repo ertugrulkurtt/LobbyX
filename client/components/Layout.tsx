@@ -305,7 +305,15 @@ export function Layout({ children }: LayoutProps) {
                     }`}
                   >
                     <div className="w-5 h-5 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center">
-                      <User className="w-3 h-3 text-white" />
+                      {member.id === user?.uid && user?.photoURL ? (
+                        <img
+                          src={user.photoURL}
+                          alt="Profile"
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      ) : (
+                        <User className="w-3 h-3 text-white" />
+                      )}
                     </div>
                     <span className="text-xs text-gaming-text">{member.name}</span>
                     {member.isMuted && <MicOff className="w-3 h-3 text-red-400" />}
