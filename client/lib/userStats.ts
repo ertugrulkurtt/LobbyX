@@ -430,14 +430,19 @@ export const subscribeToUserStats = (userId: string, callback: (stats: UserStats
  */
 export const trackDailyLogin = async (userId: string) => {
   try {
+    if (!userId) {
+      console.warn('Cannot track daily login: User ID is missing');
+      return;
+    }
+
     const today = new Date().toISOString().split('T')[0];
     const userStats = await getUserStats(userId);
-    
+
     const lastLoginDate = userStats.lastLoginDate;
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
-    
+
     let newStreak = 1;
     if (lastLoginDate === yesterdayStr) {
       // Continuing streak
@@ -447,26 +452,37 @@ export const trackDailyLogin = async (userId: string) => {
       newStreak = 1;
     } else {
       // Already logged in today
+      console.log('Daily login already tracked for today');
       return;
     }
-    
+
+    console.log(`Tracking daily login: streak ${newStreak}`);
+
     // Update stats
     await updateUserStats(userId, {
       dailyStreak: newStreak,
       lastLoginDate: today
     });
-    
+
     // Award daily login XP
     await addXP(userId, XP_REWARDS.DAILY_LOGIN, 'daily_login');
-    
+
     // Streak bonus XP
     if (newStreak >= 7) {
       await addXP(userId, XP_REWARDS.DAILY_LOGIN * 2, 'weekly_streak_bonus');
     }
-    
-  } catch (error) {
+
+  } catch (error: any) {
     console.error('Error tracking daily login:', error);
-    throw error;
+
+    if (error?.code === 'permission-denied') {
+      console.error('Permission denied for daily login tracking. Check Firestore rules.');
+    } else if (error?.code === 'unauthenticated') {
+      console.error('User not authenticated for daily login tracking.');
+    }
+
+    // Don't throw error for daily login tracking to prevent app crashes
+    // The error is logged but the app continues to work
   }
 };
 
