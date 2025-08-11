@@ -140,14 +140,19 @@ export default function Profile() {
     { id: 'legendary', name: 'Legendary', class: 'ring-4 ring-purple-500/50 ring-offset-2 ring-offset-purple-500/20' }
   ];
 
-  const userStats = getUserStats(user?.uid || '');
   const sessionHistory = getSessionHistory();
 
-  const profileStats = [
-    { label: 'Toplam Mesaj', value: userStats.totalMessages.toLocaleString(), icon: MessageSquare, color: 'text-neon-cyan' },
-    { label: 'Arkadaş Sayısı', value: userStats.friendCount.toString(), icon: Users, color: 'text-neon-green' },
-    { label: 'Aktiflik Süresi', value: userStats.activeTime, icon: Clock, color: 'text-neon-orange' },
-    { label: 'Başarımlar', value: userStats.achievements.toString(), icon: Trophy, color: 'text-neon-pink' },
+  // Create profile stats from real user statistics
+  const profileStats = stats ? [
+    { label: 'Toplam Mesaj', value: stats.totalMessages.toLocaleString(), icon: MessageSquare, color: 'text-neon-cyan' },
+    { label: 'Arkadaş Sayısı', value: stats.friendCount.toString(), icon: Users, color: 'text-neon-green' },
+    { label: 'Aktiflik Süresi', value: formatActiveTime(stats.activeHours), icon: Clock, color: 'text-neon-orange' },
+    { label: 'Başarımlar', value: stats.achievements.toString(), icon: Trophy, color: 'text-neon-pink' },
+  ] : [
+    { label: 'Toplam Mesaj', value: '0', icon: MessageSquare, color: 'text-neon-cyan' },
+    { label: 'Arkadaş Sayısı', value: '0', icon: Users, color: 'text-neon-green' },
+    { label: 'Aktiflik Süresi', value: '0 dakika', icon: Clock, color: 'text-neon-orange' },
+    { label: 'Başarımlar', value: '0', icon: Trophy, color: 'text-neon-pink' },
   ];
 
   // Get current profile background class
