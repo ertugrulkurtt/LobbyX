@@ -154,6 +154,12 @@ export const getOrCreateDirectConversation = async (
   userId2: string
 ): Promise<string> => {
   return withRetry(async () => {
+    // Check if users are friends before allowing conversation
+    const friendshipStatus = await areFriends(userId1, userId2);
+    if (!friendshipStatus) {
+      throw new Error('Sadece arkadaşlarınızla sohbet edebilirsiniz. Önce arkadaş olmanız gerekiyor.');
+    }
+
     // Check if conversation already exists
     const conversationsRef = collection(db, 'conversations');
     const q = query(
@@ -172,7 +178,7 @@ export const getOrCreateDirectConversation = async (
       }
     }
 
-    // Create new conversation
+    // Create new conversation (only if they are friends)
     const newConversation = {
       type: 'direct',
       participants: [userId1, userId2],
