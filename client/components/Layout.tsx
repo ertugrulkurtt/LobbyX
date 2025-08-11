@@ -66,6 +66,7 @@ export function Layout({ children }: LayoutProps) {
     videoEnabled: false,
     screenShare: false
   });
+  const [voiceStartTime, setVoiceStartTime] = useState<Date | null>(null);
 
   const currentPath = location.pathname;
 
