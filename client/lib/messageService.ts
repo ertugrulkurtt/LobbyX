@@ -251,6 +251,27 @@ export const sendMessage = async (
   console.log('Sending message:', { conversationId, senderId, content, type });
 
   return withRetry(async () => {
+    // First, check if this is a direct conversation and verify friendship
+    const conversationRef = doc(db, 'conversations', conversationId);
+    const conversationDoc = await getDoc(conversationRef);
+
+    if (conversationDoc.exists()) {
+      const conversationData = conversationDoc.data();
+
+      // If it's a direct conversation, check friendship
+      if (conversationData.type === 'direct') {
+        const participants = conversationData.participants || [];
+        const otherParticipant = participants.find((id: string) => id !== senderId);
+
+        if (otherParticipant) {
+          const friendshipStatus = await areFriends(senderId, otherParticipant);
+          if (!friendshipStatus) {
+            throw new Error('Bu kişiyle artık arkadaş olmadığınız için mesaj gönderemezsiniz.');
+          }
+        }
+      }
+    }
+
     const messagesRef = collection(db, 'conversations', conversationId, 'messages');
     const timestamp = new Date().toISOString();
 
