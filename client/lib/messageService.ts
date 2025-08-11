@@ -297,8 +297,7 @@ export const sendMessage = async (
     const messageRef = await addDoc(messagesRef, messageData);
     console.log('Message added with ID:', messageRef.id);
 
-    // Update conversation with last message
-    const conversationRef = doc(db, 'conversations', conversationId);
+    // Update conversation with last message (reuse existing conversationRef)
     const conversationUpdate = {
       lastMessage: {
         senderId,
