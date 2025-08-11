@@ -79,6 +79,11 @@ export interface Conversation {
  */
 export const getUserConversations = async (userId: string): Promise<Conversation[]> => {
   return withRetry(async () => {
+    // Ensure user is authenticated
+    if (!auth.currentUser) {
+      throw new Error('User must be authenticated to access conversations');
+    }
+
     const conversationsRef = collection(db, 'conversations');
     // Remove orderBy to avoid composite index requirement
     const q = query(
