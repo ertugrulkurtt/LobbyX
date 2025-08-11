@@ -55,42 +55,56 @@ service cloud.firestore {
         request.auth.uid == resource.data.fromUserId;
     }
 
+    // Helper function to check if users are friends
+    function areFriends(userId1, userId2) {
+      return userId2 in get(/databases/$(database)/documents/users/$(userId1)).data.friends;
+    }
+
     // CONVERSATIONS COLLECTION
     match /conversations/{conversationId} {
       // Users can read conversations they participate in
-      allow read: if isAuthenticated() && 
+      allow read: if isAuthenticated() &&
         request.auth.uid in resource.data.participants;
-      
-      // Users can create conversations they participate in
-      allow create: if isAuthenticated() && 
-        request.auth.uid in request.resource.data.participants;
-      
+
+      // Users can create direct conversations only if they are friends
+      allow create: if isAuthenticated() &&
+        request.auth.uid in request.resource.data.participants &&
+        (request.resource.data.type != 'direct' ||
+         (request.resource.data.participants.size() == 2 &&
+          areFriends(request.auth.uid,
+            request.resource.data.participants[request.resource.data.participants[0] == request.auth.uid ? 1 : 0])));
+
       // Users can update conversations they participate in
-      allow update: if isAuthenticated() && 
+      allow update: if isAuthenticated() &&
         request.auth.uid in resource.data.participants;
-      
+
       // Only conversation participants can delete
-      allow delete: if isAuthenticated() && 
+      allow delete: if isAuthenticated() &&
         request.auth.uid in resource.data.participants;
 
       // MESSAGES SUBCOLLECTION
       match /messages/{messageId} {
         // Users can read messages in conversations they participate in
-        allow read: if isAuthenticated() && 
+        allow read: if isAuthenticated() &&
           request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
-        
-        // Users can create messages in conversations they participate in
-        allow create: if isAuthenticated() && 
+
+        // Users can create messages only if they participate and (if direct chat) are friends
+        allow create: if isAuthenticated() &&
           request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants &&
-          request.auth.uid == request.resource.data.senderId;
-        
+          request.auth.uid == request.resource.data.senderId &&
+          (get(/databases/$(database)/documents/conversations/$(conversationId)).data.type != 'direct' ||
+           (get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants.size() == 2 &&
+            areFriends(request.auth.uid,
+              get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants[
+                get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants[0] == request.auth.uid ? 1 : 0])));
+
         // Users can update their own messages or mark messages as read
-        allow update: if isAuthenticated() && 
-          (request.auth.uid == resource.data.senderId || 
+        allow update: if isAuthenticated() &&
+          (request.auth.uid == resource.data.senderId ||
            request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants);
-        
+
         // Users can delete their own messages
-        allow delete: if isAuthenticated() && 
+        allow delete: if isAuthenticated() &&
           request.auth.uid == resource.data.senderId;
       }
     }
