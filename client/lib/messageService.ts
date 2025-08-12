@@ -15,7 +15,6 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import { wrapOperation } from './unifiedErrorHandler';
-import { ensureAuthenticated, waitForAuth } from './firebaseAuth';
 import { RealUser, areFriends } from './userService';
 import { createMessageNotification } from './notificationService';
 // Network error handling removed for simplicity
