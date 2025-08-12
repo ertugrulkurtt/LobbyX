@@ -595,25 +595,46 @@ export const subscribeToFriendRequests = (
   // Initial load
   refreshData();
 
-  // Set up real-time listening for any changes in friendRequests collection
+  // Set up real-time listening for friend requests specific to this user
   const requestsRef = collection(db, 'friendRequests');
 
-  const unsubscribe = onSnapshot(requestsRef, () => {
-    // When any document in friendRequests changes, refresh all data
+  // Listen to incoming requests (where this user is the recipient)
+  const incomingQuery = query(
+    requestsRef,
+    where('toUserId', '==', userId),
+    where('status', '==', 'pending')
+  );
+
+  // Listen to outgoing requests (where this user is the sender)
+  const outgoingQuery = query(
+    requestsRef,
+    where('fromUserId', '==', userId),
+    where('status', '==', 'pending')
+  );
+
+  const unsubscribeIncoming = onSnapshot(incomingQuery, () => {
     refreshData();
   }, (error) => {
-    console.error('Friend requests subscription error:', error);
-
+    console.error('Incoming friend requests subscription error:', error);
     if (error.code === 'permission-denied') {
-      console.error('Permission denied: Please update Firestore rules');
-    } else if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
-      console.warn('Network connection issue with subscription - will retry automatically');
-      // Try to reconnect after a delay
-      setTimeout(() => {
-        refreshData();
-      }, 5000);
+      console.error('Permission denied: Please check Firestore rules for friendRequests collection');
     }
   });
+
+  const unsubscribeOutgoing = onSnapshot(outgoingQuery, () => {
+    refreshData();
+  }, (error) => {
+    console.error('Outgoing friend requests subscription error:', error);
+    if (error.code === 'permission-denied') {
+      console.error('Permission denied: Please check Firestore rules for friendRequests collection');
+    }
+  });
+
+  // Return a function that unsubscribes from both listeners
+  const unsubscribe = () => {
+    unsubscribeIncoming();
+    unsubscribeOutgoing();
+  };
 
   return unsubscribe;
 };
