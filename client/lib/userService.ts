@@ -15,9 +15,8 @@ import {
   addDoc,
   deleteDoc
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import { wrapOperation } from './unifiedErrorHandler';
-import { ensureAuthenticated, waitForAuth, isAuthenticated } from './firebaseAuth';
 import { createFriendRequestNotification, createFriendAcceptedNotification } from './notificationService';
 
 // Use unified error handler for all operations
