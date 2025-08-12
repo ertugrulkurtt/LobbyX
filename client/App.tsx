@@ -19,7 +19,6 @@ import { systemHealthCheck } from "./lib/systemHealthCheck";
 import { cleanupAllSubscriptions } from "./lib/subscriptionManager";
 import { testFirebaseConnection } from "./lib/firebase";
 
-
 // Layout
 import { Layout } from "./components/Layout";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -60,30 +59,30 @@ function LoadingScreen() {
 // Protected Route component - only for authenticated users
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return <LoadingScreen />;
   }
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
-  
+
   return <Layout>{children}</Layout>;
 }
 
 // Public Route component - only for non-authenticated users
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return <LoadingScreen />;
   }
-  
+
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
-  
+
   return <>{children}</>;
 }
 
@@ -98,30 +97,40 @@ function AppRouter() {
     initFileCleanupService();
 
     // Test Firebase connection
-    testFirebaseConnection().then(success => {
-      console.log('Firebase connection:', success ? 'OK' : 'Failed');
+    testFirebaseConnection().then((success) => {
+      console.log("Firebase connection:", success ? "OK" : "Failed");
     });
 
     // Run simple health check
     setTimeout(() => {
-      systemHealthCheck.runHealthCheck().then(() => {
-        systemHealthCheck.createHealthIndicator();
-      }).catch((error) => {
-        console.warn('Health check failed:', error);
-      });
+      systemHealthCheck
+        .runHealthCheck()
+        .then(() => {
+          systemHealthCheck.createHealthIndicator();
+        })
+        .catch((error) => {
+          console.warn("Health check failed:", error);
+        });
     }, 1000);
 
     // Listen for global Firebase permission errors
     const handleGlobalError = (event: any) => {
       const error = event.detail || event.reason;
-      if (error && (error.message?.includes('permission') || error.code === 'permission-denied')) {
+      if (
+        error &&
+        (error.message?.includes("permission") ||
+          error.code === "permission-denied")
+      ) {
         setShowFirebaseError(true);
       }
     };
 
-    window.addEventListener('firebase-permission-error', handleGlobalError);
+    window.addEventListener("firebase-permission-error", handleGlobalError);
     return () => {
-      window.removeEventListener('firebase-permission-error', handleGlobalError);
+      window.removeEventListener(
+        "firebase-permission-error",
+        handleGlobalError,
+      );
       // Clean up all Firebase subscriptions on app unmount
       cleanupAllSubscriptions();
     };
@@ -134,80 +143,118 @@ function AppRouter() {
   return (
     <>
       {showFirebaseError && (
-        <FirebaseErrorNotification onClose={() => setShowFirebaseError(false)} />
+        <FirebaseErrorNotification
+          onClose={() => setShowFirebaseError(false)}
+        />
       )}
       <Routes>
-      {/* Public routes - only accessible when NOT logged in */}
-      <Route path="/" element={
-        <PublicRoute>
-          <LandingPage />
-        </PublicRoute>
-      } />
-      <Route path="/login" element={
-        <PublicRoute>
-          <Login />
-        </PublicRoute>
-      } />
-      <Route path="/register" element={
-        <PublicRoute>
-          <Register />
-        </PublicRoute>
-      } />
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/terms" element={<Terms />} />
+        {/* Public routes - only accessible when NOT logged in */}
+        <Route
+          path="/"
+          element={
+            <PublicRoute>
+              <LandingPage />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
 
-      {/* Protected routes - only accessible when logged in */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/servers" element={
-        <ProtectedRoute>
-          <Servers />
-        </ProtectedRoute>
-      } />
-      <Route path="/groups" element={
-        <ProtectedRoute>
-          <Groups />
-        </ProtectedRoute>
-      } />
-      <Route path="/chat" element={
-        <ProtectedRoute>
-          <Chat />
-        </ProtectedRoute>
-      } />
-      <Route path="/friends" element={
-        <ProtectedRoute>
-          <Friends />
-        </ProtectedRoute>
-      } />
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <Profile />
-        </ProtectedRoute>
-      } />
-      <Route path="/settings" element={
-        <ProtectedRoute>
-          <Settings />
-        </ProtectedRoute>
-      } />
-      <Route path="/notifications" element={
-        <ProtectedRoute>
-          <Notifications />
-        </ProtectedRoute>
-      } />
-      
-      {/* Catch-all route */}
-      <Route path="*" element={
-        isAuthenticated ? (
-          <ProtectedRoute>
-            <NotFound />
-          </ProtectedRoute>
-        ) : (
-          <Navigate to="/" replace />
-        )
-      } />
+        {/* Protected routes - only accessible when logged in */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/servers"
+          element={
+            <ProtectedRoute>
+              <Servers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/groups"
+          element={
+            <ProtectedRoute>
+              <Groups />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <Chat />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/friends"
+          element={
+            <ProtectedRoute>
+              <Friends />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Catch-all route */}
+        <Route
+          path="*"
+          element={
+            isAuthenticated ? (
+              <ProtectedRoute>
+                <NotFound />
+              </ProtectedRoute>
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
       </Routes>
     </>
   );

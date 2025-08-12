@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   MessageSquare,
   Send,
@@ -13,12 +13,12 @@ import {
   Check,
   CheckCheck,
   User,
-  Loader2
-} from 'lucide-react';
-import { useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useUserStats } from '../hooks/useUserStats';
-import { useNetworkStatus } from '../hooks/useNetworkStatus';
+  Loader2,
+} from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { useUserStats } from "../hooks/useUserStats";
+import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import {
   getUserConversations,
   getOrCreateDirectConversation,
@@ -28,16 +28,21 @@ import {
   subscribeToConversations,
   subscribeToMessages,
   Conversation,
-  Message
-} from '../lib/messageService';
-import { areFriends, RealUser, sendFriendRequest, removeFriend } from '../lib/userService';
-import UserProfileModal from '../components/UserProfileModal';
-import { uploadFile, UploadProgress } from '../lib/fileService';
-import FileUploadModal from '../components/FileUploadModal';
-import FileUploadProgress from '../components/FileUploadProgress';
-import FileMessage from '../components/FileMessage';
-import EmojiPicker from '../components/EmojiPicker';
-import MessageSearch from '../components/MessageSearch';
+  Message,
+} from "../lib/messageService";
+import {
+  areFriends,
+  RealUser,
+  sendFriendRequest,
+  removeFriend,
+} from "../lib/userService";
+import UserProfileModal from "../components/UserProfileModal";
+import { uploadFile, UploadProgress } from "../lib/fileService";
+import FileUploadModal from "../components/FileUploadModal";
+import FileUploadProgress from "../components/FileUploadProgress";
+import FileMessage from "../components/FileMessage";
+import EmojiPicker from "../components/EmojiPicker";
+import MessageSearch from "../components/MessageSearch";
 
 export default function ChatReal() {
   const { user } = useAuth();
@@ -45,9 +50,11 @@ export default function ChatReal() {
   const { isOnline, wasOffline } = useNetworkStatus();
   const location = useLocation();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
-  const [messageText, setMessageText] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'online' | 'favorites'>('all');
+  const [messageText, setMessageText] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"all" | "online" | "favorites">(
+    "all",
+  );
 
   // Real Firebase data
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -55,13 +62,24 @@ export default function ChatReal() {
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [canSendMessage, setCanSendMessage] = useState(true);
-  const [friendshipStatus, setFriendshipStatus] = useState<string>('');
-  const [selectedUserProfile, setSelectedUserProfile] = useState<RealUser | null>(null);
+  const [friendshipStatus, setFriendshipStatus] = useState<string>("");
+  const [selectedUserProfile, setSelectedUserProfile] =
+    useState<RealUser | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // File upload states
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
-  const [uploadingFiles, setUploadingFiles] = useState<Map<string, { file: File; progress: number; status: 'uploading' | 'completed' | 'error'; error?: string }>>(new Map());
+  const [uploadingFiles, setUploadingFiles] = useState<
+    Map<
+      string,
+      {
+        file: File;
+        progress: number;
+        status: "uploading" | "completed" | "error";
+        error?: string;
+      }
+    >
+  >(new Map());
 
   // Emoji picker state
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
@@ -73,11 +91,10 @@ export default function ChatReal() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-
   // Check for conversation ID in URL
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
-    const conversationFromUrl = urlParams.get('conversation');
+    const conversationFromUrl = urlParams.get("conversation");
 
     if (conversationFromUrl && conversationFromUrl !== selectedChat) {
       setSelectedChat(conversationFromUrl);
@@ -90,20 +107,26 @@ export default function ChatReal() {
 
     setLoading(true);
 
-
     // Subscribe to real-time conversations with better error handling
-    const unsubscribe = subscribeToConversations(user.uid, (realTimeConversations) => {
-      setConversations(realTimeConversations);
-      setLoading(false);
+    const unsubscribe = subscribeToConversations(
+      user.uid,
+      (realTimeConversations) => {
+        setConversations(realTimeConversations);
+        setLoading(false);
 
-      // Auto-select first conversation if none selected and no URL param
-      const urlParams = new URLSearchParams(location.search);
-      const conversationFromUrl = urlParams.get('conversation');
+        // Auto-select first conversation if none selected and no URL param
+        const urlParams = new URLSearchParams(location.search);
+        const conversationFromUrl = urlParams.get("conversation");
 
-      if (!conversationFromUrl && !selectedChat && realTimeConversations.length > 0) {
-        setSelectedChat(realTimeConversations[0].id);
-      }
-    });
+        if (
+          !conversationFromUrl &&
+          !selectedChat &&
+          realTimeConversations.length > 0
+        ) {
+          setSelectedChat(realTimeConversations[0].id);
+        }
+      },
+    );
 
     return () => unsubscribe();
   }, [user?.uid, location.search, selectedChat]);
@@ -113,37 +136,46 @@ export default function ChatReal() {
     const checkFriendship = async () => {
       if (!selectedChat || !user?.uid) {
         setCanSendMessage(true);
-        setFriendshipStatus('');
+        setFriendshipStatus("");
         return;
       }
 
       // Find the selected conversation
-      const selectedConversation = conversations.find(c => c.id === selectedChat);
+      const selectedConversation = conversations.find(
+        (c) => c.id === selectedChat,
+      );
 
-      if (selectedConversation && selectedConversation.type === 'direct') {
+      if (selectedConversation && selectedConversation.type === "direct") {
         // Get the other participant
-        const otherParticipant = selectedConversation.participantDetails.find(p => p.uid !== user.uid);
+        const otherParticipant = selectedConversation.participantDetails.find(
+          (p) => p.uid !== user.uid,
+        );
 
         if (otherParticipant) {
           try {
-            const friendshipStatus = await areFriends(user.uid, otherParticipant.uid);
+            const friendshipStatus = await areFriends(
+              user.uid,
+              otherParticipant.uid,
+            );
             setCanSendMessage(friendshipStatus);
 
             if (!friendshipStatus) {
-              setFriendshipStatus(`${otherParticipant.displayName || otherParticipant.username} ile artık arkadaş değilsiniz. Mesaj gönderemezsiniz.`);
+              setFriendshipStatus(
+                `${otherParticipant.displayName || otherParticipant.username} ile artık arkadaş değilsiniz. Mesaj gönderemezsiniz.`,
+              );
             } else {
-              setFriendshipStatus('');
+              setFriendshipStatus("");
             }
           } catch (error) {
-            console.error('Error checking friendship:', error);
+            console.error("Error checking friendship:", error);
             setCanSendMessage(true);
-            setFriendshipStatus('');
+            setFriendshipStatus("");
           }
         }
       } else {
         // Group conversation or server channel - always allow
         setCanSendMessage(true);
-        setFriendshipStatus('');
+        setFriendshipStatus("");
       }
     };
 
@@ -159,59 +191,69 @@ export default function ChatReal() {
 
     setMessagesLoading(true);
 
-    const unsubscribe = subscribeToMessages(selectedChat, (realTimeMessages) => {
-      setMessages(realTimeMessages);
-      setMessagesLoading(false);
+    const unsubscribe = subscribeToMessages(
+      selectedChat,
+      (realTimeMessages) => {
+        setMessages(realTimeMessages);
+        setMessagesLoading(false);
 
-      // Mark messages as read
-      if (user?.uid) {
-        markMessagesAsRead(selectedChat, user.uid).catch(console.error);
-      }
-    });
+        // Mark messages as read
+        if (user?.uid) {
+          markMessagesAsRead(selectedChat, user.uid).catch(console.error);
+        }
+      },
+    );
 
     return () => unsubscribe();
   }, [selectedChat, user?.uid]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!messageText.trim() || !selectedChat || !user?.uid || !canSendMessage) return;
+    if (!messageText.trim() || !selectedChat || !user?.uid || !canSendMessage)
+      return;
 
     try {
       await sendMessage(selectedChat, user.uid, messageText.trim());
       await incrementMessages(selectedChat);
-      setMessageText('');
+      setMessageText("");
     } catch (error: any) {
-      console.error('Error sending message:', error);
+      console.error("Error sending message:", error);
 
-      if (error.message.includes('arkadaş')) {
+      if (error.message.includes("arkadaş")) {
         // This shouldn't happen anymore since we check friendship status in UI
         setCanSendMessage(false);
         setFriendshipStatus(error.message);
-      } else if (error.name === 'NetworkError' ||
-                 error.message.includes('Ağ bağlantısı sorunu')) {
-        alert('Ağ bağlantısı sorunu. İnternet bağlantınızı kontrol edin ve tekrar deneyin.');
-      } else if (error.message.includes('Failed to fetch') ||
-                 error.code === 'unavailable' ||
-                 error.message.includes('network-request-failed')) {
+      } else if (
+        error.name === "NetworkError" ||
+        error.message.includes("Ağ bağlantısı sorunu")
+      ) {
+        alert(
+          "Ağ bağlantısı sorunu. İnternet bağlantınızı kontrol edin ve tekrar deneyin.",
+        );
+      } else if (
+        error.message.includes("Failed to fetch") ||
+        error.code === "unavailable" ||
+        error.message.includes("network-request-failed")
+      ) {
         if (!isOnline) {
-          alert('İnternet bağlantısı yok. Lütfen bağlantınızı kontrol edin.');
+          alert("İnternet bağlantısı yok. Lütfen bağlantınızı kontrol edin.");
         } else {
-          alert('Bağlantı sorunu yaşanıyor. Lütfen tekrar deneyin.');
+          alert("Bağlantı sorunu yaşanıyor. Lütfen tekrar deneyin.");
         }
-      } else if (error.code === 'permission-denied') {
-        alert('Bu sohbete mesaj gönderme izniniz yok.');
+      } else if (error.code === "permission-denied") {
+        alert("Bu sohbete mesaj gönderme izniniz yok.");
       } else {
-        alert('Mesaj gönderilemedi. Lütfen tekrar deneyin.');
+        alert("Mesaj gönderilemedi. Lütfen tekrar deneyin.");
       }
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && canSendMessage) {
+    if (e.key === "Enter" && !e.shiftKey && canSendMessage) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -222,12 +264,12 @@ export default function ChatReal() {
     if (!selectedChat) return;
 
     try {
-      console.log('Manual refresh triggered for conversation:', selectedChat);
+      console.log("Manual refresh triggered for conversation:", selectedChat);
       const messages = await getConversationMessages(selectedChat);
-      console.log('Manual refresh got', messages.length, 'messages');
+      console.log("Manual refresh got", messages.length, "messages");
       setMessages(messages);
     } catch (error) {
-      console.error('Manual refresh error:', error);
+      console.error("Manual refresh error:", error);
     }
   };
 
@@ -246,15 +288,18 @@ export default function ChatReal() {
     if (!user?.uid) return;
 
     try {
-      const conversationId = await getOrCreateDirectConversation(user.uid, targetUserId);
+      const conversationId = await getOrCreateDirectConversation(
+        user.uid,
+        targetUserId,
+      );
       setSelectedChat(conversationId);
       handleCloseProfileModal();
     } catch (error: any) {
-      console.error('Error starting conversation from profile:', error);
-      if (error.message.includes('arkadaş')) {
+      console.error("Error starting conversation from profile:", error);
+      if (error.message.includes("arkadaş")) {
         alert(error.message);
       } else {
-        alert('Sohbet başlatılamadı.');
+        alert("Sohbet başlatılamadı.");
       }
     }
   };
@@ -264,17 +309,22 @@ export default function ChatReal() {
 
     try {
       await sendFriendRequest(user.uid, targetUserId);
-      alert('Arkadaşlık isteği gönderildi!');
+      alert("Arkadaşlık isteği gönderildi!");
     } catch (error: any) {
-      console.error('Error sending friend request from profile:', error);
-      if (error.message.includes('already sent')) {
-        alert('Bu kullanıcıya zaten arkadaşlık isteği gönderilmiş.');
-      } else if (error.message.includes('already friends')) {
-        alert('Bu kullanıcı zaten arkadaşınız.');
-      } else if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
-        alert('Bağlantı hatası. İnternet bağlantınızı kontrol edin ve tekrar deneyin.');
+      console.error("Error sending friend request from profile:", error);
+      if (error.message.includes("already sent")) {
+        alert("Bu kullanıcıya zaten arkadaşlık isteği gönderilmiş.");
+      } else if (error.message.includes("already friends")) {
+        alert("Bu kullanıcı zaten arkadaşınız.");
+      } else if (
+        error.message.includes("Failed to fetch") ||
+        error.code === "unavailable"
+      ) {
+        alert(
+          "Bağlantı hatası. İnternet bağlantınızı kontrol edin ve tekrar deneyin.",
+        );
       } else {
-        alert(error.message || 'Arkadaşlık isteği gönderilemedi.');
+        alert(error.message || "Arkadaşlık isteği gönderilemedi.");
       }
     }
   };
@@ -282,18 +332,25 @@ export default function ChatReal() {
   const handleRemoveFriendFromProfile = async (targetUserId: string) => {
     if (!user?.uid) return;
 
-    const confirmRemove = window.confirm('Bu kişiyi arkadaşlıktan çıkarmak istediğinizden emin misiniz?');
+    const confirmRemove = window.confirm(
+      "Bu kişiyi arkadaşlıktan çıkarmak istediğinizden emin misiniz?",
+    );
     if (!confirmRemove) return;
 
     try {
       await removeFriend(user.uid, targetUserId);
-      alert('Arkadaşlıktan çıkarıldı.');
+      alert("Arkadaşlıktan çıkarıldı.");
     } catch (error: any) {
-      console.error('Error removing friend from profile:', error);
-      if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
-        alert('Bağlantı hatası. İnternet bağlantınızı kontrol edin ve tekrar deneyin.');
+      console.error("Error removing friend from profile:", error);
+      if (
+        error.message.includes("Failed to fetch") ||
+        error.code === "unavailable"
+      ) {
+        alert(
+          "Bağlantı hatası. İnternet bağlantınızı kontrol edin ve tekrar deneyin.",
+        );
       } else {
-        alert('Arkadaşlıktan çıkarılamadı. Lütfen tekrar deneyin.');
+        alert("Arkadaşlıktan çıkarılamadı. Lütfen tekrar deneyin.");
       }
     }
   };
@@ -305,11 +362,16 @@ export default function ChatReal() {
     const fileId = `${Date.now()}_${file.name}`;
 
     // Add to uploading files map
-    setUploadingFiles(prev => new Map(prev.set(fileId, {
-      file,
-      progress: 0,
-      status: 'uploading'
-    })));
+    setUploadingFiles(
+      (prev) =>
+        new Map(
+          prev.set(fileId, {
+            file,
+            progress: 0,
+            status: "uploading",
+          }),
+        ),
+    );
 
     try {
       // Upload file to Firebase Storage
@@ -318,28 +380,28 @@ export default function ChatReal() {
         selectedChat,
         user.uid,
         (progress: UploadProgress) => {
-          setUploadingFiles(prev => {
+          setUploadingFiles((prev) => {
             const newMap = new Map(prev);
             const existing = newMap.get(fileId);
             if (existing) {
               newMap.set(fileId, {
                 ...existing,
-                progress: progress.progress
+                progress: progress.progress,
               });
             }
             return newMap;
           });
-        }
+        },
       );
 
       // Update upload status to completed
-      setUploadingFiles(prev => {
+      setUploadingFiles((prev) => {
         const newMap = new Map(prev);
         const existing = newMap.get(fileId);
         if (existing) {
           newMap.set(fileId, {
             ...existing,
-            status: 'completed'
+            status: "completed",
           });
         }
         return newMap;
@@ -350,33 +412,32 @@ export default function ChatReal() {
         selectedChat,
         user.uid,
         file.name,
-        'file',
+        "file",
         fileMetadata.downloadUrl,
         file.name,
-        file.size
+        file.size,
       );
 
       // Remove from uploading files after successful send
       setTimeout(() => {
-        setUploadingFiles(prev => {
+        setUploadingFiles((prev) => {
           const newMap = new Map(prev);
           newMap.delete(fileId);
           return newMap;
         });
       }, 2000);
-
     } catch (error: any) {
-      console.error('Error uploading file:', error);
+      console.error("Error uploading file:", error);
 
       // Update upload status to error
-      setUploadingFiles(prev => {
+      setUploadingFiles((prev) => {
         const newMap = new Map(prev);
         const existing = newMap.get(fileId);
         if (existing) {
           newMap.set(fileId, {
             ...existing,
-            status: 'error',
-            error: error.message || 'Dosya yüklenemedi'
+            status: "error",
+            error: error.message || "Dosya yüklenemedi",
           });
         }
         return newMap;
@@ -384,7 +445,7 @@ export default function ChatReal() {
 
       // Remove error after a delay
       setTimeout(() => {
-        setUploadingFiles(prev => {
+        setUploadingFiles((prev) => {
           const newMap = new Map(prev);
           newMap.delete(fileId);
           return newMap;
@@ -394,7 +455,7 @@ export default function ChatReal() {
   };
 
   const handleCancelUpload = (fileId: string) => {
-    setUploadingFiles(prev => {
+    setUploadingFiles((prev) => {
       const newMap = new Map(prev);
       newMap.delete(fileId);
       return newMap;
@@ -403,7 +464,7 @@ export default function ChatReal() {
 
   // Emoji handlers
   const handleEmojiSelect = (emoji: string) => {
-    setMessageText(prev => prev + emoji);
+    setMessageText((prev) => prev + emoji);
     setIsEmojiPickerOpen(false);
   };
 
@@ -411,60 +472,82 @@ export default function ChatReal() {
   const handleMessageSelect = (messageId: string) => {
     const messageElement = document.getElementById(`message-${messageId}`);
     if (messageElement) {
-      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
       // Highlight the message briefly
-      messageElement.classList.add('animate-pulse', 'bg-neon-purple/20', 'rounded-lg');
+      messageElement.classList.add(
+        "animate-pulse",
+        "bg-neon-purple/20",
+        "rounded-lg",
+      );
       setTimeout(() => {
-        messageElement.classList.remove('animate-pulse', 'bg-neon-purple/20', 'rounded-lg');
+        messageElement.classList.remove(
+          "animate-pulse",
+          "bg-neon-purple/20",
+          "rounded-lg",
+        );
       }, 2000);
     }
     setIsSearchOpen(false);
   };
 
-
   // Get conversation details
-  const selectedChatData = conversations.find(c => c.id === selectedChat);
+  const selectedChatData = conversations.find((c) => c.id === selectedChat);
 
   // Filter conversations based on search and tab
-  const filteredChats = conversations.filter(chat => {
-    const matchesSearch = !searchQuery || 
-      chat.participantDetails.some(p => 
-        p.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.username?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredChats = conversations.filter((chat) => {
+    const matchesSearch =
+      !searchQuery ||
+      chat.participantDetails.some(
+        (p) =>
+          p.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.username?.toLowerCase().includes(searchQuery.toLowerCase()),
       );
 
-    if (activeTab === 'online') {
-      return matchesSearch && chat.participantDetails.some(p => p.isOnline && p.uid !== user?.uid);
+    if (activeTab === "online") {
+      return (
+        matchesSearch &&
+        chat.participantDetails.some((p) => p.isOnline && p.uid !== user?.uid)
+      );
     }
-    
+
     return matchesSearch;
   });
 
   // Get display name for conversation
   const getConversationDisplayName = (conversation: Conversation): string => {
-    if (conversation.type === 'group') {
-      return conversation.name || 'Grup Sohbeti';
+    if (conversation.type === "group") {
+      return conversation.name || "Grup Sohbeti";
     }
-    
-    const otherParticipant = conversation.participantDetails.find(p => p.uid !== user?.uid);
-    return otherParticipant?.displayName || otherParticipant?.username || 'Kullanıcı';
+
+    const otherParticipant = conversation.participantDetails.find(
+      (p) => p.uid !== user?.uid,
+    );
+    return (
+      otherParticipant?.displayName || otherParticipant?.username || "Kullanıcı"
+    );
   };
 
   // Get conversation avatar
-  const getConversationAvatar = (conversation: Conversation): string | undefined => {
-    if (conversation.type === 'group') {
+  const getConversationAvatar = (
+    conversation: Conversation,
+  ): string | undefined => {
+    if (conversation.type === "group") {
       return conversation.icon;
     }
-    
-    const otherParticipant = conversation.participantDetails.find(p => p.uid !== user?.uid);
+
+    const otherParticipant = conversation.participantDetails.find(
+      (p) => p.uid !== user?.uid,
+    );
     return otherParticipant?.photoURL;
   };
 
   // Check if other participant is online
   const isOtherParticipantOnline = (conversation: Conversation): boolean => {
-    if (conversation.type === 'group') return true;
-    
-    const otherParticipant = conversation.participantDetails.find(p => p.uid !== user?.uid);
+    if (conversation.type === "group") return true;
+
+    const otherParticipant = conversation.participantDetails.find(
+      (p) => p.uid !== user?.uid,
+    );
     return otherParticipant?.isOnline || false;
   };
 
@@ -472,12 +555,12 @@ export default function ChatReal() {
   const formatTime = (isoDate: string): string => {
     try {
       const date = new Date(isoDate);
-      return date.toLocaleTimeString('tr-TR', {
-        hour: '2-digit',
-        minute: '2-digit'
+      return date.toLocaleTimeString("tr-TR", {
+        hour: "2-digit",
+        minute: "2-digit",
       });
     } catch {
-      return '';
+      return "";
     }
   };
 
@@ -486,37 +569,49 @@ export default function ChatReal() {
     if (!message.readBy || message.readBy.length === 0) return false;
 
     // For direct conversations, check if the other participant has read it
-    if (selectedChatData?.type === 'direct') {
-      const otherParticipant = selectedChatData.participantDetails.find(p => p.uid !== user?.uid);
-      return message.readBy.some(read => read.userId === otherParticipant?.uid);
+    if (selectedChatData?.type === "direct") {
+      const otherParticipant = selectedChatData.participantDetails.find(
+        (p) => p.uid !== user?.uid,
+      );
+      return message.readBy.some(
+        (read) => read.userId === otherParticipant?.uid,
+      );
     }
 
     // For group conversations, check if anyone else has read it
-    return message.readBy.some(read => read.userId !== user?.uid);
+    return message.readBy.some((read) => read.userId !== user?.uid);
   };
 
   // Get read status tooltip text
   const getReadStatusTooltip = (message: Message): string => {
-    if (!message.readBy || message.readBy.length === 0) return 'Gönderildi';
+    if (!message.readBy || message.readBy.length === 0) return "Gönderildi";
 
-    if (selectedChatData?.type === 'direct') {
-      const otherParticipant = selectedChatData.participantDetails.find(p => p.uid !== user?.uid);
-      const readInfo = message.readBy.find(read => read.userId === otherParticipant?.uid);
+    if (selectedChatData?.type === "direct") {
+      const otherParticipant = selectedChatData.participantDetails.find(
+        (p) => p.uid !== user?.uid,
+      );
+      const readInfo = message.readBy.find(
+        (read) => read.userId === otherParticipant?.uid,
+      );
 
       if (readInfo) {
         const readTime = formatTime(readInfo.readAt);
         return `Görüldü ${readTime}`;
       }
-      return 'Gönderildi';
+      return "Gönderildi";
     }
 
     // For group conversations, show who read it
-    const readByOthers = message.readBy.filter(read => read.userId !== user?.uid);
-    if (readByOthers.length === 0) return 'Gönderildi';
+    const readByOthers = message.readBy.filter(
+      (read) => read.userId !== user?.uid,
+    );
+    if (readByOthers.length === 0) return "Gönderildi";
 
     if (readByOthers.length === 1) {
-      const reader = selectedChatData?.participantDetails.find(p => p.uid === readByOthers[0].userId);
-      const readerName = reader?.displayName || reader?.username || 'Kullanıcı';
+      const reader = selectedChatData?.participantDetails.find(
+        (p) => p.uid === readByOthers[0].userId,
+      );
+      const readerName = reader?.displayName || reader?.username || "Kullanıcı";
       return `${readerName} tarafından görüldü`;
     }
 
@@ -525,27 +620,37 @@ export default function ChatReal() {
 
   // Get unread count for conversation
   const getUnreadCount = (conversation: Conversation): number => {
-    return conversation.unreadCounts?.[user?.uid || ''] || 0;
+    return conversation.unreadCounts?.[user?.uid || ""] || 0;
   };
 
   // Check if last message was sent by current user and is read
   const isLastMessageRead = (conversation: Conversation): boolean => {
-    if (!conversation.lastMessage || conversation.lastMessage.senderId !== user?.uid) {
+    if (
+      !conversation.lastMessage ||
+      conversation.lastMessage.senderId !== user?.uid
+    ) {
       return false; // Not our message or no message
     }
 
     // For direct conversations, check if other participant has unread count of 0
-    if (conversation.type === 'direct') {
-      const otherParticipant = conversation.participantDetails.find(p => p.uid !== user?.uid);
+    if (conversation.type === "direct") {
+      const otherParticipant = conversation.participantDetails.find(
+        (p) => p.uid !== user?.uid,
+      );
       if (otherParticipant) {
-        const otherUnreadCount = conversation.unreadCounts?.[otherParticipant.uid] || 0;
+        const otherUnreadCount =
+          conversation.unreadCounts?.[otherParticipant.uid] || 0;
         return otherUnreadCount === 0;
       }
     }
 
     // For group conversations, check if anyone else has read it
-    const otherParticipants = conversation.participantDetails.filter(p => p.uid !== user?.uid);
-    return otherParticipants.some(p => (conversation.unreadCounts?.[p.uid] || 0) === 0);
+    const otherParticipants = conversation.participantDetails.filter(
+      (p) => p.uid !== user?.uid,
+    );
+    return otherParticipants.some(
+      (p) => (conversation.unreadCounts?.[p.uid] || 0) === 0,
+    );
   };
 
   if (loading) {
@@ -553,7 +658,7 @@ export default function ChatReal() {
       <div className="flex items-center justify-center min-h-96">
         <Loader2 className="w-8 h-8 animate-spin text-neon-purple" />
         <span className="ml-2 text-gaming-text">
-          {!isOnline ? 'Bağlantı bekleniyor...' : 'Sohbetler yükleniyor...'}
+          {!isOnline ? "Bağlantı bekleniyor..." : "Sohbetler yükleniyor..."}
         </span>
       </div>
     );
@@ -585,7 +690,7 @@ export default function ChatReal() {
         {/* Header */}
         <div className="p-4 border-b border-gaming-border">
           <h1 className="text-xl font-bold text-gaming-text mb-4">Sohbetler</h1>
-          
+
           {/* Search */}
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gaming-muted" />
@@ -601,17 +706,17 @@ export default function ChatReal() {
           {/* Tabs */}
           <div className="flex space-x-1 bg-gaming-surface/50 rounded-lg p-1">
             {[
-              { id: 'all', label: 'Tümü' },
-              { id: 'online', label: 'Çevrimiçi' },
-              { id: 'favorites', label: 'Favoriler' }
+              { id: "all", label: "Tümü" },
+              { id: "online", label: "Çevrimiçi" },
+              { id: "favorites", label: "Favoriler" },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex-1 px-3 py-1 text-sm rounded-md transition-colors ${
                   activeTab === tab.id
-                    ? 'bg-neon-purple text-white'
-                    : 'text-gaming-muted hover:text-gaming-text'
+                    ? "bg-neon-purple text-white"
+                    : "text-gaming-muted hover:text-gaming-text"
                 }`}
               >
                 {tab.label}
@@ -634,16 +739,16 @@ export default function ChatReal() {
                   key={chat.id}
                   onClick={() => setSelectedChat(chat.id)}
                   className={`p-4 border-b border-gaming-border/50 cursor-pointer transition-colors hover:bg-gaming-surface/50 ${
-                    selectedChat === chat.id ? 'bg-gaming-surface' : ''
+                    selectedChat === chat.id ? "bg-gaming-surface" : ""
                   }`}
                 >
                   <div className="flex items-center space-x-3">
                     <div className="relative">
                       <div className="w-12 h-12 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center">
                         {avatar ? (
-                          <img 
-                            src={avatar} 
-                            alt={displayName} 
+                          <img
+                            src={avatar}
+                            alt={displayName}
                             className="w-full h-full object-cover rounded-full"
                           />
                         ) : (
@@ -661,24 +766,33 @@ export default function ChatReal() {
                           {displayName}
                         </h3>
                         <span className="text-xs text-gaming-muted">
-                          {chat.lastMessage && formatTime(chat.lastMessage.timestamp)}
+                          {chat.lastMessage &&
+                            formatTime(chat.lastMessage.timestamp)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2 flex-1 min-w-0">
                           <p className="text-sm text-gaming-muted truncate">
-                            {chat.lastMessage?.content || 'Mesaj yok'}
+                            {chat.lastMessage?.content || "Mesaj yok"}
                           </p>
                           {/* Show read status for last message if sent by current user */}
-                          {chat.lastMessage && chat.lastMessage.senderId === user?.uid && (
-                            <div className="flex-shrink-0" title={isLastMessageRead(chat) ? 'Görüldü' : 'Gönderildi'}>
-                              {isLastMessageRead(chat) ? (
-                                <CheckCheck className="w-3 h-3 text-neon-cyan" />
-                              ) : (
-                                <Check className="w-3 h-3 text-gaming-muted" />
-                              )}
-                            </div>
-                          )}
+                          {chat.lastMessage &&
+                            chat.lastMessage.senderId === user?.uid && (
+                              <div
+                                className="flex-shrink-0"
+                                title={
+                                  isLastMessageRead(chat)
+                                    ? "Görüldü"
+                                    : "Gönderildi"
+                                }
+                              >
+                                {isLastMessageRead(chat) ? (
+                                  <CheckCheck className="w-3 h-3 text-neon-cyan" />
+                                ) : (
+                                  <Check className="w-3 h-3 text-gaming-muted" />
+                                )}
+                              </div>
+                            )}
                         </div>
                         {unreadCount > 0 && (
                           <span className="bg-neon-red text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
@@ -721,8 +835,11 @@ export default function ChatReal() {
                     className="relative cursor-pointer"
                     onClick={() => {
                       // For direct conversations, show the other participant's profile
-                      if (selectedChatData.type === 'direct') {
-                        const otherParticipant = selectedChatData.participantDetails.find(p => p.uid !== user?.uid);
+                      if (selectedChatData.type === "direct") {
+                        const otherParticipant =
+                          selectedChatData.participantDetails.find(
+                            (p) => p.uid !== user?.uid,
+                          );
                         if (otherParticipant) {
                           handleUserProfileClick(otherParticipant);
                         }
@@ -748,8 +865,11 @@ export default function ChatReal() {
                     className="cursor-pointer hover:opacity-75 transition-opacity"
                     onClick={() => {
                       // For direct conversations, show the other participant's profile
-                      if (selectedChatData.type === 'direct') {
-                        const otherParticipant = selectedChatData.participantDetails.find(p => p.uid !== user?.uid);
+                      if (selectedChatData.type === "direct") {
+                        const otherParticipant =
+                          selectedChatData.participantDetails.find(
+                            (p) => p.uid !== user?.uid,
+                          );
                         if (otherParticipant) {
                           handleUserProfileClick(otherParticipant);
                         }
@@ -762,7 +882,9 @@ export default function ChatReal() {
                       </h2>
                     </div>
                     <p className="text-sm text-gaming-muted">
-                      {isOtherParticipantOnline(selectedChatData) ? 'Çevrimiçi' : 'Çevrimdışı'}
+                      {isOtherParticipantOnline(selectedChatData)
+                        ? "Çevrimiçi"
+                        : "Çevrimdışı"}
                     </p>
                   </div>
                 </div>
@@ -791,136 +913,171 @@ export default function ChatReal() {
               ) : (
                 <>
                   {/* File Upload Progress */}
-                  {Array.from(uploadingFiles.entries()).map(([fileId, uploadInfo]) => (
-                    <div key={fileId} className="flex justify-end">
-                      <FileUploadProgress
-                        file={uploadInfo.file}
-                        progress={uploadInfo.progress}
-                        status={uploadInfo.status}
-                        error={uploadInfo.error}
-                        onCancel={() => handleCancelUpload(fileId)}
-                      />
-                    </div>
-                  ))}
+                  {Array.from(uploadingFiles.entries()).map(
+                    ([fileId, uploadInfo]) => (
+                      <div key={fileId} className="flex justify-end">
+                        <FileUploadProgress
+                          file={uploadInfo.file}
+                          progress={uploadInfo.progress}
+                          status={uploadInfo.status}
+                          error={uploadInfo.error}
+                          onCancel={() => handleCancelUpload(fileId)}
+                        />
+                      </div>
+                    ),
+                  )}
 
                   {/* Messages */}
                   {messages.length > 0 ? (
-                messages.map((message) => (
-                  <div
-                    key={message.id}
-                    id={`message-${message.id}`}
-                    className={`flex items-start space-x-3 ${message.senderId === user?.uid ? 'justify-end' : 'justify-start'}`}
-                  >
-                    {/* Avatar for received messages */}
-                    {message.senderId !== user?.uid && (
+                    messages.map((message) => (
                       <div
-                        className="w-8 h-8 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-neon-purple/50 transition-all"
-                        onClick={() => handleUserProfileClick(message.sender)}
+                        key={message.id}
+                        id={`message-${message.id}`}
+                        className={`flex items-start space-x-3 ${message.senderId === user?.uid ? "justify-end" : "justify-start"}`}
                       >
-                        {message.sender.photoURL ? (
-                          <img
-                            src={message.sender.photoURL}
-                            alt={message.sender.displayName || message.sender.username}
-                            className="w-full h-full object-cover rounded-full"
-                          />
-                        ) : (
-                          <span className="text-xs font-medium text-white">
-                            {(message.sender.displayName || message.sender.username || 'U').charAt(0).toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    <div className={`max-w-xs lg:max-w-md ${
-                      message.senderId === user?.uid ? 'order-2' : 'order-1'
-                    }`}>
-                      {message.senderId !== user?.uid && (
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span
-                            className="text-sm font-medium text-gaming-text cursor-pointer hover:text-neon-purple transition-colors"
-                            onClick={() => handleUserProfileClick(message.sender)}
-                          >
-                            {message.sender.displayName || message.sender.username}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {/* Render different message types */}
-                      {message.type === 'file' && message.fileUrl && message.fileName && message.fileSize ? (
-                        <div className={message.senderId === user?.uid ? 'ml-4' : 'mr-4'}>
-                          <FileMessage
-                            fileName={message.fileName}
-                            fileSize={message.fileSize}
-                            fileType={message.fileUrl.includes('.') ?
-                              `file/${message.fileName.split('.').pop()}` : 'application/octet-stream'
+                        {/* Avatar for received messages */}
+                        {message.senderId !== user?.uid && (
+                          <div
+                            className="w-8 h-8 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-neon-purple/50 transition-all"
+                            onClick={() =>
+                              handleUserProfileClick(message.sender)
                             }
-                            downloadUrl={message.fileUrl}
-                            className="max-w-xs"
-                          />
-                          <div className={`flex items-center justify-between mt-1 px-1 ${
-                            message.senderId === user?.uid
-                              ? 'text-white/70'
-                              : 'text-gaming-muted'
-                          }`}>
-                            <p className="text-xs">
-                              {formatTime(message.timestamp)}
-                            </p>
-                            {/* Read receipt for sent messages */}
-                            {message.senderId === user?.uid && (
-                              <div
-                                className="flex items-center ml-2"
-                                title={getReadStatusTooltip(message)}
-                              >
-                                {isMessageRead(message) ? (
-                                  <CheckCheck className="w-3 h-3 text-neon-cyan" />
-                                ) : (
-                                  <Check className="w-3 h-3 text-white/50" />
-                                )}
-                              </div>
+                          >
+                            {message.sender.photoURL ? (
+                              <img
+                                src={message.sender.photoURL}
+                                alt={
+                                  message.sender.displayName ||
+                                  message.sender.username
+                                }
+                                className="w-full h-full object-cover rounded-full"
+                              />
+                            ) : (
+                              <span className="text-xs font-medium text-white">
+                                {(
+                                  message.sender.displayName ||
+                                  message.sender.username ||
+                                  "U"
+                                )
+                                  .charAt(0)
+                                  .toUpperCase()}
+                              </span>
                             )}
                           </div>
-                        </div>
-                      ) : (
+                        )}
+
                         <div
-                          className={`rounded-2xl px-4 py-2 ${
+                          className={`max-w-xs lg:max-w-md ${
                             message.senderId === user?.uid
-                              ? 'bg-neon-purple text-white ml-4'
-                              : 'bg-gaming-surface text-gaming-text mr-4'
+                              ? "order-2"
+                              : "order-1"
                           }`}
                         >
-                          <p className="text-sm">{message.content}</p>
-                          <div className={`flex items-center justify-between mt-1 ${
-                            message.senderId === user?.uid
-                              ? 'text-white/70'
-                              : 'text-gaming-muted'
-                          }`}>
-                            <p className="text-xs">
-                              {formatTime(message.timestamp)}
-                            </p>
-                            {/* Read receipt for sent messages */}
-                            {message.senderId === user?.uid && (
-                              <div
-                                className="flex items-center ml-2"
-                                title={getReadStatusTooltip(message)}
+                          {message.senderId !== user?.uid && (
+                            <div className="flex items-center space-x-2 mb-1">
+                              <span
+                                className="text-sm font-medium text-gaming-text cursor-pointer hover:text-neon-purple transition-colors"
+                                onClick={() =>
+                                  handleUserProfileClick(message.sender)
+                                }
                               >
-                                {isMessageRead(message) ? (
-                                  <CheckCheck className="w-3 h-3 text-neon-cyan" />
-                                ) : (
-                                  <Check className="w-3 h-3 text-white/50" />
+                                {message.sender.displayName ||
+                                  message.sender.username}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Render different message types */}
+                          {message.type === "file" &&
+                          message.fileUrl &&
+                          message.fileName &&
+                          message.fileSize ? (
+                            <div
+                              className={
+                                message.senderId === user?.uid ? "ml-4" : "mr-4"
+                              }
+                            >
+                              <FileMessage
+                                fileName={message.fileName}
+                                fileSize={message.fileSize}
+                                fileType={
+                                  message.fileUrl.includes(".")
+                                    ? `file/${message.fileName.split(".").pop()}`
+                                    : "application/octet-stream"
+                                }
+                                downloadUrl={message.fileUrl}
+                                className="max-w-xs"
+                              />
+                              <div
+                                className={`flex items-center justify-between mt-1 px-1 ${
+                                  message.senderId === user?.uid
+                                    ? "text-white/70"
+                                    : "text-gaming-muted"
+                                }`}
+                              >
+                                <p className="text-xs">
+                                  {formatTime(message.timestamp)}
+                                </p>
+                                {/* Read receipt for sent messages */}
+                                {message.senderId === user?.uid && (
+                                  <div
+                                    className="flex items-center ml-2"
+                                    title={getReadStatusTooltip(message)}
+                                  >
+                                    {isMessageRead(message) ? (
+                                      <CheckCheck className="w-3 h-3 text-neon-cyan" />
+                                    ) : (
+                                      <Check className="w-3 h-3 text-white/50" />
+                                    )}
+                                  </div>
                                 )}
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          ) : (
+                            <div
+                              className={`rounded-2xl px-4 py-2 ${
+                                message.senderId === user?.uid
+                                  ? "bg-neon-purple text-white ml-4"
+                                  : "bg-gaming-surface text-gaming-text mr-4"
+                              }`}
+                            >
+                              <p className="text-sm">{message.content}</p>
+                              <div
+                                className={`flex items-center justify-between mt-1 ${
+                                  message.senderId === user?.uid
+                                    ? "text-white/70"
+                                    : "text-gaming-muted"
+                                }`}
+                              >
+                                <p className="text-xs">
+                                  {formatTime(message.timestamp)}
+                                </p>
+                                {/* Read receipt for sent messages */}
+                                {message.senderId === user?.uid && (
+                                  <div
+                                    className="flex items-center ml-2"
+                                    title={getReadStatusTooltip(message)}
+                                  >
+                                    {isMessageRead(message) ? (
+                                      <CheckCheck className="w-3 h-3 text-neon-cyan" />
+                                    ) : (
+                                      <Check className="w-3 h-3 text-white/50" />
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                ))
+                      </div>
+                    ))
                   ) : (
                     <div className="text-center py-8 text-gaming-muted">
                       <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
                       <p>Henüz mesaj yok</p>
-                      <p className="text-sm">Sohbeti başlatmak için bir mesaj gönderin</p>
+                      <p className="text-sm">
+                        Sohbeti başlatmak için bir mesaj gönderin
+                      </p>
                     </div>
                   )}
                 </>
@@ -956,7 +1113,11 @@ export default function ChatReal() {
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder={canSendMessage ? "Mesaj yazın..." : "Mesaj gönderemezsiniz"}
+                    placeholder={
+                      canSendMessage
+                        ? "Mesaj yazın..."
+                        : "Mesaj gönderemezsiniz"
+                    }
                     disabled={!canSendMessage}
                     className="w-full px-4 py-3 bg-gaming-surface border border-gaming-border rounded-xl focus:outline-none focus:ring-2 focus:ring-neon-purple/50 text-gaming-text pr-12 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
@@ -1005,14 +1166,21 @@ export default function ChatReal() {
         user={selectedUserProfile}
         isOpen={isProfileModalOpen}
         onClose={handleCloseProfileModal}
-        currentUserId={user?.uid || ''}
+        currentUserId={user?.uid || ""}
         onSendMessage={handleSendMessageFromProfile}
         onAddFriend={handleAddFriendFromProfile}
         onRemoveFriend={handleRemoveFriendFromProfile}
-        isFriend={selectedUserProfile ? conversations.some(c =>
-          c.type === 'direct' &&
-          c.participantDetails.some(p => p.uid === selectedUserProfile.uid)
-        ) : false}
+        isFriend={
+          selectedUserProfile
+            ? conversations.some(
+                (c) =>
+                  c.type === "direct" &&
+                  c.participantDetails.some(
+                    (p) => p.uid === selectedUserProfile.uid,
+                  ),
+              )
+            : false
+        }
       />
 
       {/* File Upload Modal */}
@@ -1022,7 +1190,6 @@ export default function ChatReal() {
         onFileSelect={handleFileSelect}
         disabled={!canSendMessage}
       />
-
     </div>
   );
 }

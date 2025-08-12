@@ -10,17 +10,21 @@ export interface ConnectionStatus {
 
 let connectionStatus: ConnectionStatus = {
   isConnected: true,
-  retryCount: 0
+  retryCount: 0,
 };
 
 const connectionListeners: ((status: ConnectionStatus) => void)[] = [];
 
-export const addConnectionListener = (listener: (status: ConnectionStatus) => void) => {
+export const addConnectionListener = (
+  listener: (status: ConnectionStatus) => void,
+) => {
   connectionListeners.push(listener);
   listener(connectionStatus);
 };
 
-export const removeConnectionListener = (listener: (status: ConnectionStatus) => void) => {
+export const removeConnectionListener = (
+  listener: (status: ConnectionStatus) => void,
+) => {
   const index = connectionListeners.indexOf(listener);
   if (index > -1) {
     connectionListeners.splice(index, 1);
@@ -32,12 +36,12 @@ export const getConnectionStatus = (): ConnectionStatus => {
 };
 
 export const initializeConnectionMonitoring = () => {
-  console.log('Simple connection monitoring initialized');
+  console.log("Simple connection monitoring initialized");
 };
 
 export default {
   addConnectionListener,
   removeConnectionListener,
   getConnectionStatus,
-  initializeConnectionMonitoring
+  initializeConnectionMonitoring,
 };

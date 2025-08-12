@@ -11,18 +11,18 @@ import {
   updateDoc,
   addDoc,
   deleteDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db, auth } from './firebase';
-import { wrapOperation } from './unifiedErrorHandler';
-import { RealUser, areFriends } from './userService';
-import { createMessageNotification } from './notificationService';
+  serverTimestamp,
+} from "firebase/firestore";
+import { db, auth } from "./firebase";
+import { wrapOperation } from "./unifiedErrorHandler";
+import { RealUser, areFriends } from "./userService";
+import { createMessageNotification } from "./notificationService";
 // Network error handling removed for simplicity
 
 // Use unified error handler for all operations
 const withRetry = <T>(
   operation: () => Promise<T>,
-  operationName: string = 'firebase_operation'
+  operationName: string = "firebase_operation",
 ): Promise<T> => {
   return wrapOperation(operation, operationName);
 };
@@ -34,7 +34,7 @@ export interface Message {
   sender: RealUser;
   content: string;
   timestamp: string;
-  type: 'text' | 'image' | 'file' | 'voice';
+  type: "text" | "image" | "file" | "voice";
   fileUrl?: string;
   fileName?: string;
   fileSize?: number;
@@ -56,7 +56,7 @@ export interface Message {
 
 export interface Conversation {
   id: string;
-  type: 'direct' | 'group' | 'server';
+  type: "direct" | "group" | "server";
   participants: string[];
   participantDetails: RealUser[];
   name?: string; // For group conversations
@@ -77,18 +77,20 @@ export interface Conversation {
 /**
  * Get conversations for a user
  */
-export const getUserConversations = async (userId: string): Promise<Conversation[]> => {
+export const getUserConversations = async (
+  userId: string,
+): Promise<Conversation[]> => {
   return withRetry(async () => {
     // Ensure user is authenticated
     if (!auth.currentUser) {
-      throw new Error('User must be authenticated');
+      throw new Error("User must be authenticated");
     }
 
-    const conversationsRef = collection(db, 'conversations');
+    const conversationsRef = collection(db, "conversations");
     // Remove orderBy to avoid composite index requirement
     const q = query(
       conversationsRef,
-      where('participants', 'array-contains', userId)
+      where("participants", "array-contains", userId),
     );
 
     const snapshot = await getDocs(q);
@@ -100,17 +102,17 @@ export const getUserConversations = async (userId: string): Promise<Conversation
         // Get participant details
         const participantDetails = await Promise.all(
           conversationData.participants.map(async (participantId: string) => {
-            const userDoc = await getDoc(doc(db, 'users', participantId));
+            const userDoc = await getDoc(doc(db, "users", participantId));
             return { uid: userDoc.id, ...userDoc.data() } as RealUser;
-          })
+          }),
         );
 
         return {
           id: conversationDoc.id,
           ...conversationData,
-          participantDetails
+          participantDetails,
         } as Conversation;
-      })
+      }),
     );
 
     // Sort conversations by updatedAt on client side
@@ -119,7 +121,7 @@ export const getUserConversations = async (userId: string): Promise<Conversation
       const bTime = new Date(b.updatedAt).getTime();
       return bTime - aTime; // Descending order (newest first)
     });
-  }, 'getUserConversations');
+  }, "getUserConversations");
 };
 
 /**
@@ -127,21 +129,23 @@ export const getUserConversations = async (userId: string): Promise<Conversation
  */
 export const getOrCreateDirectConversation = async (
   userId1: string,
-  userId2: string
+  userId2: string,
 ): Promise<string> => {
   return withRetry(async () => {
     // Check if users are friends before allowing conversation
     const friendshipStatus = await areFriends(userId1, userId2);
     if (!friendshipStatus) {
-      throw new Error('Sadece arkadaşlarınızla sohbet edebilirsiniz. Önce arkadaş olmanız gerekiyor.');
+      throw new Error(
+        "Sadece arkadaşlarınızla sohbet edebilirsiniz. Önce arkadaş olmanız gerekiyor.",
+      );
     }
 
     // Check if conversation already exists
-    const conversationsRef = collection(db, 'conversations');
+    const conversationsRef = collection(db, "conversations");
     const q = query(
       conversationsRef,
-      where('type', '==', 'direct'),
-      where('participants', 'array-contains', userId1)
+      where("type", "==", "direct"),
+      where("participants", "array-contains", userId1),
     );
 
     const snapshot = await getDocs(q);
@@ -156,14 +160,14 @@ export const getOrCreateDirectConversation = async (
 
     // Create new conversation (only if they are friends)
     const newConversation = {
-      type: 'direct',
+      type: "direct",
       participants: [userId1, userId2],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       unreadCounts: {
         [userId1]: 0,
-        [userId2]: 0
-      }
+        [userId2]: 0,
+      },
     };
 
     const conversationRef = await addDoc(conversationsRef, newConversation);
@@ -176,14 +180,19 @@ export const getOrCreateDirectConversation = async (
  */
 export const getConversationMessages = async (
   conversationId: string,
-  limitCount: number = 50
+  limitCount: number = 50,
 ): Promise<Message[]> => {
   return withRetry(async () => {
-    const messagesRef = collection(db, 'conversations', conversationId, 'messages');
+    const messagesRef = collection(
+      db,
+      "conversations",
+      conversationId,
+      "messages",
+    );
     const q = query(
       messagesRef,
-      orderBy('timestamp', 'desc'),
-      limit(limitCount)
+      orderBy("timestamp", "desc"),
+      limit(limitCount),
     );
 
     const snapshot = await getDocs(q);
@@ -193,19 +202,19 @@ export const getConversationMessages = async (
         const messageData = messageDoc.data();
 
         // Get sender details
-        const senderDoc = await getDoc(doc(db, 'users', messageData.senderId));
+        const senderDoc = await getDoc(doc(db, "users", messageData.senderId));
         const sender = { uid: senderDoc.id, ...senderDoc.data() } as RealUser;
 
         return {
           id: messageDoc.id,
           ...messageData,
-          sender
+          sender,
         } as Message;
-      })
+      }),
     );
 
     return messages.reverse(); // Return in chronological order
-  }, 'getConversationMessages');
+  }, "getConversationMessages");
 };
 
 /**
@@ -215,36 +224,44 @@ export const sendMessage = async (
   conversationId: string,
   senderId: string,
   content: string,
-  type: 'text' | 'image' | 'file' | 'voice' = 'text',
+  type: "text" | "image" | "file" | "voice" = "text",
   fileUrl?: string,
   fileName?: string,
   fileSize?: number,
-  replyTo?: { messageId: string; content: string; senderId: string }
+  replyTo?: { messageId: string; content: string; senderId: string },
 ): Promise<string> => {
-
   return withRetry(async () => {
     // First, check if this is a direct conversation and verify friendship
-    const conversationRef = doc(db, 'conversations', conversationId);
+    const conversationRef = doc(db, "conversations", conversationId);
     const conversationDoc = await getDoc(conversationRef);
 
     if (conversationDoc.exists()) {
       const conversationData = conversationDoc.data();
 
       // If it's a direct conversation, check friendship
-      if (conversationData.type === 'direct') {
+      if (conversationData.type === "direct") {
         const participants = conversationData.participants || [];
-        const otherParticipant = participants.find((id: string) => id !== senderId);
+        const otherParticipant = participants.find(
+          (id: string) => id !== senderId,
+        );
 
         if (otherParticipant) {
           const friendshipStatus = await areFriends(senderId, otherParticipant);
           if (!friendshipStatus) {
-            throw new Error('Bu kişiyle artık arkadaş olmadığınız için mesaj gönderemezsiniz.');
+            throw new Error(
+              "Bu kişiyle artık arkadaş olmadığınız için mesaj gönderemezsiniz.",
+            );
           }
         }
       }
     }
 
-    const messagesRef = collection(db, 'conversations', conversationId, 'messages');
+    const messagesRef = collection(
+      db,
+      "conversations",
+      conversationId,
+      "messages",
+    );
     const timestamp = new Date().toISOString();
 
     const messageData: any = {
@@ -256,7 +273,7 @@ export const sendMessage = async (
       isDelivered: true,
       isRead: false,
       readBy: [],
-      reactions: []
+      reactions: [],
     };
 
     // Only add optional fields if they have values (not undefined)
@@ -271,11 +288,11 @@ export const sendMessage = async (
     const conversationUpdate = {
       lastMessage: {
         senderId,
-        content: type === 'text' ? content : `📎 ${fileName || 'Dosya'}`,
+        content: type === "text" ? content : `📎 ${fileName || "Dosya"}`,
         timestamp,
-        type
+        type,
       },
-      updatedAt: timestamp
+      updatedAt: timestamp,
     };
 
     await updateDoc(conversationRef, conversationUpdate);
@@ -291,15 +308,17 @@ export const sendMessage = async (
       const newUnreadCounts = { ...currentUnreadCounts };
 
       // Get sender details for notifications
-      const senderDoc = await getDoc(doc(db, 'users', senderId));
+      const senderDoc = await getDoc(doc(db, "users", senderId));
       const senderData = senderDoc.exists() ? senderDoc.data() : null;
-      const senderName = senderData?.displayName || senderData?.username || 'Unknown User';
-      const senderAvatar = senderData?.photoURL || '';
+      const senderName =
+        senderData?.displayName || senderData?.username || "Unknown User";
+      const senderAvatar = senderData?.photoURL || "";
 
       // Update unread counts and create notifications for other participants
       for (const participantId of participants) {
         if (participantId !== senderId) {
-          newUnreadCounts[participantId] = (newUnreadCounts[participantId] || 0) + 1;
+          newUnreadCounts[participantId] =
+            (newUnreadCounts[participantId] || 0) + 1;
 
           // Create notification for this participant
           try {
@@ -309,22 +328,25 @@ export const sendMessage = async (
               senderName,
               senderAvatar,
               conversationId,
-              content
+              content,
             );
           } catch (notificationError) {
-            console.error('Error creating message notification:', notificationError);
+            console.error(
+              "Error creating message notification:",
+              notificationError,
+            );
             // Don't fail the message sending if notification creation fails
           }
         }
       }
 
       await updateDoc(conversationRef, {
-        unreadCounts: newUnreadCounts
+        unreadCounts: newUnreadCounts,
       });
     }
 
     return messageRef.id;
-  }, 'sendMessage');
+  }, "sendMessage");
 };
 
 /**
@@ -332,15 +354,15 @@ export const sendMessage = async (
  */
 export const markMessagesAsRead = async (
   conversationId: string,
-  userId: string
+  userId: string,
 ): Promise<void> => {
   return withRetry(async () => {
     // Ensure user is authenticated
     if (!auth.currentUser) {
-      throw new Error('User must be authenticated');
+      throw new Error("User must be authenticated");
     }
     // Reset unread count for this user
-    const conversationRef = doc(db, 'conversations', conversationId);
+    const conversationRef = doc(db, "conversations", conversationId);
     const conversationDoc = await getDoc(conversationRef);
 
     if (conversationDoc.exists()) {
@@ -350,24 +372,26 @@ export const markMessagesAsRead = async (
       await updateDoc(conversationRef, {
         unreadCounts: {
           ...currentUnreadCounts,
-          [userId]: 0
-        }
+          [userId]: 0,
+        },
       });
     }
 
     // Mark individual messages as read
-    const messagesRef = collection(db, 'conversations', conversationId, 'messages');
-    // Remove compound where clause to avoid index requirement
-    const unreadQuery = query(
-      messagesRef,
-      where('isRead', '==', false)
+    const messagesRef = collection(
+      db,
+      "conversations",
+      conversationId,
+      "messages",
     );
+    // Remove compound where clause to avoid index requirement
+    const unreadQuery = query(messagesRef, where("isRead", "==", false));
 
     const unreadSnapshot = await getDocs(unreadQuery);
 
     // Filter on client side to avoid composite index requirement
     const updatePromises = unreadSnapshot.docs
-      .filter(messageDoc => {
+      .filter((messageDoc) => {
         const messageData = messageDoc.data();
         return messageData.senderId !== userId; // Filter out user's own messages
       })
@@ -378,11 +402,8 @@ export const markMessagesAsRead = async (
         // Add this user to readBy if not already there
         if (!readBy.some((read: any) => read.userId === userId)) {
           await updateDoc(messageDoc.ref, {
-            readBy: [
-              ...readBy,
-              { userId, readAt: new Date().toISOString() }
-            ],
-            isRead: true
+            readBy: [...readBy, { userId, readAt: new Date().toISOString() }],
+            isRead: true,
           });
         }
       });
@@ -391,13 +412,15 @@ export const markMessagesAsRead = async (
 
     // Mark related message notifications as read
     await markMessageNotificationsAsRead(conversationId, userId);
-  }, 'markMessagesAsRead').catch((error) => {
+  }, "markMessagesAsRead").catch((error) => {
     // Handle permission errors gracefully
-    if (error.code === 'permission-denied') {
-      console.warn('🔒 Permission denied marking messages as read - Firestore rules need deployment');
+    if (error.code === "permission-denied") {
+      console.warn(
+        "🔒 Permission denied marking messages as read - Firestore rules need deployment",
+      );
       return; // Don't throw, just warn
     }
-    console.error('Error marking messages as read:', error);
+    console.error("Error marking messages as read:", error);
     throw error;
   });
 };
@@ -407,30 +430,30 @@ export const markMessagesAsRead = async (
  */
 const markMessageNotificationsAsRead = async (
   conversationId: string,
-  userId: string
+  userId: string,
 ): Promise<void> => {
   try {
-    const notificationsRef = collection(db, 'notifications');
+    const notificationsRef = collection(db, "notifications");
     const notificationQuery = query(
       notificationsRef,
-      where('userId', '==', userId),
-      where('type', '==', 'message'),
-      where('conversationId', '==', conversationId),
-      where('isRead', '==', false)
+      where("userId", "==", userId),
+      where("type", "==", "message"),
+      where("conversationId", "==", conversationId),
+      where("isRead", "==", false),
     );
 
     const notificationSnapshot = await getDocs(notificationQuery);
 
-    const updatePromises = notificationSnapshot.docs.map(notificationDoc =>
+    const updatePromises = notificationSnapshot.docs.map((notificationDoc) =>
       updateDoc(notificationDoc.ref, {
         isRead: true,
-        updatedAt: new Date().toISOString()
-      })
+        updatedAt: new Date().toISOString(),
+      }),
     );
 
     await Promise.all(updatePromises);
   } catch (error) {
-    console.error('Error marking message notifications as read:', error);
+    console.error("Error marking message notifications as read:", error);
     // Don't throw error as this is secondary functionality
   }
 };
@@ -442,27 +465,37 @@ export const addReaction = async (
   conversationId: string,
   messageId: string,
   userId: string,
-  emoji: string
+  emoji: string,
 ): Promise<void> => {
   try {
-    const messageRef = doc(db, 'conversations', conversationId, 'messages', messageId);
+    const messageRef = doc(
+      db,
+      "conversations",
+      conversationId,
+      "messages",
+      messageId,
+    );
     const messageDoc = await getDoc(messageRef);
-    
+
     if (!messageDoc.exists()) return;
-    
+
     const messageData = messageDoc.data();
     const reactions = messageData.reactions || [];
-    
+
     // Find existing reaction with this emoji
-    const existingReactionIndex = reactions.findIndex((r: any) => r.emoji === emoji);
-    
+    const existingReactionIndex = reactions.findIndex(
+      (r: any) => r.emoji === emoji,
+    );
+
     if (existingReactionIndex >= 0) {
       const existingReaction = reactions[existingReactionIndex];
-      
+
       if (existingReaction.users.includes(userId)) {
         // Remove user's reaction
-        const updatedUsers = existingReaction.users.filter((id: string) => id !== userId);
-        
+        const updatedUsers = existingReaction.users.filter(
+          (id: string) => id !== userId,
+        );
+
         if (updatedUsers.length === 0) {
           // Remove entire reaction if no users left
           reactions.splice(existingReactionIndex, 1);
@@ -471,7 +504,7 @@ export const addReaction = async (
           reactions[existingReactionIndex] = {
             ...existingReaction,
             users: updatedUsers,
-            count: updatedUsers.length
+            count: updatedUsers.length,
           };
         }
       } else {
@@ -479,7 +512,7 @@ export const addReaction = async (
         reactions[existingReactionIndex] = {
           ...existingReaction,
           users: [...existingReaction.users, userId],
-          count: existingReaction.users.length + 1
+          count: existingReaction.users.length + 1,
         };
       }
     } else {
@@ -487,13 +520,13 @@ export const addReaction = async (
       reactions.push({
         emoji,
         users: [userId],
-        count: 1
+        count: 1,
       });
     }
-    
+
     await updateDoc(messageRef, { reactions });
   } catch (error) {
-    console.error('Error adding reaction:', error);
+    console.error("Error adding reaction:", error);
     throw error;
   }
 };
@@ -504,24 +537,30 @@ export const addReaction = async (
 export const deleteMessage = async (
   conversationId: string,
   messageId: string,
-  userId: string
+  userId: string,
 ): Promise<void> => {
   try {
-    const messageRef = doc(db, 'conversations', conversationId, 'messages', messageId);
+    const messageRef = doc(
+      db,
+      "conversations",
+      conversationId,
+      "messages",
+      messageId,
+    );
     const messageDoc = await getDoc(messageRef);
-    
+
     if (!messageDoc.exists()) return;
-    
+
     const messageData = messageDoc.data();
-    
+
     // Only sender can delete their own messages
     if (messageData.senderId !== userId) {
-      throw new Error('You can only delete your own messages');
+      throw new Error("You can only delete your own messages");
     }
-    
+
     await deleteDoc(messageRef);
   } catch (error) {
-    console.error('Error deleting message:', error);
+    console.error("Error deleting message:", error);
     throw error;
   }
 };
@@ -533,27 +572,33 @@ export const editMessage = async (
   conversationId: string,
   messageId: string,
   userId: string,
-  newContent: string
+  newContent: string,
 ): Promise<void> => {
   try {
-    const messageRef = doc(db, 'conversations', conversationId, 'messages', messageId);
+    const messageRef = doc(
+      db,
+      "conversations",
+      conversationId,
+      "messages",
+      messageId,
+    );
     const messageDoc = await getDoc(messageRef);
-    
+
     if (!messageDoc.exists()) return;
-    
+
     const messageData = messageDoc.data();
-    
+
     // Only sender can edit their own messages
     if (messageData.senderId !== userId) {
-      throw new Error('You can only edit your own messages');
+      throw new Error("You can only edit your own messages");
     }
-    
+
     await updateDoc(messageRef, {
       content: newContent,
-      editedAt: new Date().toISOString()
+      editedAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Error editing message:', error);
+    console.error("Error editing message:", error);
     throw error;
   }
 };
@@ -564,53 +609,68 @@ export const editMessage = async (
 export const subscribeToMessages = (
   conversationId: string,
   callback: (messages: Message[]) => void,
-  limitCount: number = 50
+  limitCount: number = 50,
 ) => {
-
-  const messagesRef = collection(db, 'conversations', conversationId, 'messages');
-  const q = query(
-    messagesRef,
-    orderBy('timestamp', 'desc'),
-    limit(limitCount)
+  const messagesRef = collection(
+    db,
+    "conversations",
+    conversationId,
+    "messages",
   );
+  const q = query(messagesRef, orderBy("timestamp", "desc"), limit(limitCount));
 
-  return onSnapshot(q, async (snapshot) => {
-    try {
+  return onSnapshot(
+    q,
+    async (snapshot) => {
+      try {
+        const messages = await Promise.all(
+          snapshot.docs.map(async (messageDoc) => {
+            const messageData = messageDoc.data();
 
-      const messages = await Promise.all(
-        snapshot.docs.map(async (messageDoc) => {
-          const messageData = messageDoc.data();
+            // Get sender details with retry
+            const senderDoc = await withRetry(() =>
+              getDoc(doc(db, "users", messageData.senderId)),
+            );
+            const sender = {
+              uid: senderDoc.id,
+              ...senderDoc.data(),
+            } as RealUser;
 
-          // Get sender details with retry
-          const senderDoc = await withRetry(() => getDoc(doc(db, 'users', messageData.senderId)));
-          const sender = { uid: senderDoc.id, ...senderDoc.data() } as RealUser;
+            return {
+              id: messageDoc.id,
+              ...messageData,
+              sender,
+            } as Message;
+          }),
+        );
 
-          return {
-            id: messageDoc.id,
-            ...messageData,
-            sender
-          } as Message;
-        })
-      );
-
-      const chronologicalMessages = messages.reverse();
-      callback(chronologicalMessages);
-    } catch (error) {
-      console.error('Error in messages subscription:', error);
+        const chronologicalMessages = messages.reverse();
+        callback(chronologicalMessages);
+      } catch (error) {
+        console.error("Error in messages subscription:", error);
+        callback([]);
+      }
+    },
+    (error) => {
+      console.error("Messages subscription error:", error);
+      if (error.code === "permission-denied") {
+        console.error(
+          "Permission denied: Please update Firestore rules for conversations/messages",
+        );
+      } else if (
+        error.message.includes("Failed to fetch") ||
+        error.code === "unavailable"
+      ) {
+        console.warn(
+          "Network error in messages subscription - will retry automatically",
+        );
+        // Firebase SDK will automatically retry, so we don't need to do anything
+      } else if (error.message.includes("network-request-failed")) {
+        console.warn("Network request failed - Firebase will retry");
+      }
       callback([]);
-    }
-  }, (error) => {
-    console.error('Messages subscription error:', error);
-    if (error.code === 'permission-denied') {
-      console.error('Permission denied: Please update Firestore rules for conversations/messages');
-    } else if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
-      console.warn('Network error in messages subscription - will retry automatically');
-      // Firebase SDK will automatically retry, so we don't need to do anything
-    } else if (error.message.includes('network-request-failed')) {
-      console.warn('Network request failed - Firebase will retry');
-    }
-    callback([]);
-  });
+    },
+  );
 };
 
 /**
@@ -618,61 +678,76 @@ export const subscribeToMessages = (
  */
 export const subscribeToConversations = (
   userId: string,
-  callback: (conversations: Conversation[]) => void
+  callback: (conversations: Conversation[]) => void,
 ) => {
-  const conversationsRef = collection(db, 'conversations');
+  const conversationsRef = collection(db, "conversations");
   // Remove orderBy to avoid composite index requirement
   // We'll sort on the client side instead
   const q = query(
     conversationsRef,
-    where('participants', 'array-contains', userId)
+    where("participants", "array-contains", userId),
   );
 
-  return onSnapshot(q, async (snapshot) => {
-    try {
-      const conversations = await Promise.all(
-        snapshot.docs.map(async (conversationDoc) => {
-          const conversationData = conversationDoc.data();
+  return onSnapshot(
+    q,
+    async (snapshot) => {
+      try {
+        const conversations = await Promise.all(
+          snapshot.docs.map(async (conversationDoc) => {
+            const conversationData = conversationDoc.data();
 
-          // Get participant details
-          const participantDetails = await Promise.all(
-            conversationData.participants.map(async (participantId: string) => {
-              const userDoc = await getDoc(doc(db, 'users', participantId));
-              return { uid: userDoc.id, ...userDoc.data() } as RealUser;
-            })
-          );
+            // Get participant details
+            const participantDetails = await Promise.all(
+              conversationData.participants.map(
+                async (participantId: string) => {
+                  const userDoc = await getDoc(doc(db, "users", participantId));
+                  return { uid: userDoc.id, ...userDoc.data() } as RealUser;
+                },
+              ),
+            );
 
-          return {
-          id: conversationDoc.id,
-          ...conversationData,
-          participantDetails
-        } as Conversation;
-      })
-    );
+            return {
+              id: conversationDoc.id,
+              ...conversationData,
+              participantDetails,
+            } as Conversation;
+          }),
+        );
 
-    // Sort conversations by updatedAt on client side to avoid index requirement
-    const sortedConversations = conversations.sort((a, b) => {
-      const aTime = new Date(a.updatedAt).getTime();
-      const bTime = new Date(b.updatedAt).getTime();
-      return bTime - aTime; // Descending order (newest first)
-    });
+        // Sort conversations by updatedAt on client side to avoid index requirement
+        const sortedConversations = conversations.sort((a, b) => {
+          const aTime = new Date(a.updatedAt).getTime();
+          const bTime = new Date(b.updatedAt).getTime();
+          return bTime - aTime; // Descending order (newest first)
+        });
 
-    callback(sortedConversations);
-    } catch (error) {
-      console.error('Error in conversations subscription:', error);
+        callback(sortedConversations);
+      } catch (error) {
+        console.error("Error in conversations subscription:", error);
+        callback([]);
+      }
+    },
+    (error) => {
+      console.error("Conversations subscription error:", error);
+      if (error.code === "permission-denied") {
+        console.error(
+          "Permission denied: Please update Firestore rules for conversations",
+        );
+      } else if (
+        error.message.includes("Failed to fetch") ||
+        error.code === "unavailable"
+      ) {
+        console.warn(
+          "Network error in conversations subscription - Firebase will retry automatically",
+        );
+      } else if (error.message.includes("network-request-failed")) {
+        console.warn(
+          "Network request failed in conversations subscription - Firebase will retry",
+        );
+      }
       callback([]);
-    }
-  }, (error) => {
-    console.error('Conversations subscription error:', error);
-    if (error.code === 'permission-denied') {
-      console.error('Permission denied: Please update Firestore rules for conversations');
-    } else if (error.message.includes('Failed to fetch') || error.code === 'unavailable') {
-      console.warn('Network error in conversations subscription - Firebase will retry automatically');
-    } else if (error.message.includes('network-request-failed')) {
-      console.warn('Network request failed in conversations subscription - Firebase will retry');
-    }
-    callback([]);
-  });
+    },
+  );
 };
 
 export default {
@@ -685,5 +760,5 @@ export default {
   deleteMessage,
   editMessage,
   subscribeToMessages,
-  subscribeToConversations
+  subscribeToConversations,
 };
