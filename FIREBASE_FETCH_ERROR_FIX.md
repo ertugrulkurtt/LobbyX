@@ -30,10 +30,6 @@ The errors were occurring due to:
 - **Replaced Custom Retry Logic**: Updated to use the new `withExponentialBackoff` function
 - **Better Error Propagation**: Improved error handling in message sending operations
 
-### 4. Enhanced Call Service (`client/lib/callService.ts`)
-- **Wrapped Firebase Operations**: All Firebase operations now use `withFirebaseErrorHandling`
-- **Better Error Context**: Each operation has specific context for debugging
-- **Graceful Degradation**: Better handling when Firebase operations fail
 
 ### 5. Debug Utilities (`client/lib/firebaseDebugUtils.ts`)
 - **Connection Testing**: Functions to test Firestore and Realtime Database connections
