@@ -80,7 +80,9 @@ export interface Conversation {
 export const getUserConversations = async (userId: string): Promise<Conversation[]> => {
   return withRetry(async () => {
     // Ensure user is authenticated
-    const user = await ensureAuthenticated();
+    if (!auth.currentUser) {
+      throw new Error('User must be authenticated');
+    }
 
     const conversationsRef = collection(db, 'conversations');
     // Remove orderBy to avoid composite index requirement
@@ -334,7 +336,9 @@ export const markMessagesAsRead = async (
 ): Promise<void> => {
   return withRetry(async () => {
     // Ensure user is authenticated
-    const user = await ensureAuthenticated();
+    if (!auth.currentUser) {
+      throw new Error('User must be authenticated');
+    }
     // Reset unread count for this user
     const conversationRef = doc(db, 'conversations', conversationId);
     const conversationDoc = await getDoc(conversationRef);
