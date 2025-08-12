@@ -105,7 +105,6 @@ The fix includes comprehensive logging that helps identify:
 ## Files Modified
 - `client/lib/firebase.ts` - Enhanced network handling and retry logic
 - `client/lib/messageService.ts` - Updated to use new retry mechanisms
-- `client/lib/callService.ts` - Added error handling to Firebase operations
 - `client/App.tsx` - Initialize global error handling
 - `client/lib/globalFirebaseErrorHandler.ts` - New global error handler
 - `client/lib/firebaseDebugUtils.ts` - New debug utilities
