@@ -1,6 +1,7 @@
 import { doc, getDoc, setDoc, updateDoc, increment, collection, query, where, getDocs, orderBy, limit, onSnapshot, addDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from './firebase';
+import { ensureAuthenticated, isAuthenticated } from './firebaseAuth';
 
 // User statistics interface
 export interface UserStats {
@@ -248,8 +249,14 @@ export const addXP = async (userId: string, xpAmount: number, source: string) =>
 export const incrementMessageCount = async (userId: string, conversationId?: string) => {
   try {
     // Check if user is authenticated
-    if (!auth.currentUser || auth.currentUser.uid !== userId) {
+    if (!isAuthenticated()) {
       console.warn('User not authenticated for message count update');
+      return;
+    }
+
+    const user = await ensureAuthenticated();
+    if (user.uid !== userId) {
+      console.warn('User ID mismatch for message count update');
       return;
     }
 
