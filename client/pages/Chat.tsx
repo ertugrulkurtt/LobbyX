@@ -777,22 +777,6 @@ export default function ChatReal() {
                   >
                     <Search className="w-5 h-5 text-gaming-muted hover:text-neon-purple" />
                   </button>
-                  <button
-                    onClick={handleStartVoiceCall}
-                    className="p-2 rounded-lg hover:bg-gaming-surface transition-colors"
-                    title="Sesli Arama"
-                    disabled={selectedChatData?.type !== 'direct'}
-                  >
-                    <Phone className="w-5 h-5 text-gaming-muted hover:text-neon-green" />
-                  </button>
-                  <button
-                    onClick={handleStartVideoCall}
-                    className="p-2 rounded-lg hover:bg-gaming-surface transition-colors"
-                    title="Görüntülü Arama"
-                    disabled={selectedChatData?.type !== 'direct'}
-                  >
-                    <Video className="w-5 h-5 text-gaming-muted hover:text-neon-blue" />
-                  </button>
                   <button className="p-2 rounded-lg hover:bg-gaming-surface transition-colors">
                     <MoreVertical className="w-5 h-5 text-gaming-muted" />
                   </button>
