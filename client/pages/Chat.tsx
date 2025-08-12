@@ -1025,50 +1025,6 @@ export default function ChatReal() {
         disabled={!canSendMessage}
       />
 
-      {/* Voice Call Modal */}
-      <VoiceCallModal
-        isOpen={isVoiceCallModalOpen}
-        callState={voiceCallState}
-        onEndCall={handleEndCall}
-        onToggleMute={handleToggleMute}
-        onToggleDeafen={handleToggleDeafen}
-        onAnswer={handleAnswerCall}
-        onReject={handleRejectCall}
-        isIncoming={isIncomingCall}
-      />
-
-      {/* New Call Notification Modal */}
-      <CallNotificationModal
-        isOpen={callState.isCallModalOpen}
-        callData={callState.currentCall}
-        isIncoming={callState.isIncomingCall}
-        isConnected={callState.isConnected}
-        isMuted={callState.isMuted}
-        isDeafened={callState.isDeafened}
-        callDuration={callState.callDuration}
-        onAnswer={handleAnswerCall}
-        onReject={handleRejectCall}
-        onEndCall={handleEndCall}
-        onToggleMute={handleToggleMute}
-        onToggleDeafen={handleToggleDeafen}
-        onForceClose={handleForceCloseCall}
-      />
-
-      {/* Call Error Alert */}
-      {callState.error && (
-        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in-up">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-white rounded-full"></div>
-            <span className="text-sm">{callState.error}</span>
-            <button
-              onClick={callActions.clearError}
-              className="ml-2 text-white/80 hover:text-white"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
