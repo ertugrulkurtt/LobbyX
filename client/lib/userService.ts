@@ -210,11 +210,6 @@ export const getFriendRequests = async (userId: string): Promise<{
  */
 export const sendFriendRequest = async (fromUserId: string, toUserId: string): Promise<void> => {
   return withRetry(async () => {
-    // Ensure user is authenticated
-    const user = await ensureAuthenticated();
-    if (user.uid !== fromUserId) {
-      throw new Error('Cannot send friend request for another user');
-    }
     // Check if request already exists
     const requestsRef = collection(db, 'friendRequests');
     const existingQuery = query(

@@ -1,7 +1,6 @@
 import { doc, getDoc, setDoc, updateDoc, increment, collection, query, where, getDocs, orderBy, limit, onSnapshot, addDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from './firebase';
-import { ensureAuthenticated, isAuthenticated } from './firebaseAuth';
 
 // User statistics interface
 export interface UserStats {
