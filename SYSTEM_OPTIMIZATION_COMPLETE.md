@@ -173,7 +173,6 @@ client/lib/
 ├── systemHealthCheck.ts         # Sistem sağlık kontrolü
 ├── uiHealthCheck.ts            # UI/UX analiz sistemi
 ├── performanceOptimizations.ts # Performance monitoring
-├─�� callSystemTest.ts           # Arama sistemi testleri
 ├── firebaseDebugUtils.ts       # Firebase debug utilities
 ├── callService.ts              # Optimize edilmiş arama servisi
 ├── messageService.ts           # Optimize edilmiş mesaj servisi
