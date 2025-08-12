@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import { wrapOperation } from './unifiedErrorHandler';
+import { ensureAuthenticated, waitForAuth } from './firebaseAuth';
 import { RealUser, areFriends } from './userService';
 import { createMessageNotification } from './notificationService';
 // Network error handling removed for simplicity
@@ -80,9 +81,7 @@ export interface Conversation {
 export const getUserConversations = async (userId: string): Promise<Conversation[]> => {
   return withRetry(async () => {
     // Ensure user is authenticated
-    if (!auth.currentUser) {
-      throw new Error('User must be authenticated');
-    }
+    const user = await ensureAuthenticated();
 
     const conversationsRef = collection(db, 'conversations');
     // Remove orderBy to avoid composite index requirement
@@ -336,9 +335,7 @@ export const markMessagesAsRead = async (
 ): Promise<void> => {
   return withRetry(async () => {
     // Ensure user is authenticated
-    if (!auth.currentUser) {
-      throw new Error('User must be authenticated');
-    }
+    const user = await ensureAuthenticated();
     // Reset unread count for this user
     const conversationRef = doc(db, 'conversations', conversationId);
     const conversationDoc = await getDoc(conversationRef);

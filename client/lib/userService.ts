@@ -15,8 +15,9 @@ import {
   addDoc,
   deleteDoc
 } from 'firebase/firestore';
-import { db, auth } from './firebase';
+import { db } from './firebase';
 import { wrapOperation } from './unifiedErrorHandler';
+import { ensureAuthenticated, waitForAuth, isAuthenticated } from './firebaseAuth';
 import { createFriendRequestNotification, createFriendAcceptedNotification } from './notificationService';
 
 // Use unified error handler for all operations
@@ -210,6 +211,11 @@ export const getFriendRequests = async (userId: string): Promise<{
  */
 export const sendFriendRequest = async (fromUserId: string, toUserId: string): Promise<void> => {
   return withRetry(async () => {
+    // Ensure user is authenticated
+    const user = await ensureAuthenticated();
+    if (user.uid !== fromUserId) {
+      throw new Error('Cannot send friend request for another user');
+    }
     // Check if request already exists
     const requestsRef = collection(db, 'friendRequests');
     const existingQuery = query(
