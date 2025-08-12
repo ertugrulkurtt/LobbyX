@@ -16,8 +16,8 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 // Services
 import { initFileCleanupService } from "./lib/fileCleanupService";
 import { systemHealthCheck } from "./lib/systemHealthCheck";
-import { initializePerformanceMonitoring } from "./lib/performanceOptimizations";
 import { cleanupAllSubscriptions } from "./lib/subscriptionManager";
+import { testFirebaseConnection } from "./lib/firebase";
 
 
 // Layout
@@ -94,22 +94,22 @@ function AppRouter() {
 
   // Initialize services when app starts
   useEffect(() => {
-    // Initialize performance monitoring first
-    initializePerformanceMonitoring();
-
     // Initialize core services
     initFileCleanupService();
 
-    // Run health check after services are initialized
+    // Test Firebase connection
+    testFirebaseConnection().then(success => {
+      console.log('Firebase connection:', success ? 'OK' : 'Failed');
+    });
+
+    // Run simple health check
     setTimeout(() => {
       systemHealthCheck.runHealthCheck().then(() => {
         systemHealthCheck.createHealthIndicator();
       }).catch((error) => {
-        if (error.message?.includes('permission') || error.code === 'permission-denied') {
-          setShowFirebaseError(true);
-        }
+        console.warn('Health check failed:', error);
       });
-    }, 2000);
+    }, 1000);
 
     // Listen for global Firebase permission errors
     const handleGlobalError = (event: any) => {
