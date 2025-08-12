@@ -247,12 +247,41 @@ export const addXP = async (userId: string, xpAmount: number, source: string) =>
  */
 export const incrementMessageCount = async (userId: string, conversationId?: string) => {
   try {
-    // Update total message count
+    // Check if user is authenticated
+    if (!auth.currentUser || auth.currentUser.uid !== userId) {
+      console.warn('User not authenticated for message count update');
+      return;
+    }
+
+    // Update total message count - create document if it doesn't exist
     const userStatsRef = doc(db, 'userStats', userId);
-    await updateDoc(userStatsRef, {
-      totalMessages: increment(1),
-      lastActivity: new Date().toISOString()
-    });
+    const userStatsDoc = await getDoc(userStatsRef);
+
+    if (userStatsDoc.exists()) {
+      await updateDoc(userStatsRef, {
+        totalMessages: increment(1),
+        lastActivity: new Date().toISOString()
+      });
+    } else {
+      // Create initial user stats document
+      await setDoc(userStatsRef, {
+        userId,
+        totalMessages: 1,
+        friendCount: 0,
+        activeHours: 0,
+        achievements: 0,
+        joinDate: new Date().toISOString(),
+        lastActivity: new Date().toISOString(),
+        level: 1,
+        xp: 0,
+        xpToNextLevel: 100,
+        totalXP: 0,
+        weeklyXP: 0,
+        monthlyXP: 0,
+        rank: 0,
+        gamesPlayed: 0
+      });
+    }
     
     // Track message stats for conversation
     if (conversationId) {
