@@ -40,10 +40,6 @@ import FileUploadProgress from '../components/FileUploadProgress';
 import FileMessage from '../components/FileMessage';
 import EmojiPicker from '../components/EmojiPicker';
 import MessageSearch from '../components/MessageSearch';
-import VoiceCallModal from '../components/VoiceCallModal';
-import voiceChatService, { VoiceCallState } from '../lib/voiceChatService';
-import CallNotificationModal from '../components/CallNotificationModal';
-import { useCallManager } from '../hooks/useCallManager';
 
 export default function ChatReal() {
   const { user } = useAuth();
@@ -76,51 +72,9 @@ export default function ChatReal() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Voice call state (legacy - keeping for compatibility)
-  const [voiceCallState, setVoiceCallState] = useState<VoiceCallState>({
-    isInCall: false,
-    isMuted: false,
-    isDeafened: false,
-    isConnecting: false
-  });
-  const [isVoiceCallModalOpen, setIsVoiceCallModalOpen] = useState(false);
-  const [isIncomingCall, setIsIncomingCall] = useState(false);
-
-  // New call manager
-  const [callState, callActions] = useCallManager();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initialize voice chat service
-  useEffect(() => {
-    voiceChatService.initialize({
-      onCallStarted: (userId) => {
-        setIsVoiceCallModalOpen(true);
-        setIsIncomingCall(false);
-      },
-      onCallEnded: () => {
-        setIsVoiceCallModalOpen(false);
-        setIsIncomingCall(false);
-        setVoiceCallState({
-          isInCall: false,
-          isMuted: false,
-          isDeafened: false,
-          isConnecting: false
-        });
-      },
-      onCallReceived: (from) => {
-        setVoiceCallState(prev => ({ ...prev, remoteUser: from }));
-        setIsIncomingCall(true);
-        setIsVoiceCallModalOpen(true);
-      },
-      onCallAccepted: () => {
-        setIsIncomingCall(false);
-        setVoiceCallState(prev => ({ ...prev, isInCall: true, isConnecting: false }));
-      },
-      onError: (error) => {
-        setVoiceCallState(prev => ({ ...prev, error, isConnecting: false }));
-      }
-    });
-  }, []);
 
   // Check for conversation ID in URL
   useEffect(() => {
