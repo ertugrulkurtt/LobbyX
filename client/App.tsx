@@ -6,7 +6,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 
 // Contexts
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -15,12 +15,14 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 
 // Services
 import { initFileCleanupService } from "./lib/fileCleanupService";
-import { initializeConnectionMonitoring } from "./lib/firebaseConnectionMonitor";
-import { initializeGlobalErrorHandler } from "./lib/globalErrorHandler";
+import { systemHealthCheck } from "./lib/systemHealthCheck";
+import { cleanupAllSubscriptions } from "./lib/subscriptionManager";
+import { testFirebaseConnection } from "./lib/firebase";
 
 // Layout
 import { Layout } from "./components/Layout";
 import ErrorBoundary from "./components/ErrorBoundary";
+import FirebaseErrorNotification from "./components/FirebaseErrorNotification";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -57,42 +59,81 @@ function LoadingScreen() {
 // Protected Route component - only for authenticated users
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return <LoadingScreen />;
   }
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
-  
+
   return <Layout>{children}</Layout>;
 }
 
 // Public Route component - only for non-authenticated users
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return <LoadingScreen />;
   }
-  
+
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
-  
+
   return <>{children}</>;
 }
 
 // Main App Router
 function AppRouter() {
   const { isAuthenticated, isLoading } = useAuth();
+  const [showFirebaseError, setShowFirebaseError] = React.useState(false);
 
   // Initialize services when app starts
   useEffect(() => {
+    // Initialize core services
     initFileCleanupService();
-    initializeConnectionMonitoring();
-    initializeGlobalErrorHandler();
+
+    // Test Firebase connection
+    testFirebaseConnection().then((success) => {
+      console.log("Firebase connection:", success ? "OK" : "Failed");
+    });
+
+    // Run simple health check
+    setTimeout(() => {
+      systemHealthCheck
+        .runHealthCheck()
+        .then(() => {
+          systemHealthCheck.createHealthIndicator();
+        })
+        .catch((error) => {
+          console.warn("Health check failed:", error);
+        });
+    }, 1000);
+
+    // Listen for global Firebase permission errors
+    const handleGlobalError = (event: any) => {
+      const error = event.detail || event.reason;
+      if (
+        error &&
+        (error.message?.includes("permission") ||
+          error.code === "permission-denied")
+      ) {
+        setShowFirebaseError(true);
+      }
+    };
+
+    window.addEventListener("firebase-permission-error", handleGlobalError);
+    return () => {
+      window.removeEventListener(
+        "firebase-permission-error",
+        handleGlobalError,
+      );
+      // Clean up all Firebase subscriptions on app unmount
+      cleanupAllSubscriptions();
+    };
   }, []);
 
   if (isLoading) {
@@ -100,100 +141,145 @@ function AppRouter() {
   }
 
   return (
-    <Routes>
-      {/* Public routes - only accessible when NOT logged in */}
-      <Route path="/" element={
-        <PublicRoute>
-          <LandingPage />
-        </PublicRoute>
-      } />
-      <Route path="/login" element={
-        <PublicRoute>
-          <Login />
-        </PublicRoute>
-      } />
-      <Route path="/register" element={
-        <PublicRoute>
-          <Register />
-        </PublicRoute>
-      } />
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/terms" element={<Terms />} />
+    <>
+      {showFirebaseError && (
+        <FirebaseErrorNotification
+          onClose={() => setShowFirebaseError(false)}
+        />
+      )}
+      <Routes>
+        {/* Public routes - only accessible when NOT logged in */}
+        <Route
+          path="/"
+          element={
+            <PublicRoute>
+              <LandingPage />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
 
-      {/* Protected routes - only accessible when logged in */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/servers" element={
-        <ProtectedRoute>
-          <Servers />
-        </ProtectedRoute>
-      } />
-      <Route path="/groups" element={
-        <ProtectedRoute>
-          <Groups />
-        </ProtectedRoute>
-      } />
-      <Route path="/chat" element={
-        <ProtectedRoute>
-          <Chat />
-        </ProtectedRoute>
-      } />
-      <Route path="/friends" element={
-        <ProtectedRoute>
-          <Friends />
-        </ProtectedRoute>
-      } />
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <Profile />
-        </ProtectedRoute>
-      } />
-      <Route path="/settings" element={
-        <ProtectedRoute>
-          <Settings />
-        </ProtectedRoute>
-      } />
-      <Route path="/notifications" element={
-        <ProtectedRoute>
-          <Notifications />
-        </ProtectedRoute>
-      } />
-      
-      {/* Catch-all route */}
-      <Route path="*" element={
-        isAuthenticated ? (
-          <ProtectedRoute>
-            <NotFound />
-          </ProtectedRoute>
-        ) : (
-          <Navigate to="/" replace />
-        )
-      } />
-    </Routes>
+        {/* Protected routes - only accessible when logged in */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/servers"
+          element={
+            <ProtectedRoute>
+              <Servers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/groups"
+          element={
+            <ProtectedRoute>
+              <Groups />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <Chat />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/friends"
+          element={
+            <ProtectedRoute>
+              <Friends />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Catch-all route */}
+        <Route
+          path="*"
+          element={
+            isAuthenticated ? (
+              <ProtectedRoute>
+                <NotFound />
+              </ProtectedRoute>
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+      </Routes>
+    </>
   );
 }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <ErrorBoundary>
-        <ThemeProvider>
-          <AuthProvider>
-            <NotificationProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <AppRouter />
-              </BrowserRouter>
-            </NotificationProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </ErrorBoundary>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <AuthProvider>
+              <NotificationProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <AppRouter />
+                </BrowserRouter>
+              </NotificationProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 createRoot(document.getElementById("root")!).render(<App />);

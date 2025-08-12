@@ -223,6 +223,9 @@ export const subscribeToNotifications = (
     }
   }, (error) => {
     console.error('Notifications subscription error:', error);
+    if (error.code === 'permission-denied') {
+      console.error('Permission denied: Please update Firestore rules for notifications');
+    }
     callback([]);
   });
 };

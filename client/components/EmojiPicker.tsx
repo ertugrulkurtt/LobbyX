@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Smile, Heart, Zap, Star, Gamepad2, Coffee, Fire, Sparkles } from 'lucide-react';
+import { Search, Smile, Heart, Zap, Star, Gamepad2, Coffee, Flame, Sparkles } from 'lucide-react';
 
 interface EmojiPickerProps {
   isOpen: boolean;
@@ -95,7 +95,7 @@ const emojiCategories = {
       '🎮', '🕹️', '👾', '🎯', '🎲', '🃏', '🎰', '🎪', '🎭', '🎨',
       '🎬', '🎤', '🎧', '🎼', '🎹', '🥁', '🎷', '🎺', '🎸', '🪕',
       '🎻', '🎪', '🚀', '🛸', '🛰️', '🌌', '⭐', '🌟', '✨', '⚡',
-      '🔥', '💥', '💫', '🎆', '🎇', '🌈', '🔮', '🎊', '🎉', '🎈',
+      '🔥', '💥', '💫', '🎆', '🎇', '🌈', '🔮', '🎊', '����', '🎈',
       '🏆', '🥇', '🥈', '🥉', '🏅', '🎖️', '🏵️', '🎗️', '🎀', '🎁'
     ]
   }

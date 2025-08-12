@@ -16,25 +16,14 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useUserStats } from '../hooks/useUserStats';
 import { getUserConversations } from '../lib/messageService';
-import { createTestNotifications } from '../lib/testNotifications';
 import { forceCleanup, getLastCleanupTime } from '../lib/fileCleanupService';
 import { useState, useEffect } from 'react';
+import FirebaseStatus from '../components/FirebaseStatus';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { stats, loading: statsLoading, formatActiveTime } = useUserStats();
 
-  const handleCreateTestNotifications = async () => {
-    if (!user?.uid) return;
-
-    try {
-      await createTestNotifications(user.uid);
-      alert('Test bildirimleri oluşturuldu! Bildirimler sayfasını kontrol edin.');
-    } catch (error) {
-      console.error('Error creating test notifications:', error);
-      alert('Test bildirimleri oluşturulamadı.');
-    }
-  };
 
   const handleForceFileCleanup = async () => {
     try {
@@ -227,6 +216,9 @@ export default function Dashboard() {
         </div>
       </section>
 
+      {/* Firebase Status */}
+      <FirebaseStatus />
+
       {/* Quick Actions */}
       <section>
         <h2 className="text-2xl font-bold text-gaming-text mb-6 flex items-center space-x-2">
@@ -391,15 +383,6 @@ export default function Dashboard() {
         <section className="card-glass">
           <h2 className="text-xl font-bold text-gaming-text mb-4">🧪 Geliştirici Araçları</h2>
           <div className="space-y-3">
-            <p className="text-gaming-muted text-sm">
-              Test bildirimleri oluşturmak için aşağıdaki butonu kullanın:
-            </p>
-            <button
-              onClick={handleCreateTestNotifications}
-              className="px-4 py-2 bg-neon-purple/20 text-neon-purple rounded-lg hover:bg-neon-purple/30 transition-colors text-sm"
-            >
-              Test Bildirimleri Oluştur
-            </button>
             <button
               onClick={handleForceFileCleanup}
               className="px-4 py-2 bg-neon-orange/20 text-neon-orange rounded-lg hover:bg-neon-orange/30 transition-colors text-sm"
