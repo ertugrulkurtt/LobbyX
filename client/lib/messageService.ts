@@ -335,9 +335,7 @@ export const markMessagesAsRead = async (
 ): Promise<void> => {
   return withRetry(async () => {
     // Ensure user is authenticated
-    if (!auth.currentUser) {
-      throw new Error('User must be authenticated to mark messages as read');
-    }
+    const user = await ensureAuthenticated();
     // Reset unread count for this user
     const conversationRef = doc(db, 'conversations', conversationId);
     const conversationDoc = await getDoc(conversationRef);
