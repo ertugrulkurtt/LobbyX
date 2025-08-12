@@ -84,7 +84,7 @@ export function FirebaseStatus() {
             <div>👤 <strong>Authentication:</strong> Oturum açma sorunu</div>
           </div>
           <div className="mt-2 text-xs">
-            <strong>Çözüm:</strong> FIREBASE_QUICK_FIX.md dosyasına bakın
+            <strong>Çözüm:</strong> Sistem yöneticisiyle iletişime geçin
           </div>
         </div>
       )}
