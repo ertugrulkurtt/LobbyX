@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getDatabase } from 'firebase/database';
 
@@ -23,16 +23,31 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const rtdb = getDatabase(app);
 
-// Simple Firebase connection test
+// Enhanced Firebase connection test
 export const testFirebaseConnection = async (): Promise<boolean> => {
   try {
-    // Simple test - check if Firebase is initialized
-    if (auth && db) {
-      return true;
+    // Check if Firebase services are initialized
+    if (!auth || !db) {
+      console.warn('Firebase services not initialized');
+      return false;
     }
-    return false;
+
+    // Test Firestore with a simple read operation
+    const testDoc = doc(db, '_test', 'connection');
+    try {
+      await getDoc(testDoc);
+      console.log('✅ Firebase connection successful');
+      return true;
+    } catch (firestoreError: any) {
+      // If it's a permission error, Firebase is still working
+      if (firestoreError.code === 'permission-denied') {
+        console.log('✅ Firebase connection OK (permission denied expected for test doc)');
+        return true;
+      }
+      throw firestoreError;
+    }
   } catch (error) {
-    console.warn('Firebase connection test failed:', error);
+    console.warn('❌ Firebase connection test failed:', error);
     return false;
   }
 };
