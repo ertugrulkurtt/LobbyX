@@ -4,8 +4,6 @@ import {
   Send,
   Smile,
   Paperclip,
-  Phone,
-  Video,
   MoreVertical,
   Search,
   Star,
