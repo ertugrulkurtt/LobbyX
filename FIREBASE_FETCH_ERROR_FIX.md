@@ -118,6 +118,5 @@ The "Failed to fetch" errors should now be:
 
 Users should experience more stable functionality when:
 - Sending messages
-- Making voice/video calls
 - Loading conversations
 - Performing any Firebase-dependent operations
