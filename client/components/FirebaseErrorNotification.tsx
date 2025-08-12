@@ -30,7 +30,7 @@ export function FirebaseErrorNotification({ onClose }: FirebaseErrorNotification
               Firebase Bağlantı Sorunu
             </h3>
             <p className="text-xs text-gaming-muted mb-3">
-              Veritabanı izinleri güncellenmelidir. Lütfen FIREBASE_QUICK_FIX.md dosyasına bakın.
+              Veritabanı izinleri güncellenmelidir. Lütfen sistem yöneticisiyle iletişime geçin.
             </p>
             
             <div className="flex space-x-2">
