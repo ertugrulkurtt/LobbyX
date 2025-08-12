@@ -66,8 +66,8 @@ const isNetworkError =
 ### Context-Aware Error Handling
 ```typescript
 await withFirebaseErrorHandling(
-  () => addDoc(collection(db, 'calls'), callData),
-  { operation: 'store_call_data', component: 'callService' }
+  () => addDoc(collection(db, 'messages'), messageData),
+  { operation: 'store_message_data', component: 'messageService' }
 );
 ```
 
