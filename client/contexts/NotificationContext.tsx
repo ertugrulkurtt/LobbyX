@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { 
-  NotificationData, 
+import {
+  NotificationData,
   NotificationCounts,
   subscribeToNotifications,
   subscribeToNotificationCounts,
   markNotificationAsRead,
   markAllNotificationsAsRead
 } from '../lib/notificationService';
+import { createManagedSubscription } from '../lib/subscriptionManager';
 
 interface NotificationContextType {
   notifications: NotificationData[];
@@ -20,15 +21,15 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-export const useNotifications = () => {
+export function useNotifications() {
   const context = useContext(NotificationContext);
   if (context === undefined) {
     throw new Error('useNotifications must be used within a NotificationProvider');
   }
   return context;
-};
+}
 
-export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
   const [counts, setCounts] = useState<NotificationCounts>({
@@ -49,16 +50,21 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     setLoading(true);
 
-    // Subscribe to notifications
-    const unsubscribeNotifications = subscribeToNotifications(user.uid, (realTimeNotifications) => {
-      setNotifications(realTimeNotifications);
-      setLoading(false);
-    });
+    // Use managed subscriptions to prevent Target ID conflicts
+    const unsubscribeNotifications = createManagedSubscription(
+      `notifications_${user.uid}`,
+      () => subscribeToNotifications(user.uid, (realTimeNotifications) => {
+        setNotifications(realTimeNotifications);
+        setLoading(false);
+      })
+    );
 
-    // Subscribe to notification counts
-    const unsubscribeCounts = subscribeToNotificationCounts(user.uid, (realTimeCounts) => {
-      setCounts(realTimeCounts);
-    });
+    const unsubscribeCounts = createManagedSubscription(
+      `notification_counts_${user.uid}`,
+      () => subscribeToNotificationCounts(user.uid, (realTimeCounts) => {
+        setCounts(realTimeCounts);
+      })
+    );
 
     return () => {
       unsubscribeNotifications();
@@ -105,4 +111,4 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       {children}
     </NotificationContext.Provider>
   );
-};
+}

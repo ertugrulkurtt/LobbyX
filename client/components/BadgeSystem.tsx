@@ -443,6 +443,5 @@ export default function BadgeSystem({ userBadges = [], showModal = false, onClos
   );
 }
 
-// Export badge data and types for use in other components
+// Export badge data for use in other components
 export { badgeData };
-export type { Badge };

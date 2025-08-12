@@ -64,13 +64,17 @@ export default function Settings() {
   };
 
   const updateSetting = (category: string, key: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [category]: {
-        ...prev[category as keyof typeof prev],
-        [key]: value
-      }
-    }));
+    setSettings(prev => {
+      const categoryValue = prev[category as keyof typeof prev];
+      const categoryObject = typeof categoryValue === 'object' && categoryValue !== null ? categoryValue : {};
+      return {
+        ...prev,
+        [category]: {
+          ...categoryObject,
+          [key]: value
+        }
+      };
+    });
   };
 
   const handleSaveSettings = async () => {

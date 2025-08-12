@@ -69,7 +69,7 @@ interface ServerChannel {
   memberCount: number;
   isActive?: boolean;
   categoryId: string;
-  permissions?: ChannelPermission[];
+  permissions?: ChannelPermission[] | PermissionSettings;
   connectedUsers?: VoiceChannelUser[];
 }
 
@@ -100,12 +100,19 @@ interface ChannelPermission {
   deny: string[];
 }
 
+interface PermissionSettings {
+  canRead?: boolean;
+  canWrite?: boolean;
+  adminOnly?: boolean;
+  moderatorOnly?: boolean;
+}
+
 interface ServerCategory {
   id: string;
   name: string;
   position: number;
   isCollapsed?: boolean;
-  permissions?: ChannelPermission[];
+  permissions?: ChannelPermission[] | PermissionSettings;
 }
 
 interface GameServer {
@@ -120,7 +127,7 @@ interface GameServer {
   tags: string[];
   channels: ServerChannel[];
   categories: ServerCategory[];
-  roles: ServerRole[];
+  roles?: ServerRole[];
   owner?: string;
   lastActivity: string;
   isJoined?: boolean;
@@ -773,7 +780,7 @@ export default function Servers() {
                           <span className="text-xs font-bold text-gaming-muted uppercase tracking-wider">
                             {category.name}
                           </span>
-                          {category.permissions?.adminOnly && (
+                          {Array.isArray(category.permissions) ? false : category.permissions?.adminOnly && (
                             <Shield className="w-3 h-3 text-neon-orange" />
                           )}
                         </div>
@@ -819,10 +826,10 @@ export default function Servers() {
                                       {channel.name}
                                     </span>
                                     {!canWriteChannel && (
-                                      <EyeOff className="w-3 h-3 text-gaming-muted" title="Sadece okuma" />
+                                      <EyeOff className="w-3 h-3 text-gaming-muted" />
                                     )}
                                     {channel.isPrivate && (
-                                      <Lock className="w-3 h-3 text-neon-orange" title="Özel kanal" />
+                                      <Lock className="w-3 h-3 text-neon-orange" />
                                     )}
                                   </div>
                                   <div className="flex items-center justify-between mt-1">
@@ -865,13 +872,13 @@ export default function Servers() {
 
                                         <div className="flex items-center space-x-1">
                                           {connectedUser.isMuted && (
-                                            <MicOff className="w-3 h-3 text-red-400" title="Mikrofon kapalı" />
+                                            <MicOff className="w-3 h-3 text-red-400" />
                                           )}
                                           {connectedUser.isDeafened && (
-                                            <Headphones className="w-3 h-3 text-red-400" title="Kulaklık kapalı" />
+                                            <Headphones className="w-3 h-3 text-red-400" />
                                           )}
                                           {!connectedUser.isMuted && !connectedUser.isDeafened && (
-                                            <Mic className="w-3 h-3 text-neon-green" title="Aktif" />
+                                            <Mic className="w-3 h-3 text-neon-green" />
                                           )}
                                         </div>
                                       </div>

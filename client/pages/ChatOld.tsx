@@ -484,16 +484,9 @@ export default function Chat() {
                   }`}>
                     {message.senderId !== user?.uid && (
                       <div className="flex items-center space-x-2 mb-1">
-                        <span className={`text-sm font-medium ${
-                          message.isSpecial ? 'text-neon-cyan' : 'text-gaming-text'
-                        }`}>
+                        <span className="text-sm font-medium text-gaming-text">
                           {message.senderName}
                         </span>
-                        {message.isSpecial && (
-                          <div className="flex items-center justify-center w-4 h-4 bg-neon-cyan rounded-full">
-                            <Check className="w-3 h-3 text-white" />
-                          </div>
-                        )}
                       </div>
                     )}
                     
@@ -501,8 +494,6 @@ export default function Chat() {
                       className={`rounded-2xl px-4 py-2 ${
                         message.senderId === user?.uid
                           ? 'bg-neon-purple text-white ml-4'
-                          : message.isSpecial
-                          ? 'bg-gradient-to-br from-neon-cyan/20 to-neon-blue/20 border border-neon-cyan/30 text-gaming-text'
                           : 'bg-gaming-surface text-gaming-text mr-4'
                       }`}
                     >
