@@ -126,8 +126,6 @@ generatePerformanceReport();
 // Firebase debug utilities
 window.firebaseDebug.testConnection()
 
-// Call system testing
-window.callSystemTest.testBasicFunctionality()
 
 // System health check
 window.systemHealthCheck.runHealthCheck()
