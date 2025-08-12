@@ -13,11 +13,11 @@ import {
   deleteDoc,
   serverTimestamp
 } from 'firebase/firestore';
-import { db, auth, withExponentialBackoff } from './firebase';
-import { wrapOperation, reportError } from './unifiedErrorHandler';
+import { db, auth } from './firebase';
+import { wrapOperation } from './unifiedErrorHandler';
 import { RealUser, areFriends } from './userService';
 import { createMessageNotification } from './notificationService';
-import { handleNetworkError } from './firebaseConnectionMonitor';
+// Network error handling removed for simplicity
 
 // Use unified error handler for all operations
 const withRetry = <T>(
