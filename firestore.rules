@@ -78,6 +78,12 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
+    // Allow authenticated users to manage file uploads
+    match /fileUploads/{fileId} {
+      allow read, write: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.uploadedBy;
+    }
+
     // Test document for connection testing
     match /_test/connection {
       allow read: if false; // This will cause permission denied, which is expected for connection test
