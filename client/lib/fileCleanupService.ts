@@ -1,4 +1,5 @@
 import { cleanupExpiredFiles } from './fileService';
+import { auth } from './firebase';
 
 // Cleanup interval: Check every 6 hours
 const CLEANUP_INTERVAL = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
@@ -11,6 +12,12 @@ const LAST_CLEANUP_KEY = 'lobbyx-last-file-cleanup';
  */
 export const checkAndRunCleanup = async (): Promise<void> => {
   try {
+    // Only run cleanup if user is authenticated
+    if (!auth.currentUser) {
+      console.log('Skipping file cleanup - user not authenticated');
+      return;
+    }
+
     const lastCleanup = localStorage.getItem(LAST_CLEANUP_KEY);
     const lastCleanupTime = lastCleanup ? parseInt(lastCleanup) : 0;
     const now = Date.now();
@@ -18,12 +25,12 @@ export const checkAndRunCleanup = async (): Promise<void> => {
     // Check if 6 hours have passed since last cleanup
     if (now - lastCleanupTime >= CLEANUP_INTERVAL) {
       console.log('Starting scheduled file cleanup...');
-      
+
       await cleanupExpiredFiles();
-      
+
       // Update last cleanup timestamp
       localStorage.setItem(LAST_CLEANUP_KEY, now.toString());
-      
+
       console.log('File cleanup completed successfully');
     }
   } catch (error) {
@@ -36,13 +43,18 @@ export const checkAndRunCleanup = async (): Promise<void> => {
  */
 export const forceCleanup = async (): Promise<void> => {
   try {
+    // Only run cleanup if user is authenticated
+    if (!auth.currentUser) {
+      throw new Error('User must be authenticated to run file cleanup');
+    }
+
     console.log('Starting forced file cleanup...');
-    
+
     await cleanupExpiredFiles();
-    
+
     // Update last cleanup timestamp
     localStorage.setItem(LAST_CLEANUP_KEY, Date.now().toString());
-    
+
     console.log('Forced file cleanup completed successfully');
   } catch (error) {
     console.error('Error during forced file cleanup:', error);

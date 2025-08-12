@@ -93,13 +93,15 @@ function AppRouter() {
 
   // Initialize services when app starts
   useEffect(() => {
-    // Initialize core services
-    initFileCleanupService();
-
     // Test Firebase connection
     testFirebaseConnection().then((success) => {
       console.log("Firebase connection:", success ? "OK" : "Failed");
     });
+
+    // Initialize file cleanup service only if user is authenticated
+    if (isAuthenticated) {
+      initFileCleanupService();
+    }
 
     // Run simple health check
     setTimeout(() => {
@@ -134,7 +136,7 @@ function AppRouter() {
       // Clean up all Firebase subscriptions on app unmount
       cleanupAllSubscriptions();
     };
-  }, []);
+  }, [isAuthenticated]);
 
   if (isLoading) {
     return <LoadingScreen />;
