@@ -98,17 +98,6 @@ generatePerformanceReport();
 - ✅ Navigation timing
 - ✅ Unused code detection
 
-### 5. Call System Testing (`callSystemTest.ts`)
-```typescript
-// Arama sistemi fonksiyonlarının otomatik testi
-await callSystemTest.testBasicFunctionality();
-```
-
-**Test Edilen Fonksiyonlar:**
-- ✅ Service initialization
-- ✅ Audio system
-- ✅ State management
-- ✅ Error handling
 
 ## 📊 Performance Metrics
 
