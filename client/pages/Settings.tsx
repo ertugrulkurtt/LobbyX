@@ -1,0 +1,530 @@
+import React, { useState } from 'react';
+import {
+  Settings as SettingsIcon,
+  Bell,
+  Volume2,
+  Palette,
+  Shield,
+  LogOut,
+  Save,
+  Check,
+  Moon,
+  Sun,
+  VolumeX,
+  Lock,
+  AlertTriangle
+} from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { useNavigate } from 'react-router-dom';
+import TwoFactorAuth from '../components/TwoFactorAuth';
+
+export default function Settings() {
+  const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+  
+  const [settings, setSettings] = useState({
+    notifications: {
+      messages: true,
+      friendRequests: true,
+      groupInvites: false,
+      systemUpdates: true
+    },
+    audio: {
+      masterVolume: 80,
+      notificationSounds: true,
+      voiceChatVolume: 75,
+      muteMicrophone: false
+    },
+    privacy: {
+      onlineStatus: true,
+      profileVisibility: 'friends',
+      messageRequests: 'everyone'
+    },
+    twoFactorEnabled: false
+  });
+
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
+  const [twoFactorStep, setTwoFactorStep] = useState<'intro' | 'qr' | 'verify' | 'backup' | 'complete'>('intro');
+  const [generatedSecret, setGeneratedSecret] = useState('');
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  const updateSetting = (category: string, key: string, value: any) => {
+    setSettings(prev => {
+      const categoryValue = prev[category as keyof typeof prev];
+      const categoryObject = typeof categoryValue === 'object' && categoryValue !== null ? categoryValue : {};
+      return {
+        ...prev,
+        [category]: {
+          ...categoryObject,
+          [key]: value
+        }
+      };
+    });
+  };
+
+  const handleSaveSettings = async () => {
+    setIsSaving(true);
+    setSaveMessage('');
+
+    try {
+      // In real app: Save to Firebase
+      // await updateDoc(doc(db, 'users', user.uid), {
+      //   settings: settings,
+      //   preferences: {
+      //     ...user.preferences,
+      //     notifications: settings.notifications.systemUpdates
+      //   }
+      // });
+
+      // Mock save delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Save to localStorage for demo
+      localStorage.setItem('lobbyx-settings', JSON.stringify(settings));
+
+      setSaveMessage('Ayarlar başarıyla kaydedildi!');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (error) {
+      console.error('Settings save failed:', error);
+      setSaveMessage('Ayarlar kaydedilemedi. Lütfen tekrar deneyin.');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Load settings from localStorage on component mount
+  React.useEffect(() => {
+    const savedSettings = localStorage.getItem('lobbyx-settings');
+    if (savedSettings) {
+      try {
+        const parsedSettings = JSON.parse(savedSettings);
+        setSettings(parsedSettings);
+      } catch (error) {
+        console.error('Failed to load saved settings:', error);
+      }
+    }
+  }, []);
+
+  // Generate proper Base32 secret for TOTP (Google Authenticator compatible)
+  const generateBase32Secret = () => {
+    const base32chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let secret = '';
+    // Generate 32 character Base32 secret (160 bits)
+    for (let i = 0; i < 32; i++) {
+      secret += base32chars.charAt(Math.floor(Math.random() * base32chars.length));
+    }
+    return secret;
+  };
+
+  // Generate 2FA secret and QR code
+  const generateTwoFactorSecret = () => {
+    // Generate proper Base32 secret (160 bits / 32 characters)
+    const secret = generateBase32Secret();
+    setGeneratedSecret(secret);
+
+    // Generate QR code URL with proper TOTP format
+    const appName = 'LobbyX Gaming Platform';
+    const username = user?.email || user?.username || 'user';
+    const qrUrl = `otpauth://totp/${encodeURIComponent(appName)}:${encodeURIComponent(username)}?secret=${secret}&issuer=${encodeURIComponent(appName)}&algorithm=SHA1&digits=6&period=30`;
+    setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`);
+
+    // Generate backup codes (8 characters each, alphanumeric)
+    const codes = Array.from({ length: 10 }, () => {
+      let code = '';
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    });
+    setBackupCodes(codes);
+  };
+
+  const verifyTwoFactorCode = () => {
+    // In real app: verify with authenticator library like speakeasy
+    // const verified = speakeasy.totp.verify({
+    //   secret: generatedSecret,
+    //   encoding: 'base32',
+    //   token: verificationCode,
+    //   window: 1
+    // });
+
+    // For demo, accept any 6-digit numeric code
+    if (verificationCode.length === 6 && /^\d{6}$/.test(verificationCode)) {
+      return true;
+    }
+    return false;
+  };
+
+  const completeTwoFactorSetup = () => {
+    updateSetting('', 'twoFactorEnabled', true);
+    setShowTwoFactorSetup(false);
+    handleSaveSettings();
+    setSaveMessage('2FA başarıyla etkinleştirildi!');
+    setTimeout(() => setSaveMessage(''), 3000);
+  };
+
+  const handleBackFrom2FA = () => {
+    setShowTwoFactorSetup(false);
+  };
+
+  return (
+    <div className="space-y-8 animate-fade-in-up max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-gaming-text flex items-center space-x-2">
+          <SettingsIcon className="w-8 h-8 text-neon-purple" />
+          <span>Ayarlar</span>
+        </h1>
+        <div className="flex items-center space-x-4">
+          {saveMessage && (
+            <span className={`text-sm ${saveMessage.includes('başarıyla') ? 'text-neon-green' : 'text-red-400'}`}>
+              {saveMessage}
+            </span>
+          )}
+          <button
+            onClick={handleSaveSettings}
+            disabled={isSaving}
+            className="px-4 py-2 bg-neon-green text-white rounded-lg hover:bg-neon-green/80 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSaving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span>Kaydediliyor...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Değişiklikleri Kaydet</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Notifications */}
+      <section className="card-glass">
+        <h2 className="text-xl font-bold text-gaming-text mb-6 flex items-center space-x-2">
+          <Bell className="w-6 h-6 text-neon-cyan" />
+          <span>Bildirimler</span>
+        </h2>
+        
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium text-gaming-text">Mesaj Bildirimleri</h3>
+              <p className="text-sm text-gaming-muted">Yeni mesajlar için bildirim al</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={settings.notifications.messages}
+                onChange={(e) => updateSetting('notifications', 'messages', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gaming-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-purple"></div>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium text-gaming-text">Arkadaşlık İstekleri</h3>
+              <p className="text-sm text-gaming-muted">Yeni arkadaşlık istekleri için bildirim</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={settings.notifications.friendRequests}
+                onChange={(e) => updateSetting('notifications', 'friendRequests', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gaming-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-purple"></div>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium text-gaming-text">Grup Davetleri</h3>
+              <p className="text-sm text-gaming-muted">Grup davetleri için bildirim</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={settings.notifications.groupInvites}
+                onChange={(e) => updateSetting('notifications', 'groupInvites', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gaming-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-purple"></div>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium text-gaming-text">Sistem Güncellemeleri</h3>
+              <p className="text-sm text-gaming-muted">Önemli duyurular ve güncellemeler</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={settings.notifications.systemUpdates}
+                onChange={(e) => updateSetting('notifications', 'systemUpdates', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gaming-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-purple"></div>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      {/* Audio Settings */}
+      <section className="card-glass">
+        <h2 className="text-xl font-bold text-gaming-text mb-6 flex items-center space-x-2">
+          <Volume2 className="w-6 h-6 text-neon-orange" />
+          <span>Ses Ayarları</span>
+        </h2>
+        
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium text-gaming-text">Ana Ses Seviyesi</h3>
+              <span className="text-gaming-text">{settings.audio.masterVolume}%</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={settings.audio.masterVolume}
+              onChange={(e) => updateSetting('audio', 'masterVolume', parseInt(e.target.value))}
+              className="w-full h-2 bg-gaming-surface rounded-lg appearance-none cursor-pointer"
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium text-gaming-text">Sesli Sohbet Seviyesi</h3>
+              <span className="text-gaming-text">{settings.audio.voiceChatVolume}%</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={settings.audio.voiceChatVolume}
+              onChange={(e) => updateSetting('audio', 'voiceChatVolume', parseInt(e.target.value))}
+              className="w-full h-2 bg-gaming-surface rounded-lg appearance-none cursor-pointer"
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium text-gaming-text">Bildirim Sesleri</h3>
+              <p className="text-sm text-gaming-muted">Mesaj ve bildirim sesleri</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={settings.audio.notificationSounds}
+                onChange={(e) => updateSetting('audio', 'notificationSounds', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gaming-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-purple"></div>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      {/* Theme Settings */}
+      <section className="card-glass">
+        <h2 className="text-xl font-bold text-gaming-text mb-6 flex items-center space-x-2">
+          <Palette className="w-6 h-6 text-neon-pink" />
+          <span>Tema Ayarları</span>
+        </h2>
+        
+        <div className="space-y-4">
+          <div>
+            <h3 className="font-medium text-gaming-text mb-3">Tema Seçimi</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => {
+                  if (theme !== 'dark') {
+                    toggleTheme();
+                    // Auto-save theme change
+                    setTimeout(handleSaveSettings, 500);
+                  }
+                }}
+                className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                  theme === 'dark'
+                    ? 'border-neon-purple bg-neon-purple/10'
+                    : 'border-gaming-border hover:border-neon-purple/50'
+                }`}
+              >
+                <Moon className="w-8 h-8 mx-auto mb-2 text-neon-purple" />
+                <span className="text-gaming-text font-medium">Karanlık Mod</span>
+                {theme === 'dark' && (
+                  <div className="mt-2">
+                    <Check className="w-5 h-5 mx-auto text-neon-purple" />
+                  </div>
+                )}
+              </button>
+
+              <button
+                onClick={() => {
+                  if (theme !== 'light') {
+                    toggleTheme();
+                    // Auto-save theme change
+                    setTimeout(handleSaveSettings, 500);
+                  }
+                }}
+                className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                  theme === 'light'
+                    ? 'border-neon-orange bg-neon-orange/10'
+                    : 'border-gaming-border hover:border-neon-orange/50'
+                }`}
+              >
+                <Sun className="w-8 h-8 mx-auto mb-2 text-neon-orange" />
+                <span className="text-gaming-text font-medium">Aydınlık Mod</span>
+                {theme === 'light' && (
+                  <div className="mt-2">
+                    <Check className="w-5 h-5 mx-auto text-neon-orange" />
+                  </div>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Security */}
+      <section className="card-glass">
+        <h2 className="text-xl font-bold text-gaming-text mb-6 flex items-center space-x-2">
+          <Shield className="w-6 h-6 text-neon-green" />
+          <span>Güvenlik</span>
+        </h2>
+        
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium text-gaming-text">İki Adımlı Doğrulama</h3>
+              <p className="text-sm text-gaming-muted">
+                {settings.twoFactorEnabled
+                  ? 'Hesabınız 2FA ile korunuyor'
+                  : 'Hesabınızı ekstra güvenlik katmanı ile koruyun'
+                }
+              </p>
+            </div>
+            <div className="flex items-center space-x-3">
+              {settings.twoFactorEnabled && (
+                <div className="flex items-center space-x-2 text-neon-green">
+                  <Check className="w-4 h-4" />
+                  <span className="text-sm">Aktif</span>
+                </div>
+              )}
+              <button
+                onClick={() => {
+                  if (settings.twoFactorEnabled) {
+                    // Disable 2FA
+                    updateSetting('', 'twoFactorEnabled', false);
+                    handleSaveSettings();
+                  } else {
+                    // Start setup process
+                    setShowTwoFactorSetup(true);
+                    setTwoFactorStep('intro');
+                    generateTwoFactorSecret();
+                  }
+                }}
+                className={`px-4 py-2 rounded-lg transition-colors text-sm ${
+                  settings.twoFactorEnabled
+                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                    : 'bg-neon-green/20 text-neon-green hover:bg-neon-green/30'
+                }`}
+              >
+                {settings.twoFactorEnabled ? 'Devre Dışı Bırak' : 'Kurulum Başlat'}
+              </button>
+            </div>
+          </div>
+
+          <button className="w-full px-4 py-3 bg-neon-cyan/20 text-neon-cyan rounded-lg hover:bg-neon-cyan/30 transition-colors text-left flex items-center space-x-3">
+            <Lock className="w-5 h-5" />
+            <span>Şifre Değiştir</span>
+          </button>
+
+          <button className="w-full px-4 py-3 bg-gaming-surface text-gaming-text rounded-lg hover:bg-gaming-surface/80 transition-colors text-left">
+            Aktif Oturumları Görüntüle
+          </button>
+        </div>
+      </section>
+
+      {/* Logout */}
+      <section className="card-glass border-red-500/30">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-gaming-text">Oturum Kapat</h3>
+            <p className="text-gaming-muted">Tüm cihazlarda oturumunu sonlandır</p>
+          </div>
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors flex items-center space-x-2"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Çıkış Yap</span>
+          </button>
+        </div>
+      </section>
+
+      {/* Two-Factor Authentication Setup Modal */}
+      {showTwoFactorSetup && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gaming-surface/95 backdrop-blur-xl rounded-2xl p-6 max-w-lg w-full border border-gaming-border">
+            <TwoFactorAuth
+              mode="setup"
+              onSuccess={completeTwoFactorSetup}
+              onBack={handleBackFrom2FA}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gaming-surface rounded-2xl p-6 max-w-md mx-4 border border-gaming-border">
+            <h3 className="text-xl font-bold text-gaming-text mb-4">Oturum Kapat</h3>
+            <p className="text-gaming-muted mb-6">
+              Oturumunuzu kapatmak istediğinizden emin misiniz?
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 px-4 py-2 bg-gaming-surface text-gaming-text rounded-lg hover:bg-gaming-surface/80 transition-colors"
+              >
+                ��ptal
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-500/80 transition-colors"
+              >
+                Çıkış Yap
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
