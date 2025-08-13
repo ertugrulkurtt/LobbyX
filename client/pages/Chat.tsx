@@ -37,7 +37,7 @@ import {
   removeFriend,
 } from "../lib/userService";
 import UserProfileModal from "../components/UserProfileModal";
-import { uploadFile, UploadProgress } from "../lib/fileService";
+import { uploadFile } from "../lib/fileServiceR2";
 import FileUploadModal from "../components/FileUploadModal";
 import FileUploadProgress from "../components/FileUploadProgress";
 import FileMessage from "../components/FileMessage";
@@ -374,19 +374,20 @@ export default function ChatReal() {
     );
 
     try {
-      // Upload file to Firebase Storage
+      // Upload file to Cloudflare R2
       const fileMetadata = await uploadFile(
         file,
-        selectedChat,
         user.uid,
-        (progress: UploadProgress) => {
+        'chat',
+        { conversationId: selectedChat },
+        (progress: number) => {
           setUploadingFiles((prev) => {
             const newMap = new Map(prev);
             const existing = newMap.get(fileId);
             if (existing) {
               newMap.set(fileId, {
                 ...existing,
-                progress: progress.progress,
+                progress: progress,
               });
             }
             return newMap;
@@ -413,7 +414,7 @@ export default function ChatReal() {
         user.uid,
         file.name,
         "file",
-        fileMetadata.downloadUrl,
+        fileMetadata.publicUrl,
         file.name,
         file.size,
       );

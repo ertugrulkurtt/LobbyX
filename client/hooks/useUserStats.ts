@@ -140,8 +140,11 @@ export const useUserStats = (): UseUserStatsReturn => {
 
     try {
       await incrementMessageCount(user.uid, conversationId);
-    } catch (err) {
-      console.error('Error incrementing message count:', err);
+    } catch (err: any) {
+      if (err?.code !== 'permission-denied') {
+        console.error('Error incrementing message count:', err);
+      }
+      // Don't show errors for permission issues as they're handled gracefully
     }
   };
 

@@ -15,6 +15,7 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "./firebase";
+import { withFirestoreRetry } from './firebaseRetryWrapper';
 
 // User statistics interface
 export interface UserStats {
@@ -371,8 +372,22 @@ export const incrementMessageCount = async (
     // Update daily activity
     const today = new Date().toISOString().split("T")[0];
     await updateDailyActivity(userId, today, { messagesCount: 1 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error incrementing message count:", error);
+
+    // Don't throw permission errors to prevent app crashes
+    if (error.code === 'permission-denied') {
+      console.warn("🔒 Message count tracking disabled - Firestore rules need deployment");
+
+      // Dispatch a custom event to notify the UI about rules issue
+      window.dispatchEvent(new CustomEvent('firebase-rules-error', {
+        detail: error
+      }));
+
+      return; // Gracefully handle permission errors
+    }
+
+    // For other errors, still throw to maintain error handling
     throw error;
   }
 };
@@ -424,8 +439,15 @@ export const trackVoiceTime = async (userId: string, minutes: number) => {
       voiceTime: minutes,
       activeTime: minutes,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error tracking voice time:", error);
+
+    // Don't throw permission errors to prevent app crashes
+    if (error.code === 'permission-denied') {
+      console.warn("🔒 Voice time tracking disabled - Firestore rules need deployment");
+      return; // Gracefully handle permission errors
+    }
+
     throw error;
   }
 };
@@ -462,8 +484,22 @@ export const updateDailyActivity = async (
         activeTime: updates.activeTime || 0,
       });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating daily activity:", error);
+
+    // Don't throw permission errors to prevent app crashes
+    if (error.code === 'permission-denied') {
+      console.warn("🔒 Daily activity tracking disabled - Firestore rules need deployment");
+
+      // Dispatch a custom event to notify the UI about rules issue
+      window.dispatchEvent(new CustomEvent('firebase-rules-error', {
+        detail: error
+      }));
+
+      return; // Gracefully handle permission errors
+    }
+
+    // For other errors, still throw to maintain error handling
     throw error;
   }
 };

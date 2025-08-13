@@ -100,14 +100,6 @@ service cloud.firestore {
       );
     }
 
-    // Allow authenticated users to manage file metadata (files stored in Cloudflare R2)
-    match /files/{fileId} {
-      allow read, write: if request.auth != null && (
-        request.auth.uid == resource.data.uploadedBy ||
-        request.auth.uid == request.resource.data.uploadedBy
-      );
-    }
-
     // Test document for connection testing
     match /_test/connection {
       allow read: if false; // This will cause permission denied, which is expected for connection test

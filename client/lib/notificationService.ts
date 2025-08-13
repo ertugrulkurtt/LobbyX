@@ -1,18 +1,19 @@
-import { 
-  collection, 
-  doc, 
-  addDoc, 
-  updateDoc, 
+import {
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
   deleteDoc,
-  query, 
-  where, 
-  orderBy, 
+  query,
+  where,
+  orderBy,
   limit,
   onSnapshot,
   serverTimestamp,
   getDocs
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { withFirestoreRetry } from './firebaseRetryWrapper';
 
 export interface NotificationData {
   id: string;
@@ -49,18 +50,34 @@ export interface NotificationCounts {
  */
 export const createNotification = async (notification: Omit<NotificationData, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
   try {
-    const notificationsRef = collection(db, 'notifications');
-    const notificationData = {
-      ...notification,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    const docRef = await addDoc(notificationsRef, notificationData);
-    console.log('Notification created:', docRef.id);
-    return docRef.id;
-  } catch (error) {
+    return await withFirestoreRetry(async () => {
+      const notificationsRef = collection(db, 'notifications');
+      const notificationData = {
+        ...notification,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      const docRef = await addDoc(notificationsRef, notificationData);
+      console.log('Notification created:', docRef.id);
+      return docRef.id;
+    }, 'createNotification');
+  } catch (error: any) {
     console.error('Error creating notification:', error);
+
+    // Don't throw permission errors to prevent app crashes
+    if (error.code === 'permission-denied') {
+      console.warn("🔒 Notification creation disabled - Firestore rules need deployment");
+
+      // Dispatch a custom event to notify the UI about rules issue
+      window.dispatchEvent(new CustomEvent('firebase-rules-error', {
+        detail: error
+      }));
+
+      return 'permission-denied'; // Return a special ID to indicate permission issue
+    }
+
+    // For other errors, still throw to maintain error handling
     throw error;
   }
 };

@@ -3,8 +3,8 @@
 // This script helps deploy Firebase rules
 // Run: npm run deploy-rules or node deploy-rules.js
 
-const { exec } = require("child_process");
-const fs = require("fs");
+import { exec } from "child_process";
+import fs from "fs";
 
 console.log("🔥 Firebase Rules Deployment Helper");
 console.log("====================================");

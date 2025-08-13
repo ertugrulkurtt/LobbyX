@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { X, Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react';
-import { validateFile, formatFileSize, getFileIcon, MAX_FILE_SIZE } from '../lib/fileService';
+import { validateFile, MAX_FILE_SIZE } from '../lib/fileServiceR2';
+import { formatFileSize, getFileIcon } from '../lib/fileUtils';
 
 interface FileUploadModalProps {
   isOpen: boolean;
@@ -56,7 +57,7 @@ export default function FileUploadModal({
     setValidationError('');
     
     const validation = validateFile(file);
-    if (!validation.isValid) {
+    if (!validation.valid) {
       setValidationError(validation.error || 'Geçersiz dosya');
       setSelectedFile(null);
       return;
@@ -127,7 +128,9 @@ export default function FileUploadModal({
               // Selected File Preview
               <div className="space-y-3">
                 <div className="flex items-center justify-center space-x-3">
-                  <div className="text-3xl">{getFileIcon(selectedFile.type)}</div>
+                  <div className="text-3xl">
+                    {React.createElement(getFileIcon(selectedFile.type), { className: "w-6 h-6" })}
+                  </div>
                   <div className="text-left">
                     <p className="font-medium text-gaming-text truncate max-w-[200px]" title={selectedFile.name}>
                       {selectedFile.name}

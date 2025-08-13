@@ -1,4 +1,7 @@
 {
+  "projects": {
+    "default": "lobbyx-8be54"
+  },
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"

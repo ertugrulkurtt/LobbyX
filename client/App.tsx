@@ -23,6 +23,8 @@ import { testFirebaseConnection } from "./lib/firebase";
 import { Layout } from "./components/Layout";
 import ErrorBoundary from "./components/ErrorBoundary";
 import FirebaseErrorNotification from "./components/FirebaseErrorNotification";
+import FirebaseRulesNotification from "./components/FirebaseRulesNotification";
+import NetworkErrorNotification from "./components/NetworkErrorNotification";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -90,6 +92,9 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function AppRouter() {
   const { isAuthenticated, isLoading } = useAuth();
   const [showFirebaseError, setShowFirebaseError] = React.useState(false);
+  const [showRulesNotification, setShowRulesNotification] = React.useState(false);
+  const [showNetworkError, setShowNetworkError] = React.useState(false);
+  const [networkErrorCount, setNetworkErrorCount] = React.useState(0);
 
   // Initialize services when app starts
   useEffect(() => {
@@ -125,12 +130,43 @@ function AppRouter() {
       }
     };
 
+    // Listen for Firebase rules-related permission errors
+    const handleRulesError = (event: any) => {
+      const error = event.detail || event.reason;
+      if (
+        error &&
+        error.code === "permission-denied" &&
+        (error.message?.includes("notifications") ||
+          error.message?.includes("userStats") ||
+          error.message?.includes("messageStats") ||
+          error.message?.includes("dailyActivity"))
+      ) {
+        setShowRulesNotification(true);
+      }
+    };
+
+    // Listen for Firebase network errors
+    const handleNetworkError = (event: any) => {
+      const { error, context, errorCount } = event.detail || {};
+      console.warn("Firebase network error detected:", error, context);
+      setNetworkErrorCount(errorCount || 1);
+
+      // Show error notification if there are multiple network errors
+      if (errorCount >= 2) {
+        setShowNetworkError(true);
+      }
+    };
+
     window.addEventListener("firebase-permission-error", handleGlobalError);
+    window.addEventListener("firebase-rules-error", handleRulesError);
+    window.addEventListener("firebase-network-error", handleNetworkError);
     return () => {
       window.removeEventListener(
         "firebase-permission-error",
         handleGlobalError,
       );
+      window.removeEventListener("firebase-rules-error", handleRulesError);
+      window.removeEventListener("firebase-network-error", handleNetworkError);
       // Clean up all Firebase subscriptions on app unmount
       cleanupAllSubscriptions();
     };
@@ -145,6 +181,21 @@ function AppRouter() {
       {showFirebaseError && (
         <FirebaseErrorNotification
           onClose={() => setShowFirebaseError(false)}
+        />
+      )}
+      {showRulesNotification && (
+        <FirebaseRulesNotification
+          onClose={() => setShowRulesNotification(false)}
+        />
+      )}
+      {showNetworkError && (
+        <NetworkErrorNotification
+          onClose={() => setShowNetworkError(false)}
+          onRetry={() => {
+            setShowNetworkError(false);
+            setNetworkErrorCount(0);
+            window.location.reload();
+          }}
         />
       )}
       <Routes>

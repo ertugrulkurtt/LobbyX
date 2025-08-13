@@ -26,7 +26,7 @@ import {
   Settings
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { uploadProfilePhoto } from '../lib/storage';
+import { uploadProfilePhoto } from '../lib/storageR2';
 import { useUserStats } from '../hooks/useUserStats';
 
 // Note: User statistics are now handled by useUserStats hook

@@ -22,9 +22,13 @@
     "deploy-rules": "node deploy-rules.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.864.0",
+    "@aws-sdk/s3-request-presigner": "^3.864.0",
     "dotenv": "^17.2.0",
     "express": "^4.18.2",
     "firebase": "^12.1.0",
+    "multer": "^1.4.5-lts.1",
+    "nanoid": "^5.1.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -63,6 +67,7 @@
     "@tanstack/react-query": "^5.56.2",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.13",
     "@types/node": "^22.5.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
